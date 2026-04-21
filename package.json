@@ -1,0 +1,29 @@
+{
+  "name": "projex-ai",
+  "version": "1.0.0",
+  "description": "AI-Powered Project Management System with Social Features",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@lemonsqueezy/lemonsqueezy.js": "^2.0.0"
+  },
+  "devDependencies": {
+    "vercel": "latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/projex-ai"
+  },
+  "keywords": [
+    "project-management",
+    "ai",
+    "collaboration",
+    "kanban",
+    "productivity"
+  ],
+  "author": "PROJEX AI Team",
+  "license": "MIT"
+}

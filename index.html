@@ -1,0 +1,4074 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJEX AI — AI-Powered Project Management with Social Collaboration</title>
+  <meta name="description"
+    content="AI-powered project management platform with social features, real-time collaboration, and advanced AI tools">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       AUTH VIEW - Login / Register
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="view active" id="authView">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-bg"></div>
+
+    <!-- Hero Section -->
+    <div class="auth-hero">
+      <div class="hero-left">
+        <div class="logo-wrap">
+          <div class="logo-icon"></div>
+          <div>
+            <span class="logo-text">PROJEX AI</span>
+            <span class="logo-slogan">AI-POWERED COLLABORATION</span>
+          </div>
+        </div>
+        <h1 class="hero-title">AI-Powered<br /><span>Project Management</span></h1>
+        <p class="hero-desc">Organize projects, tasks, and notes with AI. Voice commands, smart chat, team
+          collaboration,
+          and AI image generation.</p>
+        <div class="features">
+          <div class="feature">
+            <div class="feat-icon">📅</div><span>Meeting Management - Video conferencing and calendar integration</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">📝</div><span>Notes - Tagged, searchable note system</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">👥</div><span>Team Management - Department-based team organization</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">⚡</div><span>Resource Management - Document, link and tool tracking</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">💰</div><span>Budget Tracking - Expense and budget analysis</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">⚠️</div><span>Risk Management - Risk analysis and mitigation plans</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">🎨</div><span>AI Image Generation - AI-powered visual creation</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">📈</div><span>Reports - Detailed project analysis and statistics</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">🎙️</div><span>Voice AI - Voice commands and transcription</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">🤖</div><span>Multi-AI Chat - Groq, Gemini, Mistral assistants</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">🍅</div><span>Pomodoro - Focus and time management</span>
+          </div>
+          <div class="feature">
+            <div class="feat-icon">📊</div><span>Dashboard - All project summaries on one screen</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="blog-section">
+          <h3 class="blog-title">PROJEX AI - Future of Project Management</h3>
+          <p class="blog-content">
+            PROJEX AI is an innovative platform offering AI-powered solutions for complex project management needs in
+            the modern business world.
+            It goes beyond the limitations of traditional project management tools by integrating AI technologies into
+            daily workflows.
+          </p>
+          <p class="blog-content">
+            <strong>Who Can Use It?</strong><br>
+            • Startups and entrepreneurs - Fast project setup and management<br>
+            • Small and medium businesses - Team collaboration and resource optimization<br>
+            • Large companies - Inter-departmental coordination and reporting<br>
+            • Freelancers - Client projects and time management<br>
+            • Educational institutions - Student and academic project tracking<br>
+            • Agencies - Managing multiple client projects
+          </p>
+          <p class="blog-content">
+            <strong>Key Features:</strong><br>
+            • AI-powered task suggestions and automation<br>
+            • Real-time collaboration and social feed<br>
+            • Voice commands for project control<br>
+            • Automated reporting and analysis<br>
+            • Video conferencing integration<br>
+            • Budget and risk management tools<br>
+            • 15-day free trial period
+          </p>
+          <p class="blog-content">
+            Manage your projects more efficiently, coordinate your teams better, and integrate AI power into your
+            workflows with PROJEX AI.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auth Card -->
+    <div class="card-panel">
+      <div class="auth-card">
+        <div class="card-header">
+          <div class="card-logo">
+            <div class="card-logo-icon"></div>
+            <span class="card-logo-text">PROJEX AI</span>
+          </div>
+          <div class="card-tagline" id="tagline">AI-powered project & team collaboration hub</div>
+          <div class="shimmer"></div>
+        </div>
+        <div class="card-body">
+          <div class="tabs">
+            <button class="tab-btn active" id="loginTabBtn" onclick="switchTab('login')">Login</button>
+            <button class="tab-btn" id="registerTabBtn" onclick="switchTab('register')">Sign Up</button>
+          </div>
+          <div id="msg-area"></div>
+          <div id="form-area"></div>
+          <div class="trial-note">
+            <strong>15-day free trial</strong> — No credit card required. Upgrade to Pro for AI features.
+          </div>
+          <div class="auth-footer">
+            <div class="footer-links">
+              <a class="footer-link">Terms of Service</a>
+              <a class="footer-link">Privacy Policy</a>
+              <a class="footer-link">Help Center</a>
+            </div>
+            <div class="copyright">© 2026 PROJEX AI. All rights reserved.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       APP VIEW - Main Application
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="view" id="appView">
+    <!-- Header -->
+    <header>
+      <a class="logo" onclick="navigateTo('dashboard')">
+        <div class="logo-wrap">
+          <div class="logo-icon"></div>
+          <div class="logo-text-wrapper">
+            <span class="logo-text">PROJEX AI</span>
+            <span class="logo-slogan">YAPAY ZEKA DESTEKLI IŞ BIRLIĞI</span>
+          </div>
+        </div>
+      </a>
+
+      <div class="h-search">
+        <span class="h-search-icon">🔍</span>
+        <input type="text" id="globalSearch" placeholder="Search projects, tasks, notes, people..."
+          onkeyup="handleSearch(event)">
+      </div>
+
+      <div class="h-right">
+        <button class="h-btn h-btn-teal" onclick="quickAdd()">+ New</button>
+        <button class="h-btn h-btn-ghost" onclick="togglePomodoro()">🍅 Pomodoro</button>
+        <div class="clock-widget" id="clockWidget">00:00</div>
+        <button class="notif-btn" onclick="showNotifications()">
+          🔔
+          <span class="notif-dot" id="notifDot"></span>
+        </button>
+        <div class="avatar" id="userAvatar">A</div>
+        <button class="h-btn h-btn-ghost" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="nav-section">
+        <div class="nav-label">Main Menu</div>
+        <button class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-page="projects" onclick="navigateTo('projects')">
+          <span class="nav-icon">📁</span>
+          <span>Projects</span>
+          <span class="nav-badge" id="projectCount">0</span>
+        </button>
+        <button class="nav-item" data-page="tasks" onclick="navigateTo('tasks')">
+          <span class="nav-icon">✅</span>
+          <span>Tasks</span>
+          <span class="nav-badge green" id="taskCount">0</span>
+        </button>
+        <button class="nav-item" data-page="ai" onclick="navigateTo('ai')">
+          <span class="nav-icon">🤖</span>
+          <span>AI Assistant</span>
+          <span class="nav-badge amber">PRO</span>
+        </button>
+        <button class="nav-item" data-page="social" onclick="navigateTo('social')">
+          <span class="nav-icon">👥</span>
+          <span>Social Feed</span>
+        </button>
+        <button class="nav-item" data-page="meetings" onclick="navigateTo('meetings')">
+          <span class="nav-icon">📅</span>
+          <span>Meetings</span>
+        </button>
+        <button class="nav-item" data-page="notes" onclick="navigateTo('notes')">
+          <span class="nav-icon">📝</span>
+          <span>Notes</span>
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Enterprise</div>
+        <button class="nav-item" data-page="team" onclick="navigateTo('team')">
+          <span class="nav-icon">👥</span>
+          <span>Team</span>
+        </button>
+        <button class="nav-item" data-page="resources" onclick="navigateTo('resources')">
+          <span class="nav-icon">⚡</span>
+          <span>Resources</span>
+        </button>
+        <button class="nav-item" data-page="budget" onclick="navigateTo('budget')">
+          <span class="nav-icon">💰</span>
+          <span>Budget</span>
+        </button>
+        <button class="nav-item" data-page="risks" onclick="navigateTo('risks')">
+          <span class="nav-icon">⚠️</span>
+          <span>Risks</span>
+          <span class="nav-badge red" id="riskCount">0</span>
+        </button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Trial / Pro Banner -->
+      <div class="sidebar-pro" id="trialBanner">
+        <div class="sidebar-pro-title">🌟 Free Trial</div>
+        <div class="sidebar-pro-text" id="trialText">15 days remaining</div>
+        <button class="btn btn-sm" style="background: var(--amber); color: #000; width: 100%;" onclick="upgradeToPro()">
+          Upgrade to Pro
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Tools</div>
+        <button class="nav-item" data-page="images" onclick="navigateTo('images')">
+          <span class="nav-icon">🎨</span>
+          <span>AI Images</span>
+          <span class="nav-badge amber">PRO</span>
+        </button>
+        <button class="nav-item" data-page="reports" onclick="navigateTo('reports')">
+          <span class="nav-icon">📈</span>
+          <span>Reports</span>
+        </button>
+        <button class="nav-item" data-page="settings" onclick="navigateTo('settings')">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </button>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="online-dot"></div>
+        <div>
+          <div class="sidebar-user-name" id="sidebarUserName">User</div>
+          <div class="sidebar-user-role" id="sidebarUserPlan" style="font-size: 0.6rem; color: var(--amber);">Free Trial
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Trial Banner (Top) -->
+      <div class="trial-banner" id="topTrialBanner">
+        <div class="trial-banner-text">
+          🎉 <strong id="trialDays">15 days</strong> left in your free trial. <strong>Upgrade to Pro</strong> for
+          unlimited AI features!
+        </div>
+        <div class="trial-banner-actions">
+          <button class="btn btn-primary" onclick="upgradeToPro()">Upgrade to Pro — $29/mo</button>
+          <button class="btn btn-ghost" onclick="dismissTrialBanner()">✕</button>
+        </div>
+      </div>
+
+      <!-- Dashboard Page -->
+      <div class="page active" id="dashboardPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-sub">Overview and quick stats</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newTaskModal')">+ New Task</button>
+            <button class="btn btn-teal" onclick="openModal('newMeetingModal')">+ Meeting</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashProjectCount">0</div>
+            <div class="stat-card-label">Active Projects</div>
+            <div class="stat-card-change up">+2 this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashTaskCount">0</div>
+            <div class="stat-card-label">Completed Tasks</div>
+            <div class="stat-card-change up">+12 this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashMeetingCount">0</div>
+            <div class="stat-card-label">Upcoming Meetings</div>
+            <div class="stat-card-change">Today: 3</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashTeamCount">0</div>
+            <div class="stat-card-label">Team Members</div>
+            <div class="stat-card-change up">+1 new</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dashboard-col">
+            <div class="dashboard-card">
+              <div class="card-title">🎯 Priority Tasks</div>
+              <div id="priorityTasks"></div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-title">📊 Project Progress</div>
+              <div id="projectProgress"></div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-title">🤖 Quick AI Assistant</div>
+              <div class="ai-chat-container" style="height: 250px;">
+                <div class="ai-chat-messages" id="quickAIChat">
+                  <div class="ai-message system">Welcome! Ask me anything about your projects.</div>
+                </div>
+                <div class="ai-chat-input">
+                  <input type="text" id="quickAIInput" placeholder="Ask AI..."
+                    onkeypress="if(event.key==='Enter')quickAIMessage()">
+                  <button class="btn btn-primary" onclick="quickAIMessage()">Send</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-col">
+            <div class="dashboard-card">
+              <div class="card-title">📅 Today's Meetings</div>
+              <div id="todayMeetings"></div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-title">⚡ Recent Activity</div>
+              <div id="recentActivity"></div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-title">🍅 Pomodoro Stats</div>
+              <div style="display: flex; gap: 16px; margin-bottom: 12px;">
+                <div style="text-align: center; flex: 1;">
+                  <div style="font-size: 1.4rem; font-weight: 800; color: var(--accent);" id="pomoToday">0</div>
+                  <div style="font-size: 0.7rem; color: var(--text-muted);">Today</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                  <div style="font-size: 1.4rem; font-weight: 800; color: var(--teal);" id="pomoWeek">0</div>
+                  <div style="font-size: 0.7rem; color: var(--text-muted);">This Week</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                  <div style="font-size: 1.4rem; font-weight: 800; color: var(--green);" id="pomoTotal">0</div>
+                  <div style="font-size: 0.7rem; color: var(--text-muted);">Total</div>
+                </div>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="pomoProgress" style="width: 0%"></div>
+              </div>
+              <div style="text-align: center; margin-top: 8px; font-size: 0.7rem; color: var(--text-muted);">
+                Daily goal: <span id="pomoGoal">4</span> pomodoros
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Assistant Page -->
+      <div class="page" id="aiPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">🤖 AI Assistant</h1>
+            <p class="page-sub">Powered by Groq, Gemini, and Mistral AI</p>
+          </div>
+          <div class="page-actions">
+            <select class="form-select" id="aiProvider" style="width: 150px;">
+              <option value="groq">🚀 Groq (Fast)</option>
+              <option value="gemini">🧠 Gemini (Smart)</option>
+              <option value="mistral">⚡ Mistral (Balanced)</option>
+            </select>
+            <button class="btn btn-primary" onclick="clearAIChat()">Clear Chat</button>
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="ai-chat-container" style="height: 500px;">
+            <div class="ai-chat-messages" id="aiChatMessages">
+              <div class="ai-message system">👋 Welcome to PROJEX AI Assistant! I can help you with:</div>
+              <div class="ai-message system">• Project planning and task breakdown</div>
+              <div class="ai-message system">• Code review and debugging</div>
+              <div class="ai-message system">• Meeting summaries and notes</div>
+              <div class="ai-message system">• General questions and brainstorming</div>
+            </div>
+            <div class="ai-chat-input">
+              <input type="text" id="aiChatInput"
+                placeholder="Ask anything... (e.g., 'Help me plan a website redesign project')"
+                onkeypress="if(event.key==='Enter')sendAIMessage()">
+              <button class="btn btn-teal" onclick="sendAIMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid" style="margin-top: 16px;">
+          <div class="dashboard-card">
+            <div class="card-title">🎯 Project Templates</div>
+            <div class="list-item" onclick="useTemplate('web')">
+              <div class="list-icon blue">🌐</div>
+              <div class="list-content">
+                <div class="list-title">Website Redesign</div>
+                <div class="list-meta">Complete website overhaul project</div>
+              </div>
+            </div>
+            <div class="list-item" onclick="useTemplate('app')">
+              <div class="list-icon green">📱</div>
+              <div class="list-content">
+                <div class="list-title">Mobile App Launch</div>
+                <div class="list-meta">iOS/Android app development</div>
+              </div>
+            </div>
+            <div class="list-item" onclick="useTemplate('marketing')">
+              <div class="list-icon amber">📢</div>
+              <div class="list-content">
+                <div class="list-title">Marketing Campaign</div>
+                <div class="list-meta">Product launch marketing</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="card-title">📝 AI Actions</div>
+            <button class="btn btn-ghost" style="width: 100%; margin-bottom: 8px;" onclick="aiAction('summarize')">📝
+              Summarize Tasks</button>
+            <button class="btn btn-ghost" style="width: 100%; margin-bottom: 8px;" onclick="aiAction('prioritize')">🎯
+              Prioritize Tasks</button>
+            <button class="btn btn-ghost" style="width: 100%; margin-bottom: 8px;" onclick="aiAction('timeline')">📅
+              Create Timeline</button>
+            <button class="btn btn-ghost" style="width: 100%;" onclick="aiAction('email')">📧 Draft Update
+              Email</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social Feed Page -->
+      <div class="page" id="socialPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">👥 Team Social Feed</h1>
+            <p class="page-sub">Collaborate and share with your team</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newPostModal')">+ New Post</button>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dashboard-col" style="flex: 2;">
+            <div id="socialFeed" class="social-feed">
+              <!-- Posts will be rendered here -->
+            </div>
+          </div>
+          <div class="dashboard-col" style="flex: 1;">
+            <div class="dashboard-card">
+              <div class="card-title">🔥 Trending</div>
+              <div id="trendingTopics"></div>
+            </div>
+            <div class="dashboard-card">
+              <div class="card-title">👥 Online Team</div>
+              <div id="onlineTeam"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Image Generation Page -->
+      <div class="page" id="imagesPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">🎨 AI Image Generation</h1>
+            <p class="page-sub">Create stunning images with AI (Pro Feature)</p>
+          </div>
+        </div>
+
+        <div class="dashboard-card" style="max-width: 800px;">
+          <div class="form-group">
+            <label class="form-label">Image Prompt</label>
+            <textarea class="form-textarea" id="imagePrompt" rows="3"
+              placeholder="Describe the image you want to create... (e.g., 'A modern minimalist logo for a tech startup, purple and blue gradient, geometric shapes')"></textarea>
+          </div>
+          <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+            <select class="form-select" id="imageProvider" style="width: 200px;">
+              <option value="cloudflare">☁️ Cloudflare AI</option>
+              <option value="huggingface">🤗 HuggingFace</option>
+            </select>
+            <select class="form-select" id="imageStyle" style="width: 150px;">
+              <option value="">Default Style</option>
+              <option value="photorealistic">📷 Photorealistic</option>
+              <option value="digital-art">🎨 Digital Art</option>
+              <option value="minimalist">◻️ Minimalist</option>
+              <option value="3d">🔲 3D Render</option>
+            </select>
+            <button class="btn btn-primary" onclick="generateImage()" id="generateImageBtn">✨ Generate Image</button>
+          </div>
+        </div>
+
+        <div class="dashboard-card" id="generatedImageCard" style="display: none;">
+          <div class="card-title">✨ Generated Image</div>
+          <div id="generatedImageContainer" style="text-align: center;">
+            <img id="generatedImage" style="max-width: 100%; border-radius: var(--r);" />
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 12px;">
+            <button class="btn btn-primary" onclick="downloadImage()">💾 Download</button>
+            <button class="btn btn-teal" onclick="shareImage()">🔗 Share to Feed</button>
+            <button class="btn btn-ghost" onclick="generateAgain()">🔄 Generate Again</button>
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="card-title">🖼️ Gallery</div>
+          <div class="gallery-grid" id="imageGallery">
+            <!-- Generated images will appear here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Other Pages (Projects, Tasks, etc.) -->
+      <div class="page" id="projectsPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Projects</h1>
+            <p class="page-sub">Manage all your projects</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newProjectModal')">+ New Project</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Budget</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="projectsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="page" id="tasksPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Tasks</h1>
+            <p class="page-sub">Track your tasks</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newTaskModal')">+ New Task</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assigned</th>
+                <th>Due</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tasksTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="page" id="meetingsPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Meetings</h1>
+            <p class="page-sub">Schedule and manage meetings</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newMeetingModal')">+ New Meeting</button>
+            <button class="btn btn-teal" onclick="startVideoMeeting()">📹 Start Video Meeting</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Duration</th>
+                <th>Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="meetingsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Video Meeting Room -->
+      <div class="page" id="videoMeetingPage" style="display:none;">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">📹 Video Meeting Room</h1>
+            <p class="page-sub">Join or start a video meeting</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-red" onclick="endVideoMeeting()">📴 End Meeting</button>
+            <button class="btn btn-ghost" onclick="navigateTo('meetings')">← Back to Meetings</button>
+          </div>
+        </div>
+        <div class="dashboard-grid" style="grid-template-columns: 1fr;">
+          <div class="dashboard-card">
+            <div
+              style="background: #000; border-radius: 12px; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; position: relative;">
+              <video id="localVideo" autoplay muted
+                style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"></video>
+              <div id="videoPlaceholder"
+                style="position: absolute; display: flex; flex-direction: column; align-items: center; gap: 12px; color: white;">
+                <div style="font-size: 4rem;">📹</div>
+                <div style="font-size: 1.2rem; font-weight: 600;">Click "Start Video Meeting" to begin</div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+              <button class="btn btn-primary" onclick="toggleMic()">🎙️ Mic</button>
+              <button class="btn btn-primary" onclick="toggleCam()">📷 Camera</button>
+              <button class="btn btn-primary" onclick="toggleScreenShare()">🖥️ Share Screen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="teamPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Team</h1>
+            <p class="page-sub">Manage team members</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newTeamModal')">+ New Member</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="teamTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Settings Page with Subscription -->
+      <div class="page" id="settingsPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Settings</h1>
+            <p class="page-sub">App configuration and subscription</p>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <div class="card-title">⚙️ General Settings</div>
+            <div class="form-group">
+              <label class="form-label">Daily Pomodoro Goal</label>
+              <input type="number" class="form-input" id="pomodoroGoal" value="4" min="1" max="16">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pomodoro Duration (minutes)</label>
+              <input type="number" class="form-input" id="pomodoroDuration" value="25" min="5" max="60">
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="card-title">💎 Subscription</div>
+            <div id="subscriptionStatus">
+              <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">🎁</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Free Trial Active</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;" id="trialStatusText">15
+                  days remaining</div>
+                <button class="btn"
+                  style="background: linear-gradient(135deg, var(--amber), var(--orange)); color: #000; width: 100%;"
+                  onclick="upgradeToPro()">
+                  🚀 Upgrade to Pro — $29/month
+                </button>
+                <div style="margin-top: 12px; font-size: 0.7rem; color: var(--text-muted);">
+                  ✓ Unlimited AI chat<br>
+                  ✓ AI Image generation<br>
+                  ✓ Advanced analytics<br>
+                  ✓ Priority support
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes Page -->
+      <div class="page" id="notesPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Notes</h1>
+            <p class="page-sub">Your personal notes and ideas</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newNoteModal')">+ New Note</button>
+          </div>
+        </div>
+        <div id="notesContainer" class="notes-container"></div>
+      </div>
+
+      <!-- Resources Page -->
+      <div class="page" id="resourcesPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Resources</h1>
+            <p class="page-sub">Manage project resources and assets</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newResourceModal')">+ New Resource</button>
+          </div>
+        </div>
+        <div id="resourcesContainer"></div>
+      </div>
+
+      <!-- Budget Page -->
+      <div class="page" id="budgetPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Budget</h1>
+            <p class="page-sub">Track project budgets and expenses</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newBudgetModal')">+ New Budget Item</button>
+          </div>
+        </div>
+        <div id="budgetContainer"></div>
+      </div>
+
+      <!-- Risks Page -->
+      <div class="page" id="risksPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Risks</h1>
+            <p class="page-sub">Identify and manage project risks</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openModal('newRiskModal')">+ New Risk</button>
+          </div>
+        </div>
+        <div id="risksContainer"></div>
+      </div>
+
+      <!-- Reports Page -->
+      <div class="page" id="reportsPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Reports</h1>
+            <p class="page-sub">Generate and view project reports</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+          </div>
+        </div>
+        <div id="reportsContainer"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       MODALS
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <!-- Upgrade Modal -->
+  <div class="modal-overlay" id="upgradeModal">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <div class="modal-title">🚀 Upgrade to PRO</div>
+        <button class="modal-close" onclick="closeModal('upgradeModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 3rem; margin-bottom: 12px;">💎</div>
+          <h2 style="font-family: 'Cabinet Grotesk'; font-size: 1.5rem; margin-bottom: 8px;">Unlock Full Power</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Get unlimited access to all AI features</p>
+        </div>
+
+        <div style="background: var(--surface); border-radius: var(--r); padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-weight: 600;">PRO Plan</span>
+            <span style="font-size: 1.5rem; font-weight: 800; color: var(--amber);">$29<span
+                style="font-size: 0.7rem; color: var(--text-muted);">/mo</span></span>
+          </div>
+          <ul style="list-style: none; font-size: 0.85rem; color: var(--text-dim);">
+            <li style="margin-bottom: 6px;">✓ Unlimited AI Assistant (Groq, Gemini, Mistral)</li>
+            <li style="margin-bottom: 6px;">✓ AI Image Generation</li>
+            <li style="margin-bottom: 6px;">✓ Advanced Project Analytics</li>
+            <li style="margin-bottom: 6px;">✓ Team Collaboration Features</li>
+            <li style="margin-bottom: 6px;">✓ Priority Support</li>
+            <li>✓ No limits on projects, tasks, or storage</li>
+          </ul>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary" style="flex: 1;" onclick="upgradeToPro()">
+            💳 Upgrade Now — $29/month
+          </button>
+        </div>
+        <div style="text-align: center; margin-top: 12px; font-size: 0.7rem; color: var(--text-muted);">
+          🔒 Secure payment via LemonSqueezy. Cancel anytime.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pomodoro Modal -->
+  <div class="modal-overlay" id="pomodoroModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <div class="modal-title">🍅 Pomodoro Timer</div>
+        <button class="modal-close" onclick="closeModal('pomodoroModal')">✕</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <div
+          style="font-size: 4rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--accent); margin: 20px 0;"
+          id="pomodoroTimer">25:00</div>
+        <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 16px;">
+          <button class="btn btn-primary" id="pomoStartBtn" onclick="startPomodoro()">Start</button>
+          <button class="btn btn-ghost" onclick="pausePomodoro()">Pause</button>
+          <button class="btn btn-red" onclick="resetPomodoro()">Reset</button>
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label">Link to Task (Optional)</label>
+          <select class="form-select" id="pomoTaskSelect">
+            <option value="">— Select task —</option>
+          </select>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px;">
+          <span id="pomoSessionCount">0</span> pomodoros completed today
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Post Modal -->
+  <div class="modal-overlay" id="newPostModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📝 New Post</div>
+        <button class="modal-close" onclick="closeModal('newPostModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <textarea class="form-textarea" id="postContent" rows="4"
+            placeholder="What's on your mind? Share with your team..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Attach Image (Optional)</label>
+          <input type="file" class="form-input" id="postImage" accept="image/*">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newPostModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="createPost()">Post</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other Modals (Task, Meeting, etc.) -->
+  <div class="modal-overlay" id="newTaskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">New Task</div>
+        <button class="modal-close" onclick="closeModal('newTaskModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Task Title</label>
+          <input type="text" class="form-input" id="taskTitle" placeholder="Task name...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="taskDesc" rows="2" placeholder="Description..."></textarea>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select class="form-select" id="taskPriority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="taskStatus">
+              <option value="todo">To Do</option>
+              <option value="inprogress">In Progress</option>
+              <option value="review">Review</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assigned To</label>
+          <select class="form-select" id="taskAssignee"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input type="date" class="form-input" id="taskDueDate">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newTaskModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTask()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="newMeetingModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">New Meeting</div>
+        <button class="modal-close" onclick="closeModal('newMeetingModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Meeting Title</label>
+          <input type="text" class="form-input" id="meetingTitle" placeholder="Meeting name...">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="meetingDate">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time</label>
+            <input type="time" class="form-input" id="meetingTime">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newMeetingModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveMeeting()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="newProjectModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">New Project</div>
+        <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Project Name</label>
+          <input type="text" class="form-input" id="projectTitle" placeholder="Project name...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="projectDesc" rows="2" placeholder="Description..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="projectStatus">
+            <option value="planning">Planning</option>
+            <option value="active" selected>Active</option>
+            <option value="onhold">On Hold</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newProjectModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProject()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="newTeamModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">New Team Member</div>
+        <button class="modal-close" onclick="closeModal('newTeamModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" id="teamName" placeholder="Name...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <input type="text" class="form-input" id="teamRole" placeholder="e.g., Developer, Designer...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department</label>
+          <select class="form-select" id="teamDept">
+            <option value="Software">Software</option>
+            <option value="Design">Design</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Sales">Sales</option>
+            <option value="HR">HR</option>
+            <option value="Finance">Finance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="teamEmail" placeholder="email@company.com">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newTeamModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTeamMember()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Note Modal -->
+  <div class="modal-overlay" id="newNoteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📝 New Note</div>
+        <button class="modal-close" onclick="closeModal('newNoteModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" class="form-input" id="noteTitle" placeholder="Note title...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Content</label>
+          <textarea class="form-textarea" id="noteContent" rows="6" placeholder="Write your note..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags (comma separated)</label>
+          <input type="text" class="form-input" id="noteTags" placeholder="e.g., important, ideas, meeting">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newNoteModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveNote()">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Resource Modal -->
+  <div class="modal-overlay" id="newResourceModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">⚡ New Resource</div>
+        <button class="modal-close" onclick="closeModal('newResourceModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Resource Name</label>
+          <input type="text" class="form-input" id="resourceName" placeholder="Resource name...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-select" id="resourceType">
+            <option value="document">📄 Document</option>
+            <option value="link">🔗 Link</option>
+            <option value="tool">🛠️ Tool</option>
+            <option value="asset">🎨 Asset</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL / Path</label>
+          <input type="text" class="form-input" id="resourceUrl" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="resourceDesc" rows="3" placeholder="Brief description..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newResourceModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveResource()">Save Resource</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Budget Modal -->
+  <div class="modal-overlay" id="newBudgetModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">💰 New Budget Item</div>
+        <button class="modal-close" onclick="closeModal('newBudgetModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Item Name</label>
+          <input type="text" class="form-input" id="budgetItem" placeholder="Budget item name...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="budgetCategory">
+            <option value="personnel">👥 Personnel</option>
+            <option value="software">💻 Software</option>
+            <option value="hardware">🖥️ Hardware</option>
+            <option value="marketing">📢 Marketing</option>
+            <option value="other">📦 Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount ($)</label>
+          <input type="number" class="form-input" id="budgetAmount" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Spent ($)</label>
+          <input type="number" class="form-input" id="budgetSpent" placeholder="0.00" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newBudgetModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBudget()">Save Budget</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Risk Modal -->
+  <div class="modal-overlay" id="newRiskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">⚠️ New Risk</div>
+        <button class="modal-close" onclick="closeModal('newRiskModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Risk Name</label>
+          <input type="text" class="form-input" id="riskName" placeholder="Risk name...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="riskCategory">
+            <option value="technical">🔧 Technical</option>
+            <option value="financial">💰 Financial</option>
+            <option value="schedule">📅 Schedule</option>
+            <option value="resource">👥 Resource</option>
+            <option value="other">📦 Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Severity</label>
+          <select class="form-select" id="riskSeverity">
+            <option value="low">🟢 Low</option>
+            <option value="medium">🟡 Medium</option>
+            <option value="high">🔴 High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Probability (%)</label>
+          <input type="number" class="form-input" id="riskProbability" placeholder="0-100" min="0" max="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mitigation Plan</label>
+          <textarea class="form-textarea" id="riskMitigation" rows="3"
+            placeholder="How to mitigate this risk..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newRiskModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveRisk()">Save Risk</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // APP STATE
+    // ═══════════════════════════════════════════════════════════════
+    const AppState = {
+      currentUser: null,
+      currentPage: 'dashboard',
+      users: [],
+      projects: [],
+      tasks: [],
+      meetings: [],
+      notes: [],
+      team: [],
+      posts: [],
+      images: [],
+      activity: [],
+      resources: [],
+      budget: [],
+      risks: [],
+      pomodoro: {
+        timeRemaining: 25 * 60,
+        isRunning: false,
+        isPaused: false,
+        sessionsToday: 0,
+        sessionsWeek: 0,
+        sessionsTotal: 0,
+        goal: 4
+      },
+      subscription: {
+        plan: 'trial', // 'trial', 'free', 'pro'
+        trialStart: Date.now(),
+        trialDays: 15,
+        proExpiry: null
+      },
+      settings: {
+        pomodoroGoal: 4,
+        pomodoroDuration: 25,
+        breakDuration: 5,
+        aiProvider: 'groq'
+      }
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // UTILITY FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+    const gid = (id) => document.getElementById(id);
+    const genId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+    const todayStr = () => new Date().toISOString().slice(0, 10);
+    const esc = (str) => String(str || '').replace(/[<>&"']/g, (m) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', '\'': '&#39;' }[m]));
+    const fmtDate = (ts) => new Date(ts).toLocaleDateString('en-US');
+
+    function save() {
+      localStorage.setItem('projex_data', JSON.stringify(AppState));
+    }
+
+    function load() {
+      const data = JSON.parse(localStorage.getItem('projex_data') || '{}');
+      Object.assign(AppState, data);
+      if (!AppState.users) AppState.users = [];
+      if (!AppState.projects) AppState.projects = [];
+      if (!AppState.tasks) AppState.tasks = [];
+      if (!AppState.meetings) AppState.meetings = [];
+      if (!AppState.team) AppState.team = [];
+      if (!AppState.posts) AppState.posts = [];
+      if (!AppState.images) AppState.images = [];
+      if (!AppState.activity) AppState.activity = [];
+      if (!AppState.notes) AppState.notes = [];
+      if (!AppState.resources) AppState.resources = [];
+      if (!AppState.budget) AppState.budget = [];
+      if (!AppState.risks) AppState.risks = [];
+      if (!AppState.subscription) AppState.subscription = { plan: 'trial', trialStart: Date.now(), trialDays: 15 };
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TOAST NOTIFICATIONS
+    // ═══════════════════════════════════════════════════════════════
+    function toast(message, type = 'info', title = '') {
+      const container = gid('toastContainer');
+      const toastEl = document.createElement('div');
+      toastEl.className = `toast ${type}`;
+      const icons = { success: '✅', error: '❌', warn: '⚠️', info: 'ℹ️' };
+      toastEl.innerHTML = `
+        <span class="toast-icon">${icons[type]}</span>
+        <div class="toast-content">
+          <div class="toast-title">${title || type.charAt(0).toUpperCase() + type.slice(1)}</div>
+          <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+      `;
+      container.appendChild(toastEl);
+      setTimeout(() => toastEl.remove(), 5000);
+    }
+
+    function addActivity(text, icon = '📝') {
+      AppState.activity.unshift({ text, icon, time: Date.now() });
+      if (AppState.activity.length > 50) AppState.activity.pop();
+      save();
+      renderActivity();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TRIAL & SUBSCRIPTION
+    // ═══════════════════════════════════════════════════════════════
+    function getTrialDaysRemaining() {
+      const elapsed = Math.floor((Date.now() - AppState.subscription.trialStart) / (1000 * 60 * 60 * 24));
+      return Math.max(0, AppState.subscription.trialDays - elapsed);
+    }
+
+    function isPro() {
+      // Only return true for actual PRO subscription
+      // Trial users have separate access control
+      return AppState.subscription.plan === 'pro';
+    }
+
+    function isTrialActive() {
+      return AppState.subscription.plan === 'trial' && getTrialDaysRemaining() > 0;
+    }
+
+    function hasFeatureAccess() {
+      // Return true if user has PRO subscription OR active trial
+      // This is used to check if user can access PRO features
+      return AppState.subscription.plan === 'pro' || isTrialActive();
+    }
+
+    function updateTrialDisplay() {
+      const days = getTrialDaysRemaining();
+      const trialText = days > 0 ? `${days} days remaining` : 'Trial expired - Upgrade required';
+
+      gid('trialText').textContent = trialText;
+      gid('trialDays').textContent = `${days} days`;
+      gid('trialStatusText').textContent = trialText;
+
+      if (days === 0 && AppState.subscription.plan !== 'pro') {
+        // Trial expired - show upgrade prompt
+        gid('topTrialBanner').style.display = 'flex';
+        gid('trialBanner').style.display = 'block';
+        gid('sidebarUserPlan').textContent = 'FREE';
+        gid('sidebarUserPlan').style.color = 'var(--text-muted)';
+      } else if (AppState.subscription.plan === 'pro') {
+        // PRO user
+        gid('topTrialBanner').style.display = 'none';
+        gid('trialBanner').style.display = 'none';
+        gid('sidebarUserPlan').textContent = 'PRO';
+        gid('sidebarUserPlan').style.color = 'var(--amber)';
+      } else {
+        // Trial active
+        gid('topTrialBanner').style.display = 'flex';
+        gid('trialBanner').style.display = 'block';
+        gid('sidebarUserPlan').textContent = 'Free Trial';
+        gid('sidebarUserPlan').style.color = 'var(--teal)';
+      }
+    }
+
+    function dismissTrialBanner() {
+      gid('topTrialBanner').style.display = 'none';
+    }
+
+    function upgradeToPro() {
+      // Redirect directly to LemonSqueezy checkout
+      const checkoutUrl = 'https://projeai.lemonsqueezy.com/checkout/buy/d76a4195-8d56-4ec1-888b-618528a19aac';
+
+      // Get current URL for redirect back after payment
+      const currentUrl = window.location.origin + window.location.pathname;
+
+      // Pass user ID and redirect URL as URL parameters
+      const userId = AppState.currentUser?.id || AppState.users[0]?.id || 'guest';
+      const urlWithParams = `${checkoutUrl}?checkout[custom][user_id]=${userId}&checkout[redirect_url]=${encodeURIComponent(currentUrl + '?success=true')}`;
+
+      window.location.href = urlWithParams;
+    }
+
+    async function processUpgrade() {
+      // This function is now used for demo/testing purposes only
+      // Real payments go through LemonSqueezy checkout via upgradeToPro()
+      AppState.subscription.plan = 'pro';
+      AppState.subscription.proExpiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
+      save();
+      closeModal('upgradeModal');
+      toast('Upgraded to PRO! (Demo Mode)', 'success');
+      updateTrialDisplay();
+    }
+
+    // Check for successful payment on page load
+    function checkPaymentSuccess() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentSuccess = urlParams.get('success');
+      const userId = urlParams.get('user_id');
+
+      if (paymentSuccess === 'true') {
+        // Payment successful - activate PRO
+        AppState.subscription.plan = 'pro';
+        AppState.subscription.proExpiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
+        save();
+        toast('Payment successful! PRO features unlocked! 🎉', 'success');
+        updateTrialDisplay();
+
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    function checkProFeature() {
+      if (!hasFeatureAccess()) {
+        const days = getTrialDaysRemaining();
+        if (days === 0) {
+          toast('Your 15-day free trial has expired. Upgrade to PRO to continue using this feature!', 'warn');
+        } else {
+          toast('This feature requires PRO plan. Upgrade to unlock!', 'warn');
+        }
+        upgradeToPro();
+        return false;
+      }
+      return true;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // AUTH
+    // ═══════════════════════════════════════════════════════════════
+    let authTab = 'login';
+    let loading = false;
+    let editingTaskId = null;
+
+    function switchTab(newTab) {
+      authTab = newTab;
+      gid('loginTabBtn').classList.toggle('active', authTab === 'login');
+      gid('registerTabBtn').classList.toggle('active', authTab === 'register');
+      clearMsg();
+      renderAuthForm();
+    }
+
+    function showMsg(txt, type) {
+      gid('msg-area').innerHTML = `<div class="msg-box msg-${type}">${txt}</div>`;
+    }
+
+    function clearMsg() { gid('msg-area').innerHTML = ''; }
+
+    function renderAuthForm() {
+      const area = gid('form-area');
+      if (authTab === 'login') {
+        area.innerHTML = `
+          <div class="tab-panel">
+            <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
+            <div class="fg"><label class="flabel">Password</label><input class="finput" id="pw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+            <div class="forgot-row"><button class="forgot-btn" onclick="showForgotPassword()">Şifreyi unuttun mu?</button></div>
+            <button class="submit-btn" id="sub-btn" onclick="handleLogin()">Sign In</button>
+          </div>
+        `;
+      } else if (authTab === 'register') {
+        area.innerHTML = `
+          <div class="tab-panel">
+            <div class="fg"><label class="flabel">Full Name</label><input class="finput" id="fn" type="text" placeholder="Your name" autocomplete="name"></div>
+            <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
+            <div class="fg">
+              <label class="flabel">Password</label>
+              <input class="finput" id="pw-field" type="password" placeholder="min. 6 characters" oninput="updateStrength()" autocomplete="new-password">
+              <div class="pw-strength" id="pw-bar" style="width:0%;background:#ef4444"></div>
+              <div class="pw-label" id="pw-lbl"></div>
+            </div>
+            <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="pw2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+            <button class="submit-btn" id="sub-btn" onclick="handleRegister()">Create Account</button>
+          </div>
+        `;
+      } else if (authTab === 'forgot') {
+        area.innerHTML = `
+          <div class="tab-panel">
+            <div class="fg"><label class="flabel">Email</label><input class="finput" id="resetEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+            <button class="submit-btn" id="sub-btn" onclick="handleForgot()">Kod Gönder</button>
+            <div class="back-link"><button class="forgot-btn" onclick="switchTab('login')">← Girişe Dön</button></div>
+          </div>
+        `;
+      } else if (authTab === 'verify') {
+        area.innerHTML = `
+          <div class="tab-panel">
+            <div class="fg"><label class="flabel">Doğrulama Kodu</label><input class="finput" id="verifyCode" type="text" placeholder="6 haneli kod girin" maxlength="6" style="letter-spacing: 4px; font-size: 1.2rem; text-align: center;"></div>
+            <button class="submit-btn" id="sub-btn" onclick="handleVerify()">Kodu Doğrula</button>
+            <div class="back-link"><button class="forgot-btn" onclick="switchTab('forgot')">← Geri</button></div>
+          </div>
+        `;
+      } else if (authTab === 'reset') {
+        area.innerHTML = `
+          <div class="tab-panel">
+            <div class="fg"><label class="flabel">Yeni Şifre</label><input class="finput" id="newPw" type="password" placeholder="min. 6 karakter" autocomplete="new-password"></div>
+            <div class="fg"><label class="flabel">Yeni Şifre Onayla</label><input class="finput" id="confirmNewPw" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+            <button class="submit-btn" id="sub-btn" onclick="handleReset()">Şifreyi Değiştir</button>
+            <div class="back-link"><button class="forgot-btn" onclick="switchTab('login')">← Girişe Dön</button></div>
+          </div>
+        `;
+      }
+    }
+
+    function showForgotPassword() {
+      authTab = 'forgot';
+      gid('loginTabBtn').classList.remove('active');
+      gid('registerTabBtn').classList.remove('active');
+      clearMsg();
+      renderAuthForm();
+    }
+
+    function updateStrength() {
+      const pw = gid('pw-field')?.value || '';
+      const s = Math.min(Math.floor(pw.length / 3), 5);
+      const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#7c6aff'];
+      const bar = gid('pw-bar');
+      const lbl = gid('pw-lbl');
+      if (bar) { bar.style.width = (s * 20) + '%'; bar.style.background = colors[s]; }
+      if (lbl) { lbl.textContent = pw.length ? ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'][s] : ''; }
+    }
+
+    function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+    function setLoading(on) {
+      loading = on;
+      const btn = gid('sub-btn');
+      if (!btn) return;
+      btn.disabled = on;
+      const buttonText = {
+        'login': 'Sign In',
+        'register': 'Create Account',
+        'forgot': 'Send Reset Code',
+        'verify': 'Verify Code',
+        'reset': 'Reset Password'
+      };
+      btn.innerHTML = on ? `<span class="spinner"></span> Processing...` : buttonText[authTab];
+    }
+
+    function handleLogin() {
+      clearMsg();
+      const email = gid('em')?.value.trim();
+      const pw = gid('pw')?.value;
+      if (!email || !pw) { showMsg('Please fill in all fields', 'error'); return; }
+      if (!validateEmail(email)) { showMsg('Invalid email address', 'error'); return; }
+
+      setLoading(true);
+      setTimeout(() => {
+        const user = AppState.users.find(u => u.email === email.toLowerCase() && u.password === btoa(pw));
+        if (!user) { showMsg('Invalid email or password', 'error'); setLoading(false); return; }
+
+        AppState.currentUser = user;
+        showMsg('Login successful! Redirecting...', 'success');
+        setLoading(false);
+
+        setTimeout(() => enterApp(user), 800);
+      }, 900);
+    }
+
+    function handleRegister() {
+      clearMsg();
+      const fullName = gid('fn')?.value.trim();
+      const email = gid('em')?.value.trim();
+      const pw = gid('pw-field')?.value;
+      const pw2 = gid('pw2')?.value;
+
+      if (!fullName || !email || !pw || !pw2) { showMsg('Please fill in all fields', 'error'); return; }
+      if (!validateEmail(email)) { showMsg('Invalid email address', 'error'); return; }
+      if (pw.length < 6) { showMsg('Password must be at least 6 characters', 'error'); return; }
+      if (pw !== pw2) { showMsg('Passwords do not match', 'error'); return; }
+      if (AppState.users.find(u => u.email === email.toLowerCase())) { showMsg('This email is already registered', 'error'); return; }
+
+      setLoading(true);
+      setTimeout(() => {
+        const newUser = {
+          id: genId(),
+          fullName,
+          email: email.toLowerCase(),
+          password: btoa(pw),
+          createdAt: Date.now(),
+          plan: 'trial',
+          trialEnd: Date.now() + 15 * 24 * 60 * 60 * 1000
+        };
+        AppState.users.push(newUser);
+        AppState.subscription.trialStart = Date.now();
+        save();
+        showMsg('Account created! Your 15-day trial starts now.', 'success');
+        setLoading(false);
+
+        setTimeout(() => switchTab('login'), 1200);
+      }, 1000);
+    }
+
+    function handleForgot() {
+      clearMsg();
+      const email = gid('resetEmail')?.value.trim();
+      if (!email || !validateEmail(email)) { showMsg('Enter your email to reset password', 'error'); return; }
+
+      const user = AppState.users.find(u => u.email === email.toLowerCase());
+      if (!user) { showMsg('No account found with this email', 'error'); return; }
+
+      setLoading(true);
+      setTimeout(() => {
+        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+        AppState.resetCode = resetCode;
+        AppState.resetEmail = email.toLowerCase();
+        AppState.resetCodeExpiry = Date.now() + 10 * 60 * 1000;
+        save();
+
+        showMsg(`Doğrulama kodu ${email} adresine gönderildi.`, 'success');
+        setLoading(false);
+
+        setTimeout(() => switchTab('verify'), 1500);
+      }, 1000);
+    }
+
+    function handleVerify() {
+      clearMsg();
+      const code = gid('verifyCode')?.value.trim();
+      if (!code || code.length !== 6) { showMsg('Enter the 6-digit code', 'error'); return; }
+
+      if (Date.now() > AppState.resetCodeExpiry) {
+        showMsg('Code has expired. Please request a new code.', 'error');
+        setTimeout(() => switchTab('forgot'), 1500);
+        return;
+      }
+
+      if (code !== AppState.resetCode) {
+        showMsg('Invalid code. Please try again.', 'error');
+        return;
+      }
+
+      showMsg('Code verified successfully!', 'success');
+      setTimeout(() => switchTab('reset'), 1000);
+    }
+
+    function handleReset() {
+      clearMsg();
+      const newPw = gid('newPw')?.value;
+      const confirmPw = gid('confirmNewPw')?.value;
+
+      if (!newPw || newPw.length < 6) { showMsg('Password must be at least 6 characters', 'error'); return; }
+      if (newPw !== confirmPw) { showMsg('Passwords do not match', 'error'); return; }
+
+      setLoading(true);
+      setTimeout(() => {
+        const userIndex = AppState.users.findIndex(u => u.email === AppState.resetEmail);
+        if (userIndex === -1) {
+          showMsg('User not found. Please try again.', 'error');
+          setLoading(false);
+          return;
+        }
+
+        AppState.users[userIndex].password = btoa(newPw);
+        AppState.resetCode = null;
+        AppState.resetEmail = null;
+        AppState.resetCodeExpiry = null;
+        save();
+
+        showMsg('Password reset successfully! Please login.', 'success');
+        setLoading(false);
+
+        setTimeout(() => switchTab('login'), 1500);
+      }, 1000);
+    }
+
+    function enterApp(user) {
+      gid('authView').classList.remove('active');
+      gid('appView').classList.add('active');
+
+      gid('userAvatar').textContent = user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+      gid('sidebarUserName').textContent = user.fullName;
+
+      updateTrialDisplay();
+      initSampleData();
+      renderAll();
+
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      toast(`Welcome back, ${user.fullName}! 👋`, 'success');
+    }
+
+    function logout() {
+      AppState.currentUser = null;
+      gid('appView').classList.remove('active');
+      gid('authView').classList.add('active');
+      switchTab('login');
+      toast('Logged out successfully', 'info');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // NAVIGATION
+    // ═══════════════════════════════════════════════════════════════
+    function navigateTo(page) {
+      // Check PRO features - allow trial users access
+      if ((page === 'ai' || page === 'images') && !hasFeatureAccess()) {
+        toast('AI features require PRO plan. Upgrade now! 🚀', 'warn');
+        upgradeToPro();
+        return;
+      }
+
+      AppState.currentPage = page;
+
+      // Update nav items
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.page === page);
+      });
+
+      // Hide all pages
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+
+      // Show target page
+      if (page === 'videoMeeting') {
+        gid('videoMeetingPage').style.display = 'block';
+      } else {
+        const targetPage = gid(page + 'Page');
+        if (targetPage) {
+          targetPage.classList.add('active');
+          targetPage.style.display = 'block';
+        }
+      }
+
+      renderPage(page);
+    }
+
+    function renderPage(page) {
+      switch (page) {
+        case 'dashboard': renderDashboard(); break;
+        case 'projects': renderProjects(); break;
+        case 'tasks': renderTasks(); break;
+        case 'meetings': renderMeetings(); break;
+        case 'videoMeeting': renderVideoMeeting(); break;
+        case 'team': renderTeam(); break;
+        case 'social': renderSocialFeed(); break;
+        case 'images': renderImageGallery(); break;
+        case 'ai': renderAIChat(); break;
+        case 'notes': renderNotes(); break;
+        case 'resources': renderResources(); break;
+        case 'budget': renderBudget(); break;
+        case 'risks': renderRisks(); break;
+        case 'reports': renderReports(); break;
+        case 'settings': renderSettings(); break;
+      }
+    }
+
+    function renderAIChat() {
+      // AI Chat page is already rendered via HTML, just update UI if needed
+      gid('aiChatMessages').scrollTop = gid('aiChatMessages').scrollHeight;
+    }
+
+    function renderNotes() {
+      const page = gid('notesPage');
+      if (page) {
+        const notes = AppState.notes || [];
+        const tags = [...new Set(notes.flatMap(n => n.tags || []))];
+
+        page.innerHTML = `
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">📝 Notes</h1>
+              <p class="page-sub">Create and manage your notes</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" onclick="openModal('newNoteModal')">+ New Note</button>
+            </div>
+          </div>
+
+          <!-- Note Stats -->
+          <div class="dashboard-grid" style="margin-bottom: 24px;">
+            <div class="dashboard-card">
+              <div class="stat-value">${notes.length}</div>
+              <div class="stat-label">Total Notes</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${tags.length}</div>
+              <div class="stat-label">Tags</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${notes.filter(n => n.content && n.content.length > 200).length}</div>
+              <div class="stat-label">Detailed</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${notes.filter(n => n.tags?.length).length}</div>
+              <div class="stat-label">Tagged</div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <input type="text" class="form-input" id="noteSearch" placeholder="Search notes..." style="flex: 1;" onkeyup="filterNotes()">
+            <select class="form-select" id="noteTagFilter" onchange="filterNotes()" style="width: 200px;">
+              <option value="">All Tags</option>
+              ${tags.map(tag => `<option value="${tag}">${tag}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Note Grid -->
+          <div id="notesContainer" class="notes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+            ${notes.map(n => `
+              <div class="dashboard-card note-card" onclick="editNote('${n.id}')" style="cursor: pointer; transition: transform 0.2s;">
+                <div class="note-title">${esc(n.title)}</div>
+                <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
+                <div class="note-meta" style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="note-date" style="font-size: 0.75rem; color: var(--text-muted);">${fmtDate(n.createdAt)}</span>
+                  ${n.tags?.length ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag" style="background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${esc(t)}</span>`).join('')}</div>` : ''}
+                </div>
+              </div>
+            `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">📝</div><div class="empty-state-title">No notes yet</div></div>'}
+          </div>
+        `;
+
+        window.currentNotes = notes;
+      }
+    }
+
+    function filterNotes() {
+      const search = gid('noteSearch').value.toLowerCase();
+      const tag = gid('noteTagFilter').value;
+      const notes = window.currentNotes || [];
+
+      const filtered = notes.filter(n => {
+        const matchesSearch = n.title.toLowerCase().includes(search) ||
+          (n.content && n.content.toLowerCase().includes(search));
+        const matchesTag = !tag || (n.tags && n.tags.includes(tag));
+        return matchesSearch && matchesTag;
+      });
+
+      const container = gid('notesContainer');
+      container.innerHTML = filtered.map(n => `
+        <div class="dashboard-card note-card" onclick="editNote('${n.id}')" style="cursor: pointer;">
+          <div class="note-title">${esc(n.title)}</div>
+          <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
+          <div class="note-meta" style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="note-date" style="font-size: 0.75rem; color: var(--text-muted);">${fmtDate(n.createdAt)}</span>
+            ${n.tags?.length ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag" style="background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${esc(t)}</span>`).join('')}</div>` : ''}
+          </div>
+        </div>
+      `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">📝</div><div class="empty-state-title">No notes found</div></div>';
+    }
+
+    function editNote(id) {
+      const note = AppState.notes.find(n => n.id === id);
+      if (note) {
+        gid('noteTitle').value = note.title;
+        gid('noteContent').value = note.content || '';
+        gid('noteTags').value = (note.tags || []).join(', ');
+        window.editingNoteId = id;
+        openModal('newNoteModal');
+      }
+    }
+
+    function renderResources() {
+      const page = gid('resourcesPage');
+      if (page) {
+        const resources = AppState.resources || [];
+        const categories = [...new Set(resources.map(r => r.type))];
+
+        page.innerHTML = `
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">⚡ Resources</h1>
+              <p class="page-sub">Manage team resources and allocations</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" onclick="openModal('newResourceModal')">+ Add Resource</button>
+            </div>
+          </div>
+
+          <!-- Resource Stats -->
+          <div class="dashboard-grid" style="margin-bottom: 24px;">
+            <div class="dashboard-card">
+              <div class="stat-value">${resources.length}</div>
+              <div class="stat-label">Total Resources</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${categories.length}</div>
+              <div class="stat-label">Categories</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${resources.filter(r => r.type === 'Document').length}</div>
+              <div class="stat-label">Documents</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${resources.filter(r => r.type === 'Tool').length}</div>
+              <div class="stat-label">Tools</div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <input type="text" class="form-input" id="resourceSearch" placeholder="Search resources..." style="flex: 1;" onkeyup="filterResources()">
+            <select class="form-select" id="resourceCategoryFilter" onchange="filterResources()" style="width: 200px;">
+              <option value="">All Categories</option>
+              ${categories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Resource List -->
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>URL</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="resourcesTable">
+                ${resources.map(r => `
+                  <tr>
+                    <td><strong>${esc(r.name)}</strong></td>
+                    <td><span class="badge badge-${r.type.toLowerCase()}">${esc(r.type)}</span></td>
+                    <td>${esc(r.description || '-')}</td>
+                    <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" style="color: var(--teal);">🔗 Link</a>` : '-'}</td>
+                    <td>
+                      <button class="btn btn-sm btn-ghost" onclick="editResource('${r.id}')">✏️</button>
+                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('resources', '${r.id}')">🗑️</button>
+                    </td>
+                  </tr>
+                `).join('') || '<tr><td colspan="5" class="empty-state">No resources yet</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        // Store resources for filtering
+        window.currentResources = resources;
+      }
+    }
+
+    function filterResources() {
+      const search = gid('resourceSearch').value.toLowerCase();
+      const category = gid('resourceCategoryFilter').value;
+      const resources = window.currentResources || [];
+
+      const filtered = resources.filter(r => {
+        const matchesSearch = r.name.toLowerCase().includes(search) ||
+          (r.description && r.description.toLowerCase().includes(search));
+        const matchesCategory = !category || r.type === category;
+        return matchesSearch && matchesCategory;
+      });
+
+      const tbody = gid('resourcesTable');
+      tbody.innerHTML = filtered.map(r => `
+        <tr>
+          <td><strong>${esc(r.name)}</strong></td>
+          <td><span class="badge badge-${r.type.toLowerCase()}">${esc(r.type)}</span></td>
+          <td>${esc(r.description || '-')}</td>
+          <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" style="color: var(--teal);">🔗 Link</a>` : '-'}</td>
+          <td>
+            <button class="btn btn-sm btn-ghost" onclick="editResource('${r.id}')">✏️</button>
+            <button class="btn btn-sm btn-ghost" onclick="deleteItem('resources', '${r.id}')">🗑️</button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="5" class="empty-state">No resources found</td></tr>';
+    }
+
+    function editResource(id) {
+      const resource = AppState.resources.find(r => r.id === id);
+      if (resource) {
+        gid('resourceName').value = resource.name;
+        gid('resourceType').value = resource.type;
+        gid('resourceUrl').value = resource.url || '';
+        gid('resourceDesc').value = resource.description || '';
+        window.editingResourceId = id;
+        openModal('newResourceModal');
+      }
+    }
+
+    function renderBudget() {
+      const page = gid('budgetPage');
+      if (page) {
+        const budget = AppState.budget || [];
+        const totalBudget = budget.reduce((sum, b) => sum + (b.amount || 0), 0);
+        const totalSpent = budget.reduce((sum, b) => sum + (b.spent || 0), 0);
+        const categories = [...new Set(budget.map(b => b.category))];
+
+        page.innerHTML = `
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">💰 Budget</h1>
+              <p class="page-sub">Track project budgets and expenses</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" onclick="openModal('newBudgetModal')">+ Add Budget</button>
+            </div>
+          </div>
+
+          <!-- Budget Stats -->
+          <div class="dashboard-grid" style="margin-bottom: 24px;">
+            <div class="dashboard-card">
+              <div class="stat-value">$${totalBudget.toLocaleString()}</div>
+              <div class="stat-label">Total Budget</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">$${totalSpent.toLocaleString()}</div>
+              <div class="stat-label">Total Spent</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">$${(totalBudget - totalSpent).toLocaleString()}</div>
+              <div class="stat-label">Remaining</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${categories.length}</div>
+              <div class="stat-label">Categories</div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <input type="text" class="form-input" id="budgetSearch" placeholder="Search budget items..." style="flex: 1;" onkeyup="filterBudget()">
+            <select class="form-select" id="budgetCategoryFilter" onchange="filterBudget()" style="width: 200px;">
+              <option value="">All Categories</option>
+              ${categories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Budget List -->
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Budget</th>
+                  <th>Spent</th>
+                  <th>Progress</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="budgetTable">
+                ${budget.map(b => {
+          const progress = b.amount > 0 ? Math.min(100, (b.spent / b.amount) * 100) : 0;
+          return `
+                  <tr>
+                    <td><strong>${esc(b.item)}</strong></td>
+                    <td><span class="badge badge-${b.category?.toLowerCase() || 'default'}">${esc(b.category || 'General')}</span></td>
+                    <td>$${(b.amount || 0).toLocaleString()}</td>
+                    <td>$${(b.spent || 0).toLocaleString()}</td>
+                    <td>
+                      <div style="width: 100px; height: 8px; background: var(--surface); border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${progress}%; height: 100%; background: ${progress > 80 ? 'var(--red)' : progress > 50 ? 'var(--amber)' : 'var(--teal)'}; border-radius: 4px;"></div>
+                      </div>
+                      <span style="font-size: 0.7rem; color: var(--text-muted);">${progress.toFixed(0)}%</span>
+                    </td>
+                    <td>
+                      <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')">✏️</button>
+                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')">🗑️</button>
+                    </td>
+                  </tr>
+                `}).join('') || '<tr><td colspan="6" class="empty-state">No budget items yet</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        window.currentBudget = budget;
+      }
+    }
+
+    function filterBudget() {
+      const search = gid('budgetSearch').value.toLowerCase();
+      const category = gid('budgetCategoryFilter').value;
+      const budget = window.currentBudget || [];
+
+      const filtered = budget.filter(b => {
+        const matchesSearch = b.item.toLowerCase().includes(search);
+        const matchesCategory = !category || b.category === category;
+        return matchesSearch && matchesCategory;
+      });
+
+      const tbody = gid('budgetTable');
+      tbody.innerHTML = filtered.map(b => {
+        const progress = b.amount > 0 ? Math.min(100, (b.spent / b.amount) * 100) : 0;
+        return `
+          <tr>
+            <td><strong>${esc(b.item)}</strong></td>
+            <td><span class="badge badge-${b.category?.toLowerCase() || 'default'}">${esc(b.category || 'General')}</span></td>
+            <td>$${(b.amount || 0).toLocaleString()}</td>
+            <td>$${(b.spent || 0).toLocaleString()}</td>
+            <td>
+              <div style="width: 100px; height: 8px; background: var(--surface); border-radius: 4px; overflow: hidden;">
+                <div style="width: ${progress}%; height: 100%; background: ${progress > 80 ? 'var(--red)' : progress > 50 ? 'var(--amber)' : 'var(--teal)'}; border-radius: 4px;"></div>
+              </div>
+              <span style="font-size: 0.7rem; color: var(--text-muted);">${progress.toFixed(0)}%</span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')">✏️</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="6" class="empty-state">No budget items found</td></tr>';
+    }
+
+    function editBudget(id) {
+      const item = AppState.budget.find(b => b.id === id);
+      if (item) {
+        gid('budgetItem').value = item.item;
+        gid('budgetCategory').value = item.category || '';
+        gid('budgetAmount').value = item.amount || '';
+        gid('budgetSpent').value = item.spent || '';
+        window.editingBudgetId = id;
+        openModal('newBudgetModal');
+      }
+    }
+
+    function renderRisks() {
+      const page = gid('risksPage');
+      if (page) {
+        const risks = AppState.risks || [];
+        const highRisks = risks.filter(r => r.severity === 'high').length;
+        const mediumRisks = risks.filter(r => r.severity === 'medium').length;
+        const lowRisks = risks.filter(r => r.severity === 'low').length;
+
+        page.innerHTML = `
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">⚠️ Risk Management</h1>
+              <p class="page-sub">Identify and manage project risks</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" onclick="openModal('newRiskModal')">+ Add Risk</button>
+            </div>
+          </div>
+
+          <!-- Risk Stats -->
+          <div class="dashboard-grid" style="margin-bottom: 24px;">
+            <div class="dashboard-card">
+              <div class="stat-value">${risks.length}</div>
+              <div class="stat-label">Total Risks</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value" style="color: var(--red);">${highRisks}</div>
+              <div class="stat-label">High Severity</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value" style="color: var(--amber);">${mediumRisks}</div>
+              <div class="stat-label">Medium Severity</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value" style="color: var(--teal);">${lowRisks}</div>
+              <div class="stat-label">Low Severity</div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <input type="text" class="form-input" id="riskSearch" placeholder="Search risks..." style="flex: 1;" onkeyup="filterRisks()">
+            <select class="form-select" id="riskSeverityFilter" onchange="filterRisks()" style="width: 200px;">
+              <option value="">All Severities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          <!-- Risk List -->
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Risk</th>
+                  <th>Category</th>
+                  <th>Severity</th>
+                  <th>Probability</th>
+                  <th>Mitigation</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="risksTable">
+                ${risks.map(r => `
+                  <tr>
+                    <td><strong>${esc(r.name)}</strong></td>
+                    <td><span class="badge badge-${r.category?.toLowerCase() || 'default'}">${esc(r.category || 'General')}</span></td>
+                    <td><span class="severity severity-${r.severity || 'medium'}">${esc(r.severity || 'Medium')}</span></td>
+                    <td>${r.probability || '-'}%</td>
+                    <td>${esc(r.mitigation || 'None')}</td>
+                    <td>
+                      <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')">✏️</button>
+                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')">🗑️</button>
+                    </td>
+                  </tr>
+                `).join('') || '<tr><td colspan="6" class="empty-state">No risks identified yet</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        window.currentRisks = risks;
+      }
+    }
+
+    function filterRisks() {
+      const search = gid('riskSearch').value.toLowerCase();
+      const severity = gid('riskSeverityFilter').value;
+      const risks = window.currentRisks || [];
+
+      const filtered = risks.filter(r => {
+        const matchesSearch = r.name.toLowerCase().includes(search) ||
+          (r.mitigation && r.mitigation.toLowerCase().includes(search));
+        const matchesSeverity = !severity || r.severity === severity;
+        return matchesSearch && matchesSeverity;
+      });
+
+      const tbody = gid('risksTable');
+      tbody.innerHTML = filtered.map(r => `
+        <tr>
+          <td><strong>${esc(r.name)}</strong></td>
+          <td><span class="badge badge-${r.category?.toLowerCase() || 'default'}">${esc(r.category || 'General')}</span></td>
+          <td><span class="severity severity-${r.severity || 'medium'}">${esc(r.severity || 'Medium')}</span></td>
+          <td>${r.probability || '-'}%</td>
+          <td>${esc(r.mitigation || 'None')}</td>
+          <td>
+            <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')">✏️</button>
+            <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')">🗑️</button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" class="empty-state">No risks found</td></tr>';
+    }
+
+    function editRisk(id) {
+      const risk = AppState.risks.find(r => r.id === id);
+      if (risk) {
+        gid('riskName').value = risk.name;
+        gid('riskCategory').value = risk.category || '';
+        gid('riskSeverity').value = risk.severity || 'medium';
+        gid('riskProbability').value = risk.probability || '';
+        gid('riskMitigation').value = risk.mitigation || '';
+        window.editingRiskId = id;
+        openModal('newRiskModal');
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // VIDEO MEETING FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+    let localStream = null;
+    let micEnabled = false;
+    let camEnabled = false;
+
+    function renderVideoMeeting() {
+      // Hide video placeholder if meeting is active
+      if (localStream) {
+        gid('videoPlaceholder').style.display = 'none';
+      }
+    }
+
+    async function startVideoMeeting() {
+      if (!hasFeatureAccess()) {
+        toast('Video meetings require PRO plan. Upgrade to unlock!', 'warn');
+        upgradeToPro();
+        return;
+      }
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const videoElement = gid('localVideo');
+        videoElement.srcObject = localStream;
+        videoElement.style.display = 'block';
+        gid('videoPlaceholder').style.display = 'none';
+        micEnabled = true;
+        camEnabled = true;
+        toast('Video meeting started! 📹', 'success');
+        navigateTo('videoMeeting');
+      } catch (error) {
+        toast('Could not access camera/microphone. Please check permissions.', 'error');
+        console.error('Error accessing media devices:', error);
+      }
+    }
+
+    function endVideoMeeting() {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      gid('localVideo').srcObject = null;
+      gid('localVideo').style.display = 'none';
+      gid('videoPlaceholder').style.display = 'flex';
+      micEnabled = false;
+      camEnabled = false;
+      toast('Video meeting ended', 'info');
+      navigateTo('meetings');
+    }
+
+    function toggleMic() {
+      if (!localStream) return;
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        micEnabled = audioTrack.enabled;
+        toast(micEnabled ? 'Microphone on 🎙️' : 'Microphone off 🔇', 'info');
+      }
+    }
+
+    function toggleCam() {
+      if (!localStream) return;
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        camEnabled = videoTrack.enabled;
+        toast(camEnabled ? 'Camera on 📷' : 'Camera off 🚫', 'info');
+      }
+    }
+
+    function toggleScreenShare() {
+      toast('Screen sharing feature coming soon! 🖥️', 'info');
+    }
+
+    function renderReports() {
+      const page = gid('reportsPage');
+      if (page) {
+        page.innerHTML = `
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">📈 Reports</h1>
+              <p class="page-sub">Analytics and insights</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
+              <button class="btn btn-ghost" onclick="exportReport()">📤 Export</button>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <div class="dashboard-card">
+              <div class="stat-value">${AppState.projects.length}</div>
+              <div class="stat-label">Total Projects</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${AppState.tasks.length}</div>
+              <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${AppState.tasks.filter(t => t.status === 'done').length}</div>
+              <div class="stat-label">Completed Tasks</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${Math.round((AppState.tasks.filter(t => t.status === 'done').length / (AppState.tasks.length || 1)) * 100)}%</div>
+              <div class="stat-label">Completion Rate</div>
+            </div>
+      </div>
+        `;
+      }
+    }
+
+    function generateReport() {
+      toast('Generating comprehensive report...', 'info');
+      setTimeout(() => toast('Report generated successfully! 📊', 'success'), 1500);
+    }
+
+    function exportReport() {
+      const data = {
+        projects: AppState.projects?.length || 0,
+        tasks: AppState.tasks?.length || 0,
+        meetings: AppState.meetings?.length || 0,
+        team: AppState.team?.length || 0,
+        notes: AppState.notes?.length || 0,
+        resources: AppState.resources?.length || 0,
+        budget: AppState.budget?.length || 0,
+        risks: AppState.risks?.length || 0,
+        generatedAt: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `projex-report-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Report exported successfully! 📤', 'success');
+    }
+
+    function renderSettings() {
+      const page = gid('settingsPage');
+      if (page) {
+        page.innerHTML = `
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">⚙️ Settings</h1>
+              <p class="page-sub">Customize your experience</p>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <div class="dashboard-card">
+              <div class="card-title">🎨 Theme</div>
+              <select class="form-select" id="themeSelect" onchange="setTheme(this.value)" style="margin-top: 12px;">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+              </select>
+            </div>
+            <div class="dashboard-card">
+              <div class="card-title">🔔 Notifications</div>
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="notifEmail" checked>
+                  <span>Email notifications</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="notifPush" checked>
+                  <span>Push notifications</span>
+                </label>
+              </div>
+            </div>
+            <div class="dashboard-card">
+              <div class="card-title">🍅 Pomodoro</div>
+              <div style="margin-top: 12px;">
+                <label style="font-size: 0.85rem; color: var(--text-muted);">Duration (minutes)</label>
+                <input type="number" class="form-input" id="pomodoroDuration" value="${AppState.settings?.pomodoroDuration || 25}" min="5" max="60" style="margin-top: 4px;">
+              </div>
+            </div>
+            <div class="dashboard-card">
+              <div class="card-title">💾 Data</div>
+              <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button class="btn btn-ghost" onclick="exportData()">📤 Export</button>
+                <button class="btn btn-ghost" onclick="clearData()">🗑️ Clear</button>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 24px;">Save Settings</button>
+        `;
+      }
+    }
+
+    function createNote() { openModal('newNoteModal'); }
+    function saveCurrentNote() { toast('Note saved!', 'success'); }
+    function deleteCurrentNote() { toast('Note deleted!', 'info'); }
+    function generateReport() { toast('Report generated!', 'success'); }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      AppState.settings.theme = theme;
+      save();
+      toast(`Theme changed to ${theme}`, 'success');
+    }
+
+    function saveSettings() {
+      AppState.settings.theme = gid('themeSelect').value;
+      AppState.settings.pomodoroDuration = parseInt(gid('pomodoroDuration').value);
+      AppState.settings.notifications = {
+        email: gid('notifEmail').checked,
+        push: gid('notifPush').checked
+      };
+      save();
+      toast('Settings saved successfully!', 'success');
+    }
+
+    function exportData() {
+      const data = JSON.stringify(AppState, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `projex-backup-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Data exported successfully!', 'success');
+    }
+
+    function clearData() {
+      if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+        localStorage.removeItem('projex_data');
+        location.reload();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MODALS
+    // ═══════════════════════════════════════════════════════════════
+    function openModal(id) {
+      gid(id).classList.add('active');
+
+      if (id === 'newTaskModal') {
+        gid('taskAssignee').innerHTML = AppState.team.map(t => `< option value = "${t.name}" > ${t.name}</option > `).join('');
+      }
+      if (id === 'newMeetingModal') {
+        gid('meetingDate').value = todayStr();
+      }
+      if (id === 'pomodoroModal') {
+        gid('pomoTaskSelect').innerHTML = '<option value="">— Select task —</option>' +
+          AppState.tasks.filter(t => t.status !== 'done').map(t => `< option value = "${t.id}" > ${esc(t.title)}</option > `).join('');
+      }
+    }
+
+    function closeModal(id) {
+      gid(id).classList.remove('active');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // AI ASSISTANT
+    // ═══════════════════════════════════════════════════════════════
+    async function sendAIMessage() {
+      if (!checkProFeature()) return;
+
+      const input = gid('aiChatInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      const provider = gid('aiProvider').value;
+      const chatContainer = gid('aiChatMessages');
+
+      // Add user message
+      chatContainer.innerHTML += `< div class="ai-message user" > ${esc(message)}</div > `;
+      input.value = '';
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      // Show loading
+      const loadingId = 'loading-' + Date.now();
+      chatContainer.innerHTML += `< div class="ai-message system" id = "${loadingId}" > Thinking...</div > `;
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      try {
+        const response = await fetch(`/ api / ${provider} `, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: message,
+            system: 'You are PROJEX AI, a helpful project management assistant. Help users organize projects, break down tasks, suggest timelines, and provide productivity advice.'
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById(loadingId).remove();
+
+        chatContainer.innerHTML += `< div class="ai-message assistant" > ${esc(data.content)}</div > `;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        addActivity(`Used AI Assistant(${provider})`, '🤖');
+      } catch (error) {
+        document.getElementById(loadingId).remove();
+
+        // Fallback response
+        const fallbackResponses = [
+          "I suggest breaking this project into 3 phases: Planning (2 weeks), Development (4 weeks), and Testing (2 weeks).",
+          "Based on your task list, I recommend prioritizing the critical tasks first. Would you like me to help organize them?",
+          "You could improve team productivity by implementing daily standups and using the Pomodoro technique.",
+          "Consider using a Kanban board to visualize your workflow and identify bottlenecks."
+        ];
+        const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+
+        chatContainer.innerHTML += `< div class="ai-message assistant" > ${randomResponse}</div > `;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }
+
+    function quickAIMessage() {
+      const input = gid('quickAIInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      const chatContainer = gid('quickAIChat');
+      chatContainer.innerHTML += `< div class="ai-message user" > ${esc(message)}</div > `;
+      input.value = '';
+
+      setTimeout(() => {
+        const responses = [
+          "Great question! Based on your current projects, I'd suggest focusing on the website redesign first.",
+          "You have 3 tasks due this week. Would you like me to help prioritize them?",
+          "Your team has completed 85% of this month's goals. Keep up the great work! 🎉"
+        ];
+        const response = responses[Math.floor(Math.random() * responses.length)];
+        chatContainer.innerHTML += `< div class="ai-message assistant" > ${response}</div > `;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }, 1000);
+    }
+
+    function clearAIChat() {
+      gid('aiChatMessages').innerHTML = `
+      < div class="ai-message system" >👋 Welcome to PROJEX AI Assistant!</div >
+        <div class="ai-message system">I can help you with project planning, task organization, and productivity tips.</div>
+    `;
+    }
+
+    function useTemplate(type) {
+      if (!checkProFeature()) return;
+
+      const templates = {
+        web: 'Create a comprehensive website redesign project plan with phases for: Research & Planning, Design, Development, Testing, and Launch. Include key milestones and deliverables for each phase.',
+        app: 'Create a mobile app launch project plan covering: Market Research, UI/UX Design, App Development (iOS & Android), Beta Testing, App Store Submission, and Marketing Launch.',
+        marketing: 'Create a product launch marketing campaign with: Content Strategy, Social Media Campaign, Email Marketing, Influencer Outreach, Paid Advertising, and Launch Event Planning.'
+      };
+
+      gid('aiChatInput').value = templates[type];
+      navigateTo('ai');
+      toast('Template loaded! Click Send to generate project plan.', 'info');
+    }
+
+    function aiAction(action) {
+      if (!checkProFeature()) return;
+
+      const prompts = {
+        summarize: `Summarize the following tasks: \n${AppState.tasks.map(t => `- ${t.title} (${t.status})`).join('\n')} `,
+        prioritize: 'Analyze my tasks and suggest which ones to prioritize based on deadlines and importance.',
+        timeline: 'Create a realistic timeline for completing all my in-progress tasks.',
+        email: 'Draft a professional project update email to send to stakeholders.'
+      };
+
+      gid('aiChatInput').value = prompts[action];
+      navigateTo('ai');
+      toast('AI action loaded!', 'info');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // AI IMAGE GENERATION
+    // ═══════════════════════════════════════════════════════════════
+    async function generateImage() {
+      if (!checkProFeature()) return;
+
+      const prompt = gid('imagePrompt').value.trim();
+      if (!prompt) {
+        toast('Please enter an image description', 'error');
+        return;
+      }
+
+      const btn = gid('generateImageBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+      const provider = gid('imageProvider').value;
+      const style = gid('imageStyle').value;
+
+      const fullPrompt = style ? `${prompt}, ${style} style, high quality, professional` : prompt;
+
+      try {
+        const response = await fetch('/api/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: fullPrompt, provider })
+        });
+
+        const data = await response.json();
+
+        if (data.imageUrl) {
+          gid('generatedImage').src = data.imageUrl;
+          gid('generatedImageCard').style.display = 'block';
+
+          // Save to gallery
+          AppState.images.unshift({
+            id: genId(),
+            url: data.imageUrl,
+            prompt,
+            provider,
+            createdAt: Date.now()
+          });
+          save();
+          renderImageGallery();
+
+          toast('Image generated successfully! 🎨', 'success');
+          addActivity('Generated AI image', '🎨');
+        }
+      } catch (error) {
+        toast('Image generation failed. Please try again.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '✨ Generate Image';
+      }
+    }
+
+    function renderImageGallery() {
+      const page = gid('imagesPage');
+      if (page) {
+        const images = AppState.images || [];
+        const prompts = [...new Set(images.map(img => img.prompt?.substring(0, 30) || ''))];
+
+        page.innerHTML = `
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">🎨 AI Images</h1>
+              <p class="page-sub">Generate and manage AI images</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" onclick="openModal('newImageModal')">+ Generate Image</button>
+            </div>
+          </div>
+
+          <!-- Image Stats -->
+          <div class="dashboard-grid" style="margin-bottom: 24px;">
+            <div class="dashboard-card">
+              <div class="stat-value">${images.length}</div>
+              <div class="stat-label">Total Images</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${prompts.length}</div>
+              <div class="stat-label">Unique Prompts</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${images.filter(i => i.style === 'realistic').length}</div>
+              <div class="stat-label">Realistic</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${images.filter(i => i.style === 'artistic').length}</div>
+              <div class="stat-label">Artistic</div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <input type="text" class="form-input" id="imageSearch" placeholder="Search images by prompt..." style="flex: 1;" onkeyup="filterImages()">
+            <select class="form-select" id="imageStyleFilter" onchange="filterImages()" style="width: 200px;">
+              <option value="">All Styles</option>
+              <option value="realistic">Realistic</option>
+              <option value="artistic">Artistic</option>
+              <option value="abstract">Abstract</option>
+            </select>
+          </div>
+
+          <!-- Image Gallery -->
+          <div id="imageGallery" class="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px;">
+            ${images.map(img => `
+              <div class="dashboard-card gallery-item" style="position: relative; overflow: hidden;">
+                <img src="${img.url}" alt="${esc(img.prompt)}" style="width: 100%; height: 200px; object-fit: cover;" />
+                <div class="gallery-item-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 12px; display: flex; gap: 8px;">
+                  <button class="btn btn-sm btn-primary" onclick="viewImage('${img.id}')">View</button>
+                  <button class="btn btn-sm btn-ghost" onclick="deleteItem('images', '${img.id}')">🗑️</button>
+                </div>
+                <div style="position: absolute; top: 8px; right: 8px;">
+                  <span class="badge badge-${img.style?.toLowerCase() || 'default'}" style="font-size: 0.7rem;">${esc(img.style || 'Default')}</span>
+                </div>
+              </div>
+            `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">🎨</div><div class="empty-state-title">No images yet</div></div>'}
+          </div>
+        `;
+
+        window.currentImages = images;
+      }
+    }
+
+    function filterImages() {
+      const search = gid('imageSearch').value.toLowerCase();
+      const style = gid('imageStyleFilter').value;
+      const images = window.currentImages || [];
+
+      const filtered = images.filter(img => {
+        const matchesSearch = img.prompt && img.prompt.toLowerCase().includes(search);
+        const matchesStyle = !style || img.style === style;
+        return matchesSearch && matchesStyle;
+      });
+
+      const gallery = gid('imageGallery');
+      gallery.innerHTML = filtered.map(img => `
+        <div class="dashboard-card gallery-item" style="position: relative; overflow: hidden;">
+          <img src="${img.url}" alt="${esc(img.prompt)}" style="width: 100%; height: 200px; object-fit: cover;" />
+          <div class="gallery-item-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 12px; display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-primary" onclick="viewImage('${img.id}')">View</button>
+            <button class="btn btn-sm btn-ghost" onclick="deleteItem('images', '${img.id}')">🗑️</button>
+          </div>
+          <div style="position: absolute; top: 8px; right: 8px;">
+            <span class="badge badge-${img.style?.toLowerCase() || 'default'}" style="font-size: 0.7rem;">${esc(img.style || 'Default')}</span>
+          </div>
+        </div>
+      `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">🎨</div><div class="empty-state-title">No images found</div></div>';
+    }
+
+    function downloadImage() {
+      const link = document.createElement('a');
+      link.href = gid('generatedImage').src;
+      link.download = `projex - ai - image - ${Date.now()}.png`;
+      link.click();
+    }
+
+    function shareImage() {
+      const imageUrl = gid('generatedImage').src;
+      AppState.posts.unshift({
+        id: genId(),
+        author: AppState.currentUser?.fullName || 'User',
+        content: 'Check out this AI-generated image! 🎨',
+        image: imageUrl,
+        likes: 0,
+        comments: 0,
+        createdAt: Date.now()
+      });
+      save();
+      toast('Image shared to social feed! 🎉', 'success');
+      navigateTo('social');
+    }
+
+    function generateAgain() {
+      generateImage();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SOCIAL FEED
+    // ═══════════════════════════════════════════════════════════════
+    function renderSocialFeed() {
+      const feed = gid('socialFeed');
+
+      if (AppState.posts.length === 0) {
+        feed.innerHTML = `
+      < div class="empty-state" >
+            <div class="empty-state-icon">👥</div>
+            <div class="empty-state-title">No posts yet</div>
+            <div class="empty-state-desc">Be the first to share with your team!</div>
+            <button class="btn btn-primary" style="margin-top: 16px;" onclick="openModal('newPostModal')">Create Post</button>
+          </div >
+      `;
+        return;
+      }
+
+      feed.innerHTML = AppState.posts.map(post => `
+      < div class="social-post" >
+          <div class="social-post-header">
+            <div class="social-post-avatar">${post.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</div>
+            <div class="social-post-meta">
+              <div class="social-post-author">${esc(post.author)}</div>
+              <div class="social-post-time">${fmtDate(post.createdAt)}</div>
+            </div>
+          </div>
+          <div class="social-post-content">${esc(post.content)}</div>
+          ${post.image ? `<img src="${post.image}" style="max-width: 100%; border-radius: var(--r); margin-top: 8px;" />` : ''}
+          <div class="social-post-actions">
+            <div class="social-post-action" onclick="likePost('${post.id}')">
+              ❤️ ${post.likes} Likes
+            </div>
+            <div class="social-post-action" onclick="toggleComments('${post.id}')">
+              💬 ${post.comments} Comments
+            </div>
+            <div class="social-post-action" onclick="sharePost('${post.id}')">
+              🔗 Share
+            </div>
+          </div>
+          <div id="comments-${post.id}" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            ${post.commentsList && post.commentsList.length ? post.commentsList.map(c => `
+              <div style="display: flex; gap: 8px; margin-bottom: 8px; padding: 8px; background: var(--surface); border-radius: var(--r-sm);">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0;">
+                  ${c.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div style="font-size: 0.75rem; font-weight: 600;">${esc(c.author)}</div>
+                  <div style="font-size: 0.8rem; color: var(--text);">${esc(c.content)}</div>
+                  <div style="font-size: 0.65rem; color: var(--text-muted);">${fmtDate(c.createdAt)}</div>
+                </div>
+              </div>
+            `).join('') : '<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No comments yet. Be the first!</div>'}
+            <button class="btn btn-sm btn-ghost" style="width: 100%; margin-top: 8px;" onclick="commentPost('${post.id}')">+ Add Comment</button>
+          </div>
+        </div >
+      `).join('');
+    }
+
+    function toggleComments(postId) {
+      const commentsDiv = gid(`comments - ${postId} `);
+      if (commentsDiv) {
+        const isVisible = commentsDiv.style.display !== 'none';
+        commentsDiv.style.display = isVisible ? 'none' : 'block';
+      }
+    }
+
+    function createPost() {
+      const content = gid('postContent').value.trim();
+      if (!content) {
+        toast('Please write something to post', 'error');
+        return;
+      }
+
+      const post = {
+        id: genId(),
+        author: AppState.currentUser?.fullName || 'User',
+        content,
+        image: null,
+        likes: 0,
+        comments: 0,
+        createdAt: Date.now()
+      };
+
+      AppState.posts.unshift(post);
+      save();
+      closeModal('newPostModal');
+      gid('postContent').value = '';
+      renderSocialFeed();
+      toast('Post created successfully! 🎉', 'success');
+    }
+
+    function likePost(id) {
+      const post = AppState.posts.find(p => p.id === id);
+      if (post) {
+        post.likes++;
+        save();
+        renderSocialFeed();
+      }
+    }
+
+    function commentPost(id) {
+      const post = AppState.posts.find(p => p.id === id);
+      if (!post) return;
+
+      const comment = prompt(`Add a comment on ${post.author} 's post:`);
+      if (!comment || !comment.trim()) return;
+
+      if (!post.commentsList) post.commentsList = [];
+      post.commentsList.push({
+        id: genId(),
+        author: AppState.currentUser?.fullName || 'You',
+        content: comment.trim(),
+        createdAt: Date.now()
+      });
+      post.comments++;
+      save();
+      renderSocialFeed();
+      toast('Comment added! �', 'success');
+    }
+
+    function sharePost(id) {
+      const post = AppState.posts.find(p => p.id === id);
+      if (!post) return;
+
+      const shareText = `${post.author} on PROJEX AI: "${post.content.substring(0, 100)}..." \n\nCheck it out!`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'PROJEX AI Post',
+          text: shareText,
+          url: window.location.href
+        }).then(() => toast('Shared successfully! 🔗', 'success'))
+          .catch(() => copyToClipboard(shareText));
+      } else {
+        copyToClipboard(shareText);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        toast('Copied to clipboard! 📋', 'success');
+      }).catch(() => {
+        // Fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        toast('Copied to clipboard! �', 'success');
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // DASHBOARD RENDER
+    // ═══════════════════════════════════════════════════════════════
+    function renderDashboard() {
+      gid('dashProjectCount').textContent = AppState.projects.filter(p => p.status === 'active').length;
+      gid('dashTaskCount').textContent = AppState.tasks.filter(t => t.status === 'done').length;
+      gid('dashMeetingCount').textContent = AppState.meetings.filter(m => m.date >= todayStr()).length;
+      gid('dashTeamCount').textContent = AppState.team.length;
+
+      // Priority tasks
+      const priorityTasks = AppState.tasks
+        .filter(t => ['high', 'critical'].includes(t.priority) && t.status !== 'done')
+        .slice(0, 5);
+
+      gid('priorityTasks').innerHTML = priorityTasks.length ? priorityTasks.map(t => `
+        <div class="list-item" onclick="editTask('${t.id}')">
+          <div class="list-icon ${t.priority === 'critical' ? 'red' : 'amber'}">⚡</div>
+          <div class="list-content">
+            <div class="list-title">${esc(t.title)}</div>
+            <div class="list-meta">${t.assignee || 'Unassigned'} • ${fmtDate(t.createdAt)}</div>
+          </div>
+          <span class="tag ${t.priority === 'critical' ? 'tag-red' : 'tag-amber'}">${t.priority}</span>
+        </div>
+      `).join('') : `<div class="empty-state"><div class="empty-state-icon">🎉</div><div class="empty-state-title">All caught up!</div></div>`;
+
+      // Project progress
+      gid('projectProgress').innerHTML = AppState.projects.slice(0, 5).map(p => `
+        <div style="margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span style="font-size: 0.8rem;">${esc(p.title)}</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">${p.progress || 0}%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width: ${p.progress || 0}%"></div></div>
+        </div>
+      `).join('') || '<div class="empty-state">No projects yet</div>';
+
+      // Today's meetings
+      const todayMeetings = AppState.meetings.filter(m => m.date === todayStr()).slice(0, 5);
+      gid('todayMeetings').innerHTML = todayMeetings.length ? todayMeetings.map(m => `
+        <div class="list-item">
+          <div class="list-icon blue">📅</div>
+          <div class="list-content">
+            <div class="list-title">${esc(m.title)}</div>
+            <div class="list-meta">${m.time} • ${m.duration} min</div>
+          </div>
+        </div>
+      `).join('') : `<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-title">No meetings today</div></div>`;
+
+      renderActivity();
+      renderPomoStats();
+    }
+
+    function renderActivity() {
+      const activity = AppState.activity.slice(0, 10);
+      gid('recentActivity').innerHTML = activity.length ? activity.map(a => `
+        <div class="list-item">
+          <div class="list-icon blue">${a.icon}</div>
+          <div class="list-content">
+            <div class="list-title">${esc(a.text)}</div>
+            <div class="list-meta">${fmtDate(a.time)}</div>
+          </div>
+        </div>
+      `).join('') : '<div class="empty-state">No recent activity</div>';
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // DATA FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+    function saveTask() {
+      const title = gid('taskTitle').value.trim();
+      if (!title) { toast('Task title is required', 'error'); return; }
+
+      // Check if editing existing task
+      if (editingTaskId) {
+        const t = AppState.tasks.find(task => task.id === editingTaskId);
+        if (t) {
+          t.title = title;
+          t.description = gid('taskDesc').value.trim();
+          t.priority = gid('taskPriority').value;
+          t.status = gid('taskStatus').value;
+          t.assignee = gid('taskAssignee').value;
+          t.date = gid('taskDueDate').value;
+          t.updatedAt = Date.now();
+          save();
+          toast('Task updated! ✅', 'success');
+          addActivity(`Updated task: ${title}`, '✅');
+        }
+        editingTaskId = null;
+      } else {
+        // Create new task
+        AppState.tasks.push({
+          id: genId(),
+          title,
+          description: gid('taskDesc').value.trim(),
+          priority: gid('taskPriority').value,
+          status: gid('taskStatus').value,
+          assignee: gid('taskAssignee').value,
+          date: gid('taskDueDate').value,
+          createdAt: Date.now()
+        });
+        save();
+        toast('Task created! ✅', 'success');
+        addActivity(`Created task: ${title}`, '✅');
+      }
+
+      closeModal('newTaskModal');
+      renderAll();
+    }
+
+    function saveMeeting() {
+      const title = gid('meetingTitle').value.trim();
+      if (!title) { toast('Meeting title is required', 'error'); return; }
+
+      AppState.meetings.push({
+        id: genId(),
+        title,
+        date: gid('meetingDate').value,
+        time: gid('meetingTime').value,
+        duration: 60,
+        createdAt: Date.now()
+      });
+
+      save();
+      closeModal('newMeetingModal');
+      toast('Meeting scheduled!', 'success');
+      addActivity(`Scheduled meeting: ${title}`, '📅');
+      renderAll();
+    }
+
+    function saveProject() {
+      const title = gid('projectTitle').value.trim();
+      if (!title) { toast('Project name is required', 'error'); return; }
+
+      AppState.projects.push({
+        id: genId(),
+        title,
+        description: gid('projectDesc').value.trim(),
+        status: gid('projectStatus').value,
+        progress: 0,
+        createdAt: Date.now()
+      });
+
+      save();
+      closeModal('newProjectModal');
+      toast('Project created!', 'success');
+      addActivity(`Created project: ${title}`, '📊');
+      renderAll();
+    }
+
+    function saveTeamMember() {
+      const name = gid('teamName').value.trim();
+      if (!name) { toast('Name is required', 'error'); return; }
+
+      AppState.team.push({
+        id: genId(),
+        name,
+        role: gid('teamRole').value.trim(),
+        dept: gid('teamDept').value,
+        email: gid('teamEmail').value.trim(),
+        initials: name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+        createdAt: Date.now()
+      });
+
+      save();
+      closeModal('newTeamModal');
+      toast('Team member added!', 'success');
+      renderAll();
+    }
+
+    function saveNote() {
+      const title = gid('noteTitle').value.trim();
+      if (!title) { toast('Title is required', 'error'); return; }
+
+      AppState.notes.push({
+        id: genId(),
+        title,
+        content: gid('noteContent').value.trim(),
+        tags: gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t),
+        createdAt: Date.now()
+      });
+
+      save();
+      closeModal('newNoteModal');
+      toast('Note saved!', 'success');
+      renderAll();
+    }
+
+    function saveResource() {
+      const name = gid('resourceName').value.trim();
+      if (!name) { toast('Resource name is required', 'error'); return; }
+
+      AppState.resources = AppState.resources || [];
+      const resourceData = {
+        name,
+        type: gid('resourceType').value,
+        url: gid('resourceUrl').value.trim(),
+        description: gid('resourceDesc').value.trim()
+      };
+
+      if (window.editingResourceId) {
+        const index = AppState.resources.findIndex(r => r.id === window.editingResourceId);
+        if (index !== -1) {
+          AppState.resources[index] = { ...AppState.resources[index], ...resourceData };
+          window.editingResourceId = null;
+        }
+      } else {
+        AppState.resources.push({
+          id: genId(),
+          ...resourceData,
+          createdAt: Date.now()
+        });
+      }
+
+      save();
+      closeModal('newResourceModal');
+      toast('Resource saved!', 'success');
+      renderAll();
+    }
+
+    function saveBudget() {
+      const item = gid('budgetItem').value.trim();
+      if (!item) { toast('Item name is required', 'error'); return; }
+
+      AppState.budget = AppState.budget || [];
+      const budgetData = {
+        item,
+        category: gid('budgetCategory').value,
+        amount: parseFloat(gid('budgetAmount').value) || 0,
+        spent: parseFloat(gid('budgetSpent').value) || 0
+      };
+
+      if (window.editingBudgetId) {
+        const index = AppState.budget.findIndex(b => b.id === window.editingBudgetId);
+        if (index !== -1) {
+          AppState.budget[index] = { ...AppState.budget[index], ...budgetData };
+          window.editingBudgetId = null;
+        }
+      } else {
+        AppState.budget.push({
+          id: genId(),
+          ...budgetData,
+          createdAt: Date.now()
+        });
+      }
+
+      save();
+      closeModal('newBudgetModal');
+      toast('Budget item saved!', 'success');
+      renderAll();
+    }
+
+    function saveRisk() {
+      const name = gid('riskName').value.trim();
+      if (!name) { toast('Risk name is required', 'error'); return; }
+
+      AppState.risks = AppState.risks || [];
+      const riskData = {
+        name,
+        category: gid('riskCategory').value,
+        severity: gid('riskSeverity').value,
+        probability: parseInt(gid('riskProbability').value) || 0,
+        mitigation: gid('riskMitigation').value.trim()
+      };
+
+      if (window.editingRiskId) {
+        const index = AppState.risks.findIndex(r => r.id === window.editingRiskId);
+        if (index !== -1) {
+          AppState.risks[index] = { ...AppState.risks[index], ...riskData };
+          window.editingRiskId = null;
+        }
+      } else {
+        AppState.risks.push({
+          id: genId(),
+          ...riskData,
+          createdAt: Date.now()
+        });
+      }
+
+      save();
+      closeModal('newRiskModal');
+      toast('Risk saved!', 'success');
+      renderAll();
+    }
+
+    function deleteItem(type, id) {
+      if (!confirm('Are you sure you want to delete this?')) return;
+      AppState[type] = AppState[type].filter(item => item.id !== id);
+      save();
+      renderAll();
+      toast('Deleted successfully', 'success');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // RENDER ALL
+    // ═══════════════════════════════════════════════════════════════
+    function renderAll() {
+      renderDashboard();
+      renderProjects();
+      renderTasks();
+      renderMeetings();
+      renderTeam();
+      renderSocialFeed();
+      renderImageGallery();
+      renderNotes();
+      renderResources();
+      renderBudget();
+      renderRisks();
+      renderReports();
+      updateNavBadges();
+    }
+
+    function updateNavBadges() {
+      gid('projectCount').textContent = AppState.projects.length;
+      gid('taskCount').textContent = AppState.tasks.filter(t => t.status !== 'done').length;
+      gid('riskCount').textContent = AppState.tasks.filter(t => t.priority === 'critical').length;
+    }
+
+    function renderProjects() {
+      const tbody = gid('projectsTable');
+      tbody.innerHTML = AppState.projects.map(p => `
+        <tr>
+          <td><strong>${esc(p.title)}</strong></td>
+          <td><span class="status-badge status-${p.status}">${p.status}</span></td>
+          <td><div class="progress-bar" style="width: 100px;"><div class="progress-fill" style="width: ${p.progress || 0}%"></div></div></td>
+          <td>${p.startDate || '-'}</td>
+          <td>${p.endDate || '-'}</td>
+          <td>$${(p.budget || 0).toLocaleString()}</td>
+          <td><button class="btn btn-sm btn-ghost" onclick="deleteItem('projects', '${p.id}')">🗑️</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" class="empty-state">No projects yet</td></tr>';
+    }
+
+    function renderTasks() {
+      const tbody = gid('tasksTable');
+      tbody.innerHTML = AppState.tasks.map(t => `
+        <tr>
+          <td><strong>${esc(t.title)}</strong></td>
+          <td><span class="priority priority-${t.priority}">⚡ ${t.priority}</span></td>
+          <td><span class="status-badge status-${t.status}">${t.status}</span></td>
+          <td>${t.assignee || 'Unassigned'}</td>
+          <td>${fmtDate(t.createdAt)}</td>
+          <td><button class="btn btn-sm btn-ghost" onclick="deleteItem('tasks', '${t.id}')">🗑️</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" class="empty-state">No tasks yet</td></tr>';
+    }
+
+    function renderMeetings() {
+      const page = gid('meetingsPage');
+      if (page) {
+        const meetings = AppState.meetings || [];
+        const today = new Date().toISOString().slice(0, 10);
+        const upcoming = meetings.filter(m => m.date >= today).length;
+        const past = meetings.filter(m => m.date < today).length;
+
+        page.innerHTML = `
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">📅 Meetings</h1>
+              <p class="page-sub">Schedule and manage meetings</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" onclick="openModal('newMeetingModal')">+ New Meeting</button>
+              <button class="btn btn-teal" onclick="startVideoMeeting()">📹 Start Video Meeting</button>
+            </div>
+          </div>
+
+          <!-- Meeting Stats -->
+          <div class="dashboard-grid" style="margin-bottom: 24px;">
+            <div class="dashboard-card">
+              <div class="stat-value">${meetings.length}</div>
+              <div class="stat-label">Total Meetings</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${upcoming}</div>
+              <div class="stat-label">Upcoming</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${past}</div>
+              <div class="stat-label">Past</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${meetings.reduce((sum, m) => sum + (m.duration || 0), 0)}</div>
+              <div class="stat-label">Total Minutes</div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <input type="text" class="form-input" id="meetingSearch" placeholder="Search meetings..." style="flex: 1;" onkeyup="filterMeetings()">
+            <select class="form-select" id="meetingFilter" onchange="filterMeetings()" style="width: 200px;">
+              <option value="all">All Meetings</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="past">Past</option>
+            </select>
+          </div>
+
+          <!-- Meeting List -->
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Duration</th>
+                  <th>Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="meetingsTable">
+                ${meetings.map(m => `
+                  <tr>
+                    <td><strong>${esc(m.title)}</strong></td>
+                    <td>${m.date}</td>
+                    <td>${m.time}</td>
+                    <td>${m.duration} min</td>
+                    <td><span class="badge badge-${m.type?.toLowerCase() || 'video'}">${esc(m.type || 'Video')}</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')">✏️</button>
+                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')">🗑️</button>
+                    </td>
+                  </tr>
+                `).join('') || '<tr><td colspan="6" class="empty-state">No meetings yet</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        window.currentMeetings = meetings;
+      }
+    }
+
+    function filterMeetings() {
+      const search = gid('meetingSearch').value.toLowerCase();
+      const filter = gid('meetingFilter').value;
+      const meetings = window.currentMeetings || [];
+      const today = new Date().toISOString().slice(0, 10);
+
+      const filtered = meetings.filter(m => {
+        const matchesSearch = m.title.toLowerCase().includes(search);
+        const matchesFilter = filter === 'all' ||
+          (filter === 'upcoming' && m.date >= today) ||
+          (filter === 'past' && m.date < today);
+        return matchesSearch && matchesFilter;
+      });
+
+      const tbody = gid('meetingsTable');
+      tbody.innerHTML = filtered.map(m => `
+        <tr>
+          <td><strong>${esc(m.title)}</strong></td>
+          <td>${m.date}</td>
+          <td>${m.time}</td>
+          <td>${m.duration} min</td>
+          <td><span class="badge badge-${m.type?.toLowerCase() || 'video'}">${esc(m.type || 'Video')}</span></td>
+          <td>
+            <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')">✏️</button>
+            <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')">🗑️</button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" class="empty-state">No meetings found</td></tr>';
+    }
+
+    function editMeeting(id) {
+      const meeting = AppState.meetings.find(m => m.id === id);
+      if (meeting) {
+        gid('meetingTitle').value = meeting.title;
+        gid('meetingDate').value = meeting.date;
+        gid('meetingTime').value = meeting.time;
+        gid('meetingDuration').value = meeting.duration;
+        gid('meetingType').value = meeting.type || 'video';
+        window.editingMeetingId = id;
+        openModal('newMeetingModal');
+      }
+    }
+
+    function renderTeam() {
+      const page = gid('teamPage');
+      if (page) {
+        const team = AppState.team || [];
+        const departments = [...new Set(team.map(t => t.dept))];
+        const roles = [...new Set(team.map(t => t.role))];
+
+        page.innerHTML = `
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">👥 Team</h1>
+              <p class="page-sub">Manage team members</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" onclick="openModal('newTeamModal')">+ New Member</button>
+            </div>
+          </div>
+
+          <!-- Team Stats -->
+          <div class="dashboard-grid" style="margin-bottom: 24px;">
+            <div class="dashboard-card">
+              <div class="stat-value">${team.length}</div>
+              <div class="stat-label">Total Members</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${departments.length}</div>
+              <div class="stat-label">Departments</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${roles.length}</div>
+              <div class="stat-label">Roles</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${team.filter(t => t.online !== false).length}</div>
+              <div class="stat-label">Online</div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <input type="text" class="form-input" id="teamSearch" placeholder="Search team members..." style="flex: 1;" onkeyup="filterTeam()">
+            <select class="form-select" id="teamDeptFilter" onchange="filterTeam()" style="width: 200px;">
+              <option value="">All Departments</option>
+              ${departments.map(dept => `<option value="${dept}">${dept}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Team List -->
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Department</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="teamTable">
+                ${team.map(t => `
+                  <tr>
+                    <td><strong>${esc(t.name)}</strong></td>
+                    <td>${t.role}</td>
+                    <td>${t.dept}</td>
+                    <td>${t.email}</td>
+                    <td><span class="tag tag-${t.online !== false ? 'green' : 'gray'}">${t.online !== false ? 'Online' : 'Offline'}</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-ghost" onclick="editTeamMember('${t.id}')">✏️</button>
+                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('team', '${t.id}')">🗑️</button>
+                    </td>
+                  </tr>
+                `).join('') || '<tr><td colspan="6" class="empty-state">No team members yet</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        window.currentTeam = team;
+      }
+    }
+
+    function filterTeam() {
+      const search = gid('teamSearch').value.toLowerCase();
+      const dept = gid('teamDeptFilter').value;
+      const team = window.currentTeam || [];
+
+      const filtered = team.filter(t => {
+        const matchesSearch = t.name.toLowerCase().includes(search) ||
+          t.email.toLowerCase().includes(search);
+        const matchesDept = !dept || t.dept === dept;
+        return matchesSearch && matchesDept;
+      });
+
+      const tbody = gid('teamTable');
+      tbody.innerHTML = filtered.map(t => `
+        <tr>
+          <td><strong>${esc(t.name)}</strong></td>
+          <td>${t.role}</td>
+          <td>${t.dept}</td>
+          <td>${t.email}</td>
+          <td><span class="tag tag-${t.online !== false ? 'green' : 'gray'}">${t.online !== false ? 'Online' : 'Offline'}</span></td>
+          <td>
+            <button class="btn btn-sm btn-ghost" onclick="editTeamMember('${t.id}')">✏️</button>
+            <button class="btn btn-sm btn-ghost" onclick="deleteItem('team', '${t.id}')">🗑️</button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" class="empty-state">No team members found</td></tr>';
+    }
+
+    function editTeamMember(id) {
+      const member = AppState.team.find(t => t.id === id);
+      if (member) {
+        gid('teamMemberName').value = member.name;
+        gid('teamMemberRole').value = member.role;
+        gid('teamMemberDept').value = member.dept;
+        gid('teamMemberEmail').value = member.email;
+        window.editingTeamMemberId = id;
+        openModal('newTeamModal');
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // POMODORO
+    // ═══════════════════════════════════════════════════════════════
+    let pomoInterval = null;
+
+    function togglePomodoro() {
+      openModal('pomodoroModal');
+    }
+
+    function startPomodoro() {
+      if (AppState.pomodoro.isRunning) return;
+      AppState.pomodoro.isRunning = true;
+      gid('pomoStartBtn').textContent = 'Resume';
+
+      pomoInterval = setInterval(() => {
+        if (AppState.pomodoro.timeRemaining > 0) {
+          AppState.pomodoro.timeRemaining--;
+          updatePomoDisplay();
+        } else {
+          completePomodoro();
+        }
+      }, 1000);
+    }
+
+    function pausePomodoro() {
+      if (!AppState.pomodoro.isRunning) return;
+      AppState.pomodoro.isPaused = true;
+      AppState.pomodoro.isRunning = false;
+      clearInterval(pomoInterval);
+      gid('pomoStartBtn').textContent = 'Resume';
+    }
+
+    function resetPomodoro() {
+      clearInterval(pomoInterval);
+      AppState.pomodoro.isRunning = false;
+      AppState.pomodoro.isPaused = false;
+      AppState.pomodoro.timeRemaining = AppState.settings.pomodoroDuration * 60;
+      gid('pomoStartBtn').textContent = 'Start';
+      updatePomoDisplay();
+    }
+
+    function completePomodoro() {
+      clearInterval(pomoInterval);
+      AppState.pomodoro.isRunning = false;
+      AppState.pomodoro.sessionsToday++;
+      AppState.pomodoro.sessionsWeek++;
+      AppState.pomodoro.sessionsTotal++;
+      save();
+
+      toast('Pomodoro completed! 🎉', 'success');
+      renderPomoStats();
+      resetPomodoro();
+    }
+
+    function updatePomoDisplay() {
+      const m = Math.floor(AppState.pomodoro.timeRemaining / 60);
+      const s = AppState.pomodoro.timeRemaining % 60;
+      gid('pomodoroTimer').textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function renderPomoStats() {
+      gid('pomoToday').textContent = AppState.pomodoro.sessionsToday;
+      gid('pomoWeek').textContent = AppState.pomodoro.sessionsWeek;
+      gid('pomoTotal').textContent = AppState.pomodoro.sessionsTotal;
+      gid('pomoGoal').textContent = AppState.settings.pomodoroGoal;
+      gid('pomoSessionCount').textContent = AppState.pomodoro.sessionsToday;
+      gid('pomoProgress').style.width = Math.min((AppState.pomodoro.sessionsToday / AppState.settings.pomodoroGoal) * 100, 100) + '%';
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // UTILS
+    // ═══════════════════════════════════════════════════════════════
+    function updateClock() {
+      const now = new Date();
+      gid('clockWidget').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function handleSearch(e) {
+      if (e.key === 'Enter') {
+        const q = e.target.value.toLowerCase().trim();
+        if (!q) return;
+
+        // Search across all data
+        const results = {
+          projects: AppState.projects.filter(p =>
+            p.title.toLowerCase().includes(q) ||
+            (p.description && p.description.toLowerCase().includes(q))
+          ),
+          tasks: AppState.tasks.filter(t =>
+            t.title.toLowerCase().includes(q) ||
+            (t.description && t.description.toLowerCase().includes(q))
+          ),
+          team: AppState.team.filter(m =>
+            m.name.toLowerCase().includes(q) ||
+            m.role.toLowerCase().includes(q) ||
+            m.email.toLowerCase().includes(q)
+          ),
+          meetings: AppState.meetings.filter(m =>
+            m.title.toLowerCase().includes(q)
+          )
+        };
+
+        const totalResults = Object.values(results).reduce((sum, arr) => sum + arr.length, 0);
+
+        if (totalResults === 0) {
+          toast(`No results found for "${q}"`, 'warn');
+        } else {
+          showSearchResults(results, q);
+        }
+      }
+    }
+
+    function showSearchResults(results, query) {
+      // Create search results modal
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay active';
+      modal.id = 'searchResultsModal';
+      modal.innerHTML = `
+        <div class="modal" style="max-width: 600px; max-height: 80vh;">
+          <div class="modal-header">
+            <div class="modal-title">🔍 Search Results: "${esc(query)}"</div>
+            <button class="modal-close" onclick="closeSearchResults()">✕</button>
+          </div>
+          <div class="modal-body" style="overflow-y: auto;">
+            ${results.projects.length ? `
+              <div style="margin-bottom: 16px;">
+                <h4 style="color: var(--accent); margin-bottom: 8px;">📁 Projects (${results.projects.length})</h4>
+                ${results.projects.map(p => `
+                  <div class="list-item" onclick="closeSearchResults(); navigateTo('projects');">
+                    <div class="list-icon blue">📁</div>
+                    <div class="list-content">
+                      <div class="list-title">${esc(p.title)}</div>
+                      <div class="list-meta">${p.status} • ${p.progress || 0}% complete</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            ${results.tasks.length ? `
+              <div style="margin-bottom: 16px;">
+                <h4 style="color: var(--accent); margin-bottom: 8px;">✅ Tasks (${results.tasks.length})</h4>
+                ${results.tasks.map(t => `
+                  <div class="list-item" onclick="closeSearchResults(); navigateTo('tasks');">
+                    <div class="list-icon ${t.priority === 'critical' ? 'red' : t.priority === 'high' ? 'amber' : 'green'}">✅</div>
+                    <div class="list-content">
+                      <div class="list-title">${esc(t.title)}</div>
+                      <div class="list-meta">${t.status} • ${t.assignee || 'Unassigned'}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            ${results.team.length ? `
+              <div style="margin-bottom: 16px;">
+                <h4 style="color: var(--accent); margin-bottom: 8px;">👥 Team (${results.team.length})</h4>
+                ${results.team.map(m => `
+                  <div class="list-item" onclick="closeSearchResults(); navigateTo('team');">
+                    <div class="list-icon blue">👤</div>
+                    <div class="list-content">
+                      <div class="list-title">${esc(m.name)}</div>
+                      <div class="list-meta">${m.role} • ${m.dept}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            ${results.meetings.length ? `
+              <div style="margin-bottom: 16px;">
+                <h4 style="color: var(--accent); margin-bottom: 8px;">📅 Meetings (${results.meetings.length})</h4>
+                ${results.meetings.map(m => `
+                  <div class="list-item" onclick="closeSearchResults(); navigateTo('meetings');">
+                    <div class="list-icon blue">📅</div>
+                    <div class="list-content">
+                      <div class="list-title">${esc(m.title)}</div>
+                      <div class="list-meta">${m.date} at ${m.time}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            ${!Object.values(results).some(arr => arr.length) ? `
+              <div class="empty-state">
+                <div class="empty-state-icon">🔍</div>
+                <div class="empty-state-title">No results found</div>
+                <div class="empty-state-desc">Try different keywords</div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeSearchResults();
+      });
+    }
+
+    function closeSearchResults() {
+      const modal = gid('searchResultsModal');
+      if (modal) modal.remove();
+    }
+
+    function quickAdd() {
+      openModal('newTaskModal');
+    }
+
+    function showNotifications() {
+      // Show notification dot
+      gid('notifDot').style.display = 'block';
+
+      // Get real notifications based on activity
+      const notifications = [];
+
+      // Task due soon
+      const dueTasks = AppState.tasks.filter(t =>
+        t.status !== 'done' && t.date && new Date(t.date) <= new Date(Date.now() + 24 * 60 * 60 * 1000)
+      );
+      dueTasks.forEach(t => {
+        notifications.push({
+          icon: '⚠️',
+          title: 'Task Due Soon',
+          message: `"${t.title}" is due soon`,
+          time: 'Today',
+          type: 'warning'
+        });
+      });
+
+      // New team member posts
+      if (AppState.posts.length > 0) {
+        const latestPost = AppState.posts[0];
+        notifications.push({
+          icon: '👥',
+          title: 'New Post',
+          message: `${latestPost.author} shared a new post`,
+          time: fmtDate(latestPost.createdAt),
+          type: 'info'
+        });
+      }
+
+      // Meeting reminders
+      const upcomingMeetings = AppState.meetings.filter(m => m.date === todayStr());
+      upcomingMeetings.forEach(m => {
+        notifications.push({
+          icon: '📅',
+          title: 'Meeting Today',
+          message: `"${m.title}" at ${m.time}`,
+          time: 'Today',
+          type: 'info'
+        });
+      });
+
+      // Pomodoro milestone
+      if (AppState.pomodoro.sessionsToday >= AppState.settings.pomodoroGoal) {
+        notifications.push({
+          icon: '🎉',
+          title: 'Daily Goal Reached!',
+          message: `You completed ${AppState.pomodoro.sessionsToday} pomodoros today`,
+          time: 'Today',
+          type: 'success'
+        });
+      }
+
+      // Trial ending soon
+      const trialDays = getTrialDaysRemaining();
+      if (trialDays > 0 && trialDays <= 5 && AppState.subscription.plan !== 'pro') {
+        notifications.push({
+          icon: '⏰',
+          title: 'Trial Ending Soon',
+          message: `${trialDays} days left in your trial. Upgrade now!`,
+          time: 'Now',
+          type: 'warning',
+          action: () => upgradeToPro()
+        });
+      }
+
+      // Show notifications modal
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay active';
+      modal.id = 'notificationsModal';
+      modal.innerHTML = `
+        <div class="modal" style="max-width: 400px; max-height: 80vh;">
+          <div class="modal-header">
+            <div class="modal-title">🔔 Notifications (${notifications.length})</div>
+            <button class="modal-close" onclick="closeNotifications()">✕</button>
+          </div>
+          <div class="modal-body" style="overflow-y: auto; padding: 0;">
+            ${notifications.length ? notifications.map(n => `
+              <div class="list-item" ${n.action ? `onclick="closeNotifications(); (${n.action.toString()})();" style="cursor: pointer;"` : ''}>
+                <div class="list-icon ${n.type === 'warning' ? 'amber' : n.type === 'success' ? 'green' : 'blue'}">${n.icon}</div>
+                <div class="list-content">
+                  <div class="list-title">${esc(n.title)}</div>
+                  <div class="list-meta">${esc(n.message)} • ${n.time}</div>
+                </div>
+              </div>
+            `).join('') : `
+              <div class="empty-state" style="padding: 40px 20px;">
+                <div class="empty-state-icon">🔔</div>
+                <div class="empty-state-title">No notifications</div>
+                <div class="empty-state-desc">You're all caught up!</div>
+              </div>
+            `}
+          </div>
+          ${notifications.length ? `
+            <div class="modal-footer">
+              <button class="btn btn-ghost" onclick="clearAllNotifications()">Mark all read</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeNotifications();
+      });
+
+      // Hide notification dot
+      gid('notifDot').style.display = 'none';
+    }
+
+    function closeNotifications() {
+      const modal = gid('notificationsModal');
+      if (modal) modal.remove();
+    }
+
+    function clearAllNotifications() {
+      closeNotifications();
+      toast('All notifications marked as read', 'success');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // EDIT FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+    let editingProjectId = null;
+
+    function editTask(id) {
+      const task = AppState.tasks.find(t => t.id === id);
+      if (!task) return;
+
+      editingTaskId = id;
+
+      // Pre-fill modal
+      gid('taskTitle').value = task.title || '';
+      gid('taskDesc').value = task.description || '';
+      gid('taskPriority').value = task.priority || 'medium';
+      gid('taskStatus').value = task.status || 'todo';
+      gid('taskAssignee').innerHTML = AppState.team.map(t =>
+        `<option value="${t.name}" ${t.name === task.assignee ? 'selected' : ''}>${t.name}</option>`
+      ).join('');
+      gid('taskDueDate').value = task.date || '';
+
+      // Change modal title
+      gid('newTaskModal').querySelector('.modal-title').textContent = 'Edit Task';
+      openModal('newTaskModal');
+    }
+
+    // Close modal handler - reset edit states
+    const originalCloseModal = closeModal;
+    closeModal = function (id) {
+      originalCloseModal(id);
+      if (id === 'newTaskModal') {
+        gid('newTaskModal').querySelector('.modal-title').textContent = 'New Task';
+        editingTaskId = null;
+        // Reset form
+        gid('taskTitle').value = '';
+        gid('taskDesc').value = '';
+        gid('taskDueDate').value = '';
+      }
+      if (id === 'newProjectModal') {
+        editingProjectId = null;
+        gid('projectTitle').value = '';
+        gid('projectDesc').value = '';
+      }
+    };
+
+    function editProject(id) {
+      const project = AppState.projects.find(p => p.id === id);
+      if (!project) return;
+
+      editingProjectId = id;
+      gid('projectTitle').value = project.title || '';
+      gid('projectDesc').value = project.description || '';
+      gid('projectStatus').value = project.status || 'active';
+
+      openModal('newProjectModal');
+    }
+
+    function viewImage(id) {
+      const img = AppState.images.find(i => i.id === id);
+      if (!img) return;
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay active';
+      modal.id = 'imageViewModal';
+      modal.innerHTML = `
+        <div class="modal" style="max-width: 90vw; max-height: 90vh;">
+          <div class="modal-header">
+            <div class="modal-title">🎨 Generated Image</div>
+            <button class="modal-close" onclick="closeImageView()">✕</button>
+          </div>
+          <div class="modal-body" style="text-align: center; padding: 20px;">
+            <img src="${img.url}" style="max-width: 100%; max-height: 70vh; border-radius: var(--r);" />
+            <div style="margin-top: 12px; font-size: 0.85rem; color: var(--text-muted);">
+              <strong>Prompt:</strong> ${esc(img.prompt)}
+            </div>
+            <div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+              Generated with ${img.provider} • ${fmtDate(img.createdAt)}
+            </div>
+          </div>
+          <div class="modal-footer" style="justify-content: center;">
+            <button class="btn btn-primary" onclick="downloadImageById('${img.id}')">💾 Download</button>
+            <button class="btn btn-teal" onclick="shareImageToFeed('${img.id}')">🔗 Share to Feed</button>
+            <button class="btn btn-red" onclick="deleteImage('${img.id}')">🗑️ Delete</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeImageView();
+      });
+    }
+
+    function closeImageView() {
+      const modal = gid('imageViewModal');
+      if (modal) modal.remove();
+    }
+
+    function downloadImageById(id) {
+      const img = AppState.images.find(i => i.id === id);
+      if (!img) return;
+
+      const link = document.createElement('a');
+      link.href = img.url;
+      link.download = `projex-ai-${id.slice(-6)}.png`;
+      link.click();
+      toast('Image downloaded! 💾', 'success');
+    }
+
+    function shareImageToFeed(id) {
+      const img = AppState.images.find(i => i.id === id);
+      if (!img) return;
+
+      AppState.posts.unshift({
+        id: genId(),
+        author: AppState.currentUser?.fullName || 'User',
+        content: `Check out this AI-generated image! 🎨\n\nPrompt: "${img.prompt.substring(0, 100)}..."`,
+        image: img.url,
+        likes: 0,
+        comments: 0,
+        createdAt: Date.now()
+      });
+      save();
+      closeImageView();
+      toast('Image shared to feed! 🎉', 'success');
+      navigateTo('social');
+    }
+
+    function deleteImage(id) {
+      if (!confirm('Delete this image?')) return;
+      AppState.images = AppState.images.filter(i => i.id !== id);
+      save();
+      closeImageView();
+      renderImageGallery();
+      toast('Image deleted', 'info');
+    }
+
+    function saveSettings() {
+      AppState.settings.pomodoroGoal = parseInt(gid('pomodoroGoal').value) || 4;
+      AppState.settings.pomodoroDuration = parseInt(gid('pomodoroDuration').value) || 25;
+      save();
+      toast('Settings saved!', 'success');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SAMPLE DATA
+    // ═══════════════════════════════════════════════════════════════
+    function initSampleData() {
+      if (AppState.team.length > 0) return;
+
+      AppState.team = [
+        { id: genId(), name: 'John Smith', role: 'Project Manager', dept: 'Software', email: 'john@company.com', initials: 'JS' },
+        { id: genId(), name: 'Sarah Johnson', role: 'Designer', dept: 'Design', email: 'sarah@company.com', initials: 'SJ' },
+        { id: genId(), name: 'Mike Chen', role: 'Developer', dept: 'Software', email: 'mike@company.com', initials: 'MC' },
+      ];
+
+      AppState.projects = [
+        { id: genId(), title: 'Website Redesign', description: 'Complete website overhaul', status: 'active', progress: 45, budget: 15000 },
+        { id: genId(), title: 'Mobile App', description: 'iOS and Android app', status: 'planning', progress: 10, budget: 25000 },
+      ];
+
+      AppState.tasks = [
+        { id: genId(), title: 'Design homepage mockup', priority: 'high', status: 'inprogress', assignee: 'Sarah Johnson' },
+        { id: genId(), title: 'Setup API endpoints', priority: 'critical', status: 'todo', assignee: 'Mike Chen' },
+        { id: genId(), title: 'Write documentation', priority: 'medium', status: 'done', assignee: 'John Smith' },
+      ];
+
+      AppState.meetings = [
+        { id: genId(), title: 'Weekly Standup', date: todayStr(), time: '10:00', duration: 30 },
+        { id: genId(), title: 'Design Review', date: todayStr(), time: '14:00', duration: 60 },
+      ];
+
+      AppState.posts = [
+        { id: genId(), author: 'John Smith', content: 'Just launched our new dashboard! Check it out 🎉', likes: 12, comments: 3, createdAt: Date.now() - 3600000 },
+        { id: genId(), author: 'Sarah Johnson', content: 'Working on some amazing new designs. Can\'t wait to share!', likes: 8, comments: 1, createdAt: Date.now() - 7200000 },
+      ];
+
+      AppState.activity = [
+        { text: 'Dashboard opened, day started', icon: '🏠', time: Date.now() },
+        { text: 'Created project: Website Redesign', icon: '📊', time: Date.now() - 3600000 },
+      ];
+
+      save();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════
+    function init() {
+      load();
+      renderAuthForm();
+
+      // Check for successful payment from LemonSqueezy
+      checkPaymentSuccess();
+
+      // Close modals on overlay click
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) overlay.classList.remove('active');
+        });
+      });
+    }
+
+    init();
+  </script>
+</body>
+
+</html>
