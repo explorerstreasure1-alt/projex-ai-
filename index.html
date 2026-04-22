@@ -3248,6 +3248,11 @@
 
             mainVoiceTranscript += finalTranscript;
             gid('mainVoiceTranscript').innerHTML = mainVoiceTranscript + '<span style="color: var(--text-muted);">' + interimTranscript + '</span>';
+
+            // Update status to show transcript is being captured
+            if (mainVoiceTranscript.length > 0) {
+              gid('mainVoiceRecordStatus').textContent = `Kaydediliyor... (${mainVoiceTranscript.length} karakter)`;
+            }
           };
 
           mainVoiceRecognition.onerror = (event) => {
@@ -3255,6 +3260,12 @@
             if (event.error === 'not-allowed') {
               toast('Mikrofon izni reddedildi', 'error');
               stopMainVoiceRecording();
+            } else if (event.error === 'no-speech') {
+              console.warn('Ses algılanamadı, lütfen tekrar konuşun');
+            } else if (event.error === 'network') {
+              toast('Ses tanıma servisi hatası (internet bağlantısı gerekli)', 'error');
+            } else {
+              console.error('Speech recognition error:', event.error);
             }
           };
 
@@ -3342,8 +3353,14 @@
     }
 
     async function analyzeMainVoiceRecording() {
-      if (!mainVoiceTranscript.trim()) {
-        toast('Analiz edilecek ses kaydı yok', 'warn');
+      if (!mainVoiceTranscript || !mainVoiceTranscript.trim()) {
+        toast('Analiz edilecek ses kaydı yok. Lütfen önce ses kaydedin ve konuşun.', 'warn');
+        console.warn('Transcript boş:', mainVoiceTranscript);
+        return;
+      }
+
+      if (mainVoiceTranscript.length < 10) {
+        toast('Ses kaydı çok kısa. Lütfen daha fazla konuşun.', 'warn');
         return;
       }
 
