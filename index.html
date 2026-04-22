@@ -1789,9 +1789,18 @@
 
       setLoading(true);
       const hashedPassword = await hashPassword(pw);
+      const oldBtoaPassword = btoa(pw); // Backward compatibility for old accounts
+
       setTimeout(() => {
-        const user = AppState.users.find(u => u.email === email.toLowerCase() && u.password === hashedPassword);
+        // Try new SHA-256 hash first, then fall back to old btoa
+        const user = AppState.users.find(u => u.email === email.toLowerCase() && (u.password === hashedPassword || u.password === oldBtoaPassword));
         if (!user) { showMsg('Invalid email or password', 'error'); setLoading(false); return; }
+
+        // If user has old btoa password, migrate to new SHA-256
+        if (user.password === oldBtoaPassword) {
+          user.password = hashedPassword;
+          save();
+        }
 
         AppState.currentUser = user;
         showMsg('Login successful! Redirecting...', 'success');
