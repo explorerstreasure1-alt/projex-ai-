@@ -67,6 +67,13 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   whiteboard_data JSONB, -- Whiteboard content
   transcription TEXT, -- Meeting transcription text
   -- End Category 3
+  -- Category 4: Post-meeting features
+  summary TEXT, -- AI-generated meeting summary
+  action_items JSONB DEFAULT '[]', -- Action items extracted from meeting
+  attendance_report JSONB, -- Attendance report (who joined, duration, etc.)
+  export_formats TEXT DEFAULT 'json', -- Available export formats: 'json', 'pdf', 'doc', 'md'
+  meeting_notes TEXT, -- Additional meeting notes
+  -- End Category 4
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -539,3 +546,10 @@ ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS reactions JSONB DEFAULT '[]
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS polls JSONB DEFAULT '[]';
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS whiteboard_data JSONB;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS transcription TEXT;
+
+-- Category 4: Post-meeting features
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS summary TEXT;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS action_items JSONB DEFAULT '[]';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS attendance_report JSONB;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS export_formats TEXT DEFAULT 'json';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS meeting_notes TEXT;
