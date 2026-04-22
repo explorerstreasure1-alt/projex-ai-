@@ -1545,6 +1545,54 @@
       }
     }
 
+    // Migrate localStorage data to Supabase
+    async function migrateLocalStorageToSupabase() {
+      if (!AppState.currentUser) return;
+
+      console.log('Starting localStorage to Supabase migration...');
+
+      try {
+        // Load localStorage data
+        load();
+
+        // Migrate each data type
+        const migrations = [
+          { table: 'projects', data: AppState.projects },
+          { table: 'tasks', data: AppState.tasks },
+          { table: 'meetings', data: AppState.meetings },
+          { table: 'team', data: AppState.team },
+          { table: 'notes', data: AppState.notes },
+          { table: 'resources', data: AppState.resources },
+          { table: 'posts', data: AppState.posts },
+          { table: 'images', data: AppState.images },
+          { table: 'budget', data: AppState.budget },
+          { table: 'risks', data: AppState.risks }
+        ];
+
+        for (const migration of migrations) {
+          if (migration.data && migration.data.length > 0) {
+            for (const item of migration.data) {
+              // Convert string IDs to UUID format for Supabase
+              const supabaseItem = {
+                ...item,
+                id: item.id.length === 36 ? item.id : genId(), // Use genId if not UUID
+                user_id: AppState.currentUser.id
+              };
+
+              await saveToSupabase(migration.table, supabaseItem);
+            }
+            console.log(`Migrated ${migration.data.length} items to ${migration.table}`);
+          }
+        }
+
+        toast('Veriler Supabase\'e taşındı! ✅', 'success');
+        console.log('Migration completed successfully');
+      } catch (error) {
+        console.error('Migration error:', error);
+        toast('Migration hatası', 'error');
+      }
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // TOAST NOTIFICATIONS
     // ═══════════════════════════════════════════════════════════════
@@ -2009,6 +2057,29 @@
         AppState.risks = await loadFromSupabase('risks');
 
         console.log('Data loaded from Supabase');
+
+        // Check if Supabase is empty and localStorage has data
+        const supabaseEmpty = !AppState.projects.length && !AppState.tasks.length && !AppState.meetings.length;
+        if (supabaseEmpty) {
+          load(); // Load localStorage data
+          const localDataExists = AppState.projects.length || AppState.tasks.length || AppState.meetings.length;
+
+          if (localDataExists) {
+            // Auto-migrate localStorage data to Supabase
+            await migrateLocalStorageToSupabase();
+            // Reload from Supabase after migration
+            AppState.projects = await loadFromSupabase('projects');
+            AppState.tasks = await loadFromSupabase('tasks');
+            AppState.meetings = await loadFromSupabase('meetings');
+            AppState.team = await loadFromSupabase('team');
+            AppState.notes = await loadFromSupabase('notes');
+            AppState.resources = await loadFromSupabase('resources');
+            AppState.posts = await loadFromSupabase('posts');
+            AppState.images = await loadFromSupabase('images');
+            AppState.budget = await loadFromSupabase('budget');
+            AppState.risks = await loadFromSupabase('risks');
+          }
+        }
       } catch (error) {
         console.error('Error loading from Supabase, using localStorage fallback:', error);
         load(); // Fallback to localStorage
