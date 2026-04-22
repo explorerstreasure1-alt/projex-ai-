@@ -1477,6 +1477,7 @@
     const esc = (str) => String(str || '').replace(/[<>&"']/g, (m) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', '\'': '&#39;' }[m]));
     const fmtDate = (ts) => ts ? new Date(ts).toLocaleDateString('en-US') : '-';
 
+    // Legacy save/load for backward compatibility - will be phased out
     function save() {
       localStorage.setItem('projex_data', JSON.stringify(AppState));
     }
@@ -1497,6 +1498,51 @@
       if (!AppState.budget) AppState.budget = [];
       if (!AppState.risks) AppState.risks = [];
       if (!AppState.subscription) AppState.subscription = { plan: 'trial', trialStart: Date.now(), trialDays: 15 };
+    }
+
+    // Supabase data access functions
+    async function saveToSupabase(table, data) {
+      if (!AppState.currentUser) return;
+
+      try {
+        const { error } = await supabaseClient
+          .from(table)
+          .upsert({ ...data, user_id: AppState.currentUser.id });
+
+        if (error) throw error;
+      } catch (error) {
+        console.error(`Error saving to ${table}:`, error);
+      }
+    }
+
+    async function loadFromSupabase(table) {
+      if (!AppState.currentUser) return [];
+
+      try {
+        const { data, error } = await supabaseClient
+          .from(table)
+          .select('*')
+          .eq('user_id', AppState.currentUser.id);
+
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error(`Error loading from ${table}:`, error);
+        return [];
+      }
+    }
+
+    async function deleteFromSupabase(table, id) {
+      try {
+        const { error } = await supabaseClient
+          .from(table)
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+      } catch (error) {
+        console.error(`Error deleting from ${table}:`, error);
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -1940,7 +1986,7 @@
       }
     });
 
-    function enterApp(user) {
+    async function enterApp(user) {
       gid('authView').classList.remove('active');
       gid('appView').classList.add('active');
 
@@ -1948,6 +1994,26 @@
       gid('sidebarUserName').textContent = user.fullName;
 
       updateTrialDisplay();
+
+      // Load data from Supabase
+      try {
+        AppState.projects = await loadFromSupabase('projects');
+        AppState.tasks = await loadFromSupabase('tasks');
+        AppState.meetings = await loadFromSupabase('meetings');
+        AppState.team = await loadFromSupabase('team');
+        AppState.notes = await loadFromSupabase('notes');
+        AppState.resources = await loadFromSupabase('resources');
+        AppState.posts = await loadFromSupabase('posts');
+        AppState.images = await loadFromSupabase('images');
+        AppState.budget = await loadFromSupabase('budget');
+        AppState.risks = await loadFromSupabase('risks');
+
+        console.log('Data loaded from Supabase');
+      } catch (error) {
+        console.error('Error loading from Supabase, using localStorage fallback:', error);
+        load(); // Fallback to localStorage
+      }
+
       initSampleData();
       renderAll();
 
@@ -3352,7 +3418,7 @@
       }
     }
 
-    function saveVoiceNote(transcript, analysis, provider) {
+    async function saveVoiceNote(transcript, analysis, provider) {
       const note = {
         id: Date.now().toString(),
         transcript: transcript,
@@ -3370,17 +3436,55 @@
         AppState.voiceNotes = [];
       }
 
-      // Don't save large audio blobs to localStorage, just metadata
+      // Upload audio blob to Supabase Storage
+      let audioUrl = null;
+      if (mainVoiceAudioBlob && AppState.currentUser) {
+        try {
+          const fileName = `voice-notes/${AppState.currentUser.id}/${note.id}.webm`;
+          const { data: uploadData, error: uploadError } = await supabaseClient
+            .storage
+            .from('voice-recordings')
+            .upload(fileName, mainVoiceAudioBlob, {
+              contentType: 'audio/webm'
+            });
+
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabaseClient
+              .storage
+              .from('voice-recordings')
+              .getPublicUrl(fileName);
+            audioUrl = publicUrl;
+          }
+        } catch (error) {
+          console.error('Error uploading audio to Supabase Storage:', error);
+        }
+      }
+
+      // Save metadata to Supabase
       const noteForStorage = {
         id: note.id,
         transcript: note.transcript,
         analysis: note.analysis,
         provider: note.provider,
         duration: note.duration,
+        audio_url: audioUrl,
         createdAt: note.createdAt
       };
 
-      AppState.voiceNotes.unshift(noteForStorage);
+      await saveToSupabase('voice_notes', noteForStorage);
+
+      // Keep localStorage as fallback (without audio blob)
+      const noteForLocal = {
+        id: note.id,
+        transcript: note.transcript,
+        analysis: note.analysis,
+        provider: note.provider,
+        duration: note.duration,
+        audio_url: audioUrl,
+        createdAt: note.createdAt
+      };
+
+      AppState.voiceNotes.unshift(noteForLocal);
       save();
 
       renderSavedVoiceNotes();
@@ -4322,7 +4426,7 @@
     // ═══════════════════════════════════════════════════════════════
     // DATA FUNCTIONS
     // ═══════════════════════════════════════════════════════════════
-    function saveTask() {
+    async function saveTask() {
       const title = gid('taskTitle').value.trim();
       if (!title) { toast('Task title is required', 'error'); return; }
 
@@ -4337,14 +4441,18 @@
           t.assignee = gid('taskAssignee').value;
           t.date = gid('taskDueDate').value;
           t.updatedAt = Date.now();
-          save();
+
+          // Save to Supabase
+          await saveToSupabase('tasks', t);
+          save(); // Keep localStorage as fallback
+
           toast('Task updated! ✅', 'success');
           addActivity(`Updated task: ${title}`, '✅');
         }
         window.editingTaskId = null;
       } else {
         // Create new task
-        AppState.tasks.push({
+        const newTask = {
           id: genId(),
           title,
           description: gid('taskDesc').value.trim(),
@@ -4353,8 +4461,13 @@
           assignee: gid('taskAssignee').value,
           date: gid('taskDueDate').value,
           createdAt: Date.now()
-        });
-        save();
+        };
+        AppState.tasks.push(newTask);
+
+        // Save to Supabase
+        await saveToSupabase('tasks', newTask);
+        save(); // Keep localStorage as fallback
+
         toast('Task created! ✅', 'success');
         addActivity(`Created task: ${title}`, '✅');
       }
@@ -4363,57 +4476,87 @@
       renderAll();
     }
 
-    function saveMeeting() {
+    async function saveMeeting() {
       const title = gid('meetingTitle').value.trim();
       if (!title) { toast('Meeting title is required', 'error'); return; }
 
       if (window.editingMeetingId) {
         // Edit mode
-        const meeting = AppState.meetings.find(m => m.id === window.editingMeetingId);
-        if (meeting) {
-          meeting.title = title;
-          meeting.date = gid('meetingDate').value;
-          meeting.time = gid('meetingTime').value;
-          meeting.updatedAt = Date.now();
+        const m = AppState.meetings.find(meeting => meeting.id === window.editingMeetingId);
+        if (m) {
+          m.title = title;
+          m.date = gid('meetingDate').value;
+          m.time = gid('meetingTime').value;
+          m.updatedAt = Date.now();
+
+          await saveToSupabase('meetings', m);
+          save();
+
+          toast('Meeting updated! ✅', 'success');
         }
         window.editingMeetingId = null;
-        toast('Meeting updated!', 'success');
       } else {
         // New meeting
-        AppState.meetings.push({
+        const newMeeting = {
           id: genId(),
           title,
           date: gid('meetingDate').value,
           time: gid('meetingTime').value,
           duration: 60,
           createdAt: Date.now()
-        });
-        toast('Meeting scheduled!', 'success');
+        };
+        AppState.meetings.push(newMeeting);
+
+        await saveToSupabase('meetings', newMeeting);
+        save();
+
+        toast('Meeting scheduled! ✅', 'success');
         addActivity(`Scheduled meeting: ${title}`, '📅');
       }
 
-      save();
       closeModal('newMeetingModal');
       renderAll();
     }
 
-    function saveProject() {
+    async function saveProject() {
       const title = gid('projectTitle').value.trim();
       if (!title) { toast('Project name is required', 'error'); return; }
 
-      AppState.projects.push({
-        id: genId(),
-        title,
-        description: gid('projectDesc').value.trim(),
-        status: gid('projectStatus').value,
-        progress: 0,
-        createdAt: Date.now()
-      });
+      // Check if editing existing project
+      if (window.editingProjectId) {
+        const p = AppState.projects.find(project => project.id === window.editingProjectId);
+        if (p) {
+          p.title = title;
+          p.description = gid('projectDesc').value.trim();
+          p.status = gid('projectStatus').value;
+          p.updatedAt = Date.now();
 
-      save();
+          await saveToSupabase('projects', p);
+          save();
+
+          toast('Project updated! ✅', 'success');
+          addActivity(`Updated project: ${title}`, '📊');
+        }
+        window.editingProjectId = null;
+      } else {
+        const newProject = {
+          id: genId(),
+          title,
+          description: gid('projectDesc').value.trim(),
+          status: gid('projectStatus').value,
+          progress: 0,
+          createdAt: Date.now()
+        };
+        AppState.projects.push(newProject);
+
+        await saveToSupabase('projects', newProject);
+        save();
+
+        toast('Project created! ✅', 'success');
+        addActivity(`Created project: ${title}`, '📊');
+      }
+
       closeModal('newProjectModal');
-      toast('Project created!', 'success');
-      addActivity(`Created project: ${title}`, '📊');
       renderAll();
     }
 
@@ -4453,7 +4596,7 @@
       renderAll();
     }
 
-    function saveNote() {
+    async function saveNote() {
       const title = gid('noteTitle').value.trim();
       if (!title) { toast('Title is required', 'error'); return; }
 
@@ -4465,24 +4608,32 @@
           note.content = gid('noteContent').value.trim();
           note.tags = gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t);
           note.updatedAt = Date.now();
+
+          await saveToSupabase('notes', note);
+          save();
+
+          window.editingNoteId = null;
+          toast('Note updated! ✅', 'success');
         }
-        window.editingNoteId = null;
-        toast('Note updated!', 'success');
       } else {
         // New note
-        AppState.notes.push({
+        const newNote = {
           id: genId(),
           title,
           content: gid('noteContent').value.trim(),
           tags: gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t),
           createdAt: Date.now()
-        });
-        toast('Note created!', 'success');
+        };
+        AppState.notes.push(newNote);
+
+        await saveToSupabase('notes', newNote);
+        save();
+
+        toast('Note created! ✅', 'success');
       }
 
-      save();
       closeModal('newNoteModal');
-      toast('Note saved!', 'success');
+      toast('Note saved! ✅', 'success');
       renderAll();
     }
 
