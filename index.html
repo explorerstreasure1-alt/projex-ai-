@@ -1609,18 +1609,25 @@
     }
 
     // Check for successful payment on page load
+    // SECURITY NOTE: URL parameter validation removed - payment should be verified via Supabase subscription table
+    // or webhook from payment provider. This function is now for demo/testing only.
     function checkPaymentSuccess() {
+      // URL parameter trust removed for security
+      // Payment verification should be done via Supabase subscription table check
+      // or webhook signature verification from payment provider
       const urlParams = new URLSearchParams(window.location.search);
       const paymentSuccess = urlParams.get('success');
       const userId = urlParams.get('user_id');
 
-      if (paymentSuccess === 'true') {
-        // Payment successful - activate PRO
-        AppState.subscription.plan = 'pro';
-        AppState.subscription.proExpiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
-        save();
-        toast('Payment successful! PRO features unlocked! 🎉', 'success');
-        updateTrialDisplay();
+      if (paymentSuccess === 'true' && AppState.currentUser) {
+        // Verify payment from Supabase instead of trusting URL params
+        supabaseClient.from('subscriptions').select('plan, pro_expiry').eq('user_id', AppState.currentUser.id).single()
+          .then(({ data, error }) => {
+            if (data && data.plan === 'pro' && (!data.pro_expiry || new Date(data.pro_expiry) > new Date())) {
+              toast('PRO features active! 🎉', 'success');
+              updateTrialDisplay();
+            }
+          });
 
         // Clear URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -1819,7 +1826,14 @@
           password: pw
         });
 
-        if (error) throw error;
+        if (error) {
+          if (error.message.includes('Email not confirmed')) {
+            showMsg('Lütfen e-posta adresinizi doğrulayın. Gelen kutunuzu kontrol edin.', 'warn');
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
 
         AppState.currentUser = {
           id: data.user.id,
@@ -1903,8 +1917,8 @@
 
     // handleVerify and handleReset removed - using Supabase native password reset flow
 
-    // Listen for auth state changes
-    supabaseClient.auth.onAuthStateChange((event, session) => {
+    // Listen for auth state changes and restore session on page load
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         AppState.currentUser = {
           id: session.user.id,
@@ -1913,6 +1927,16 @@
         };
       } else if (event === 'SIGNED_OUT') {
         AppState.currentUser = null;
+      } else if (event === 'INITIAL_SESSION') {
+        // Restore session on page load
+        if (session?.user) {
+          AppState.currentUser = {
+            id: session.user.id,
+            email: session.user.email,
+            fullName: session.user.user_metadata.full_name || session.user.email.split('@')[0]
+          };
+          enterApp(AppState.currentUser);
+        }
       }
     });
 
@@ -1928,7 +1952,7 @@
       renderAll();
 
       updateClock();
-      setInterval(updateClock, 1000);
+      clockInterval = setInterval(updateClock, 1000);
 
       toast(`Welcome back, ${user.fullName}! 👋`, 'success');
 
@@ -1948,6 +1972,7 @@
       // Clear all intervals
       if (pomoInterval) clearInterval(pomoInterval);
       if (mainVoiceRecordingInterval) clearInterval(mainVoiceRecordingInterval);
+      if (clockInterval) clearInterval(clockInterval);
 
       // Stop voice recording if active
       if (mainVoiceRecording) {
@@ -1966,7 +1991,27 @@
       }
 
       await supabaseClient.auth.signOut();
-      AppState.currentUser = null;
+
+      // Clear localStorage to prevent data leak on shared computers
+      localStorage.removeItem('projex_data');
+
+      // Reset AppState
+      Object.assign(AppState, {
+        currentUser: null,
+        users: [],
+        projects: [],
+        tasks: [],
+        meetings: [],
+        team: [],
+        posts: [],
+        notes: [],
+        images: [],
+        resources: [],
+        budget: [],
+        risks: [],
+        activity: []
+      });
+
       gid('appView').classList.remove('active');
       gid('authView').classList.add('active');
       switchTab('login');
@@ -4794,6 +4839,7 @@
     // POMODORO
     // ═══════════════════════════════════════════════════════════════
     let pomoInterval = null;
+    let clockInterval = null;
 
     function togglePomodoro() {
       openModal('pomodoroModal');
