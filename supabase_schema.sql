@@ -58,6 +58,15 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   attendees JSONB DEFAULT '[]', -- Array of participant objects
   location TEXT, -- Physical location or virtual
   description TEXT,
+  -- Category 3: In-meeting features
+  recording_status TEXT DEFAULT 'none', -- 'none', 'recording', 'paused', 'completed'
+  recording_url TEXT, -- URL to recorded meeting
+  chat_messages JSONB DEFAULT '[]', -- Meeting chat history
+  reactions JSONB DEFAULT '[]', -- Meeting reactions (raise hand, thumbs up, etc.)
+  polls JSONB DEFAULT '[]', -- Meeting polls
+  whiteboard_data JSONB, -- Whiteboard content
+  transcription TEXT, -- Meeting transcription text
+  -- End Category 3
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -521,3 +530,12 @@ CREATE TABLE IF NOT EXISTS public.meeting_participants (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Category 3: In-meeting features
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS recording_status TEXT DEFAULT 'none';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS recording_url TEXT;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS chat_messages JSONB DEFAULT '[]';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS reactions JSONB DEFAULT '[]';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS polls JSONB DEFAULT '[]';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS whiteboard_data JSONB;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS transcription TEXT;
