@@ -91,6 +91,11 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   avg_duration INTEGER, -- Average duration in minutes (for recurring meetings)
   usage_stats JSONB DEFAULT '{}', -- Meeting usage statistics (features used, etc.)
   -- End Category 9
+  -- Category 10: Extra features
+  template_id TEXT, -- Meeting template reference
+  ai_assistant_enabled BOOLEAN DEFAULT false, -- Enable AI assistant during meeting
+  virtual_background TEXT, -- Virtual background image URL
+  -- End Category 10
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -614,6 +619,11 @@ ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS join_permissions TEXT DEFAU
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS total_participants INTEGER DEFAULT 0;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS avg_duration INTEGER;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS usage_stats JSONB DEFAULT '{}';
+
+-- Category 10: Extra features
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS template_id TEXT;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS ai_assistant_enabled BOOLEAN DEFAULT false;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS virtual_background TEXT;
 
 -- Category 5: Integrations table
 CREATE TABLE IF NOT EXISTS public.integrations (
