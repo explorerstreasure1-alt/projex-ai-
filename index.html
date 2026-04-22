@@ -1972,6 +1972,7 @@
         case 'images': renderImageGallery(); break;
         case 'ai': renderAIChat(); break;
         case 'notes': renderNotes(); break;
+        case 'voiceNotes': renderSavedVoiceNotes(); break;
         case 'resources': renderResources(); break;
         case 'budget': renderBudget(); break;
         case 'risks': renderRisks(); break;
@@ -3643,24 +3644,12 @@
     function createNote() { openModal('newNoteModal'); }
     function saveCurrentNote() { toast('Note saved!', 'success'); }
     function deleteCurrentNote() { toast('Note deleted!', 'info'); }
-    function generateReport() { toast('Report generated!', 'success'); }
 
     function setTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       AppState.settings.theme = theme;
       save();
       toast(`Theme changed to ${theme}`, 'success');
-    }
-
-    function saveSettings() {
-      AppState.settings.theme = gid('themeSelect').value;
-      AppState.settings.pomodoroDuration = parseInt(gid('pomodoroDuration').value);
-      AppState.settings.notifications = {
-        email: gid('notifEmail').checked,
-        push: gid('notifPush').checked
-      };
-      save();
-      toast('Settings saved successfully!', 'success');
     }
 
     function exportData() {
@@ -3689,14 +3678,14 @@
       gid(id).classList.add('active');
 
       if (id === 'newTaskModal') {
-        gid('taskAssignee').innerHTML = AppState.team.map(t => `< option value = "${t.name}" > ${t.name}</option > `).join('');
+        gid('taskAssignee').innerHTML = AppState.team.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
       }
       if (id === 'newMeetingModal') {
         gid('meetingDate').value = todayStr();
       }
       if (id === 'pomodoroModal') {
         gid('pomoTaskSelect').innerHTML = '<option value="">— Select task —</option>' +
-          AppState.tasks.filter(t => t.status !== 'done').map(t => `< option value = "${t.id}" > ${esc(t.title)}</option > `).join('');
+          AppState.tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('');
       }
     }
 
@@ -3871,78 +3860,26 @@
     }
 
     function renderImageGallery() {
-      const page = gid('imagesPage');
-      if (page) {
+      const gallery = gid('imageGallery');
+      if (gallery) {
         const images = AppState.images || [];
-        const prompts = [...new Set(images.map(img => img.prompt?.substring(0, 30) || ''))];
 
-        page.innerHTML = `
-          <div class="page-header">
-            <div>
-              <h1 class="page-title">🎨 AI Images</h1>
-              <p class="page-sub">Generate and manage AI images</p>
-            </div>
-            <div class="page-actions">
-              <button class="btn btn-primary" onclick="openModal('newImageModal')">+ Generate Image</button>
+        gallery.innerHTML = images.map(img => `
+          <div class="dashboard-card gallery-item" style="position: relative; overflow: hidden;">
+            <img src="${img.url}" alt="${esc(img.prompt)}" style="width: 100%; height: 200px; object-fit: cover;" />
+            <div class="gallery-item-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 12px; display: flex; gap: 8px;">
+              <button class="btn btn-sm btn-primary" onclick="viewImage('${img.id}')">View</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteItem('images', '${img.id}')">🗑️</button>
             </div>
           </div>
-
-          <!-- Image Stats -->
-          <div class="dashboard-grid" style="margin-bottom: 24px;">
-            <div class="dashboard-card">
-              <div class="stat-value">${images.length}</div>
-              <div class="stat-label">Total Images</div>
-            </div>
-            <div class="dashboard-card">
-              <div class="stat-value">${prompts.length}</div>
-              <div class="stat-label">Unique Prompts</div>
-            </div>
-            <div class="dashboard-card">
-              <div class="stat-value">${images.filter(i => i.style === 'realistic').length}</div>
-              <div class="stat-label">Realistic</div>
-            </div>
-            <div class="dashboard-card">
-              <div class="stat-value">${images.filter(i => i.style === 'artistic').length}</div>
-              <div class="stat-label">Artistic</div>
-            </div>
-          </div>
-
-          <!-- Filters -->
-          <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-            <input type="text" class="form-input" id="imageSearch" placeholder="Search images by prompt..." style="flex: 1;" onkeyup="filterImages()">
-            <select class="form-select" id="imageStyleFilter" onchange="filterImages()" style="width: 200px;">
-              <option value="">All Styles</option>
-              <option value="realistic">Realistic</option>
-              <option value="artistic">Artistic</option>
-              <option value="abstract">Abstract</option>
-            </select>
-          </div>
-
-          <!-- Image Gallery -->
-          <div id="imageGallery" class="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px;">
-            ${images.map(img => `
-              <div class="dashboard-card gallery-item" style="position: relative; overflow: hidden;">
-                <img src="${img.url}" alt="${esc(img.prompt)}" style="width: 100%; height: 200px; object-fit: cover;" />
-                <div class="gallery-item-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 12px; display: flex; gap: 8px;">
-                  <button class="btn btn-sm btn-primary" onclick="viewImage('${img.id}')">View</button>
-                  <button class="btn btn-sm btn-ghost" onclick="deleteItem('images', '${img.id}')">🗑️</button>
-                </div>
-                <div style="position: absolute; top: 8px; right: 8px;">
-                  <span class="badge badge-${img.style?.toLowerCase() || 'default'}" style="font-size: 0.7rem;">${esc(img.style || 'Default')}</span>
-                </div>
-              </div>
-            `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">🎨</div><div class="empty-state-title">No images yet</div></div>'}
-          </div>
-        `;
-
-        window.currentImages = images;
+        `).join('') || '<div class="dashboard-card" style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">No images generated yet</div>';
       }
     }
 
     function filterImages() {
       const search = gid('imageSearch').value.toLowerCase();
       const style = gid('imageStyleFilter').value;
-      const images = window.currentImages || [];
+      const images = window.currentImages || AppState.images || [];
 
       const filtered = images.filter(img => {
         const matchesSearch = img.prompt && img.prompt.toLowerCase().includes(search);
@@ -4000,18 +3937,18 @@
 
       if (AppState.posts.length === 0) {
         feed.innerHTML = `
-      < div class="empty-state" >
+          <div class="empty-state">
             <div class="empty-state-icon">👥</div>
             <div class="empty-state-title">No posts yet</div>
             <div class="empty-state-desc">Be the first to share with your team!</div>
             <button class="btn btn-primary" style="margin-top: 16px;" onclick="openModal('newPostModal')">Create Post</button>
-          </div >
+          </div>
       `;
         return;
       }
 
       feed.innerHTML = AppState.posts.map(post => `
-      < div class="social-post" >
+        <div class="social-post">
           <div class="social-post-header">
             <div class="social-post-avatar">${post.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</div>
             <div class="social-post-meta">
@@ -4052,7 +3989,7 @@
     }
 
     function toggleComments(postId) {
-      const commentsDiv = gid(`comments - ${postId} `);
+      const commentsDiv = gid(`comments-${postId}`);
       if (commentsDiv) {
         const isVisible = commentsDiv.style.display !== 'none';
         commentsDiv.style.display = isVisible ? 'none' : 'block';
@@ -4319,13 +4256,28 @@
       const title = gid('noteTitle').value.trim();
       if (!title) { toast('Title is required', 'error'); return; }
 
-      AppState.notes.push({
-        id: genId(),
-        title,
-        content: gid('noteContent').value.trim(),
-        tags: gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t),
-        createdAt: Date.now()
-      });
+      if (window.editingNoteId) {
+        // Edit mode
+        const note = AppState.notes.find(n => n.id === window.editingNoteId);
+        if (note) {
+          note.title = title;
+          note.content = gid('noteContent').value.trim();
+          note.tags = gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t);
+          note.updatedAt = Date.now();
+        }
+        window.editingNoteId = null;
+        toast('Note updated!', 'success');
+      } else {
+        // New note
+        AppState.notes.push({
+          id: genId(),
+          title,
+          content: gid('noteContent').value.trim(),
+          tags: gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t),
+          createdAt: Date.now()
+        });
+        toast('Note created!', 'success');
+      }
 
       save();
       closeModal('newNoteModal');
@@ -4614,8 +4566,6 @@
         gid('meetingTitle').value = meeting.title;
         gid('meetingDate').value = meeting.date;
         gid('meetingTime').value = meeting.time;
-        gid('meetingDuration').value = meeting.duration;
-        gid('meetingType').value = meeting.type || 'video';
         window.editingMeetingId = id;
         openModal('newMeetingModal');
       }
@@ -4735,10 +4685,10 @@
     function editTeamMember(id) {
       const member = AppState.team.find(t => t.id === id);
       if (member) {
-        gid('teamMemberName').value = member.name;
-        gid('teamMemberRole').value = member.role;
-        gid('teamMemberDept').value = member.dept;
-        gid('teamMemberEmail').value = member.email;
+        gid('teamName').value = member.name;
+        gid('teamRole').value = member.role;
+        gid('teamDept').value = member.dept;
+        gid('teamEmail').value = member.email;
         window.editingTeamMemberId = id;
         openModal('newTeamModal');
       }
@@ -4950,9 +4900,6 @@
     }
 
     function showNotifications() {
-      // Show notification dot
-      gid('notifDot').style.display = 'block';
-
       // Get real notifications based on activity
       const notifications = [];
 
@@ -5102,12 +5049,13 @@
     closeModal = function (id) {
       originalCloseModal(id);
       if (id === 'newTaskModal') {
-        gid('newTaskModal').querySelector('.modal-title').textContent = 'New Task';
+        const titleEl = gid('newTaskModal').querySelector('.modal-title');
+        if (titleEl) titleEl.textContent = 'New Task';
         editingTaskId = null;
         // Reset form
-        gid('taskTitle').value = '';
-        gid('taskDesc').value = '';
-        gid('taskDueDate').value = '';
+        if (gid('taskTitle')) gid('taskTitle').value = '';
+        if (gid('taskDesc')) gid('taskDesc').value = '';
+        if (gid('taskDueDate')) gid('taskDueDate').value = '';
       }
       if (id === 'newProjectModal') {
         editingProjectId = null;
