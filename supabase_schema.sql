@@ -50,6 +50,14 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   date TEXT,
   time TEXT,
   duration INTEGER DEFAULT 60,
+  duration_preset TEXT DEFAULT '60', -- '15', '30', '45', '60', '90', '120', 'custom'
+  timezone TEXT DEFAULT 'Europe/Istanbul', -- IANA timezone
+  recurrence TEXT DEFAULT 'none', -- 'none', 'daily', 'weekly', 'biweekly', 'monthly', 'custom'
+  recurrence_end_date TEXT, -- YYYY-MM-DD
+  meeting_link TEXT, -- External meeting link (Zoom, Google Meet, etc.)
+  attendees JSONB DEFAULT '[]', -- Array of participant objects
+  location TEXT, -- Physical location or virtual
+  description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -443,3 +451,13 @@ ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS progress INTEGER DEFAULT 0;
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS assignee TEXT DEFAULT '';
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 60;
 ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+-- Category 1: Meeting Planning & Scheduling columns
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS duration_preset TEXT DEFAULT '60';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS timezone TEXT DEFAULT 'Europe/Istanbul';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS recurrence TEXT DEFAULT 'none';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS recurrence_end_date TEXT;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS meeting_link TEXT;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS attendees JSONB DEFAULT '[]';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS description TEXT;
