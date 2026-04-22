@@ -62,6 +62,21 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Meeting participants table (for detailed tracking)
+CREATE TABLE IF NOT EXISTS public.meeting_participants (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  meeting_id UUID REFERENCES public.meetings(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE, -- NULL for guests
+  email TEXT, -- For guest participants
+  name TEXT, -- Display name
+  role TEXT DEFAULT 'participant', -- 'organizer', 'presenter', 'participant', 'assistant'
+  status TEXT DEFAULT 'invited', -- 'invited', 'accepted', 'declined', 'tentative'
+  joined_at TIMESTAMP WITH TIME ZONE,
+  left_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Team table
 CREATE TABLE IF NOT EXISTS public.team (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -286,6 +301,36 @@ DROP POLICY IF EXISTS "Users can delete own meetings" ON public.meetings;
 CREATE POLICY "Users can delete own meetings" ON public.meetings
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Meeting participants RLS
+DROP POLICY IF EXISTS "Users can view meeting participants" ON public.meeting_participants;
+CREATE POLICY "Users can view meeting participants" ON public.meeting_participants
+  FOR SELECT USING (
+    auth.uid() IN (
+      SELECT user_id FROM public.meetings WHERE id = meeting_participants.meeting_id
+    )
+  );
+DROP POLICY IF EXISTS "Users can insert meeting participants" ON public.meeting_participants;
+CREATE POLICY "Users can insert meeting participants" ON public.meeting_participants
+  FOR INSERT WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM public.meetings WHERE id = meeting_participants.meeting_id
+    )
+  );
+DROP POLICY IF EXISTS "Users can update meeting participants" ON public.meeting_participants;
+CREATE POLICY "Users can update meeting participants" ON public.meeting_participants
+  FOR UPDATE USING (
+    auth.uid() IN (
+      SELECT user_id FROM public.meetings WHERE id = meeting_participants.meeting_id
+    )
+  );
+DROP POLICY IF EXISTS "Users can delete meeting participants" ON public.meeting_participants;
+CREATE POLICY "Users can delete meeting participants" ON public.meeting_participants
+  FOR DELETE USING (
+    auth.uid() IN (
+      SELECT user_id FROM public.meetings WHERE id = meeting_participants.meeting_id
+    )
+  );
+
 DROP POLICY IF EXISTS "Users can view own team" ON public.team;
 CREATE POLICY "Users can view own team" ON public.team
   FOR SELECT USING (auth.uid() = user_id);
@@ -461,3 +506,18 @@ ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS meeting_link TEXT;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS attendees JSONB DEFAULT '[]';
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS location TEXT;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS description TEXT;
+
+-- Category 2: Meeting participants table
+CREATE TABLE IF NOT EXISTS public.meeting_participants (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  meeting_id UUID REFERENCES public.meetings(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+  email TEXT,
+  name TEXT,
+  role TEXT DEFAULT 'participant',
+  status TEXT DEFAULT 'invited',
+  joined_at TIMESTAMP WITH TIME ZONE,
+  left_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
