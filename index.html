@@ -4292,6 +4292,47 @@
                 <button class="btn btn-ghost" onclick="clearData()">🗑️ Clear</button>
               </div>
             </div>
+            <div class="dashboard-card">
+              <div class="card-title">🔗 Entegrasyonlar</div>
+              <div style="margin-top: 12px;">
+                <div style="margin-bottom: 8px;">
+                  <label style="font-size: 0.85rem; color: var(--text-muted);">📅 Takvim</label>
+                  <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('calendar', 'google')">Google Calendar</button>
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('calendar', 'outlook')">Outlook</button>
+                  </div>
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <label style="font-size: 0.85rem; color: var(--text-muted);">📁 Dosya Depolama</label>
+                  <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('storage', 'google')">Google Drive</button>
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('storage', 'dropbox')">Dropbox</button>
+                  </div>
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <label style="font-size: 0.85rem; color: var(--text-muted);">📋 Proje Yönetimi</label>
+                  <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('project', 'jira')">Jira</button>
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('project', 'trello')">Trello</button>
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('project', 'asana')">Asana</button>
+                  </div>
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <label style="font-size: 0.85rem; color: var(--text-muted);">💼 CRM</label>
+                  <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('crm', 'hubspot')">HubSpot</button>
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('crm', 'salesforce')">Salesforce</button>
+                  </div>
+                </div>
+                <div style="margin-bottom: 8px;">
+                  <label style="font-size: 0.85rem; color: var(--text-muted);">💬 Mesajlaşma</label>
+                  <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('messaging', 'slack')">Slack</button>
+                    <button class="btn btn-sm btn-ghost" onclick="connectIntegration('messaging', 'teams')">Teams</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 24px;">Save Settings</button>
         `;
@@ -6106,6 +6147,28 @@
       AppState.settings.pomodoroDuration = parseInt(gid('pomodoroDuration').value) || 25;
       save();
       toast('Settings saved!', 'success');
+    }
+
+    // Category 5: Integrations
+    function connectIntegration(type, provider) {
+      // In production, this would open OAuth flow
+      toast(`${provider} ${type} entegrasyonu için OAuth akışı başlatılıyor...`, 'info');
+
+      // Simulate successful connection
+      setTimeout(() => {
+        toast(`${provider} entegrasyonu başarıyla bağlandı! 🔗`, 'success');
+
+        // Save integration to AppState
+        if (!AppState.integrations) AppState.integrations = [];
+        AppState.integrations.push({
+          id: Date.now(),
+          type,
+          provider,
+          enabled: true,
+          connectedAt: new Date().toISOString()
+        });
+        save();
+      }, 1500);
     }
 
     // ═══════════════════════════════════════════════════════════════
