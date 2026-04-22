@@ -38,7 +38,7 @@ A modern, full-featured project management platform powered by multiple AI provi
 
 ### 💎 Subscription System
 - **25-day Free Trial**: Full access to all features
-- **Pro Plan ($29/month)**: Unlimited AI, images, and features
+- **Pro Plan ($4.99/month)**: Unlimited AI, images, and features
 - **LemonSqueezy Integration**: Secure payment processing
 
 ## 🚀 Quick Start
