@@ -714,6 +714,7 @@
             <p class="page-sub">Join or start a video meeting</p>
           </div>
           <div class="page-actions">
+            <button class="btn btn-primary" onclick="copyMeetingInviteLink()">📤 Davet Et</button>
             <button class="btn btn-red" onclick="endVideoMeeting()">📴 End Meeting</button>
             <button class="btn btn-ghost" onclick="navigateTo('meetings')">← Back to Meetings</button>
           </div>
@@ -1507,6 +1508,31 @@
       }
     }
 
+    // Check for meeting invite on page load
+    function checkMeetingInvite() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const meetingId = urlParams.get('meeting');
+
+      if (meetingId) {
+        // Store meeting ID for later use after login
+        AppState.pendingMeetingId = meetingId;
+        save();
+
+        // If not logged in, show login prompt
+        if (!AppState.currentUser) {
+          toast('Toplantıya katılmak için önce giriş yapın', 'info');
+          gid('authView').classList.add('active');
+          gid('appView').classList.remove('active');
+        } else {
+          // Already logged in, join meeting
+          joinMeetingFromInvite(meetingId);
+        }
+
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
     function checkProFeature() {
       if (!hasFeatureAccess()) {
         const days = getTrialDaysRemaining();
@@ -1773,6 +1799,17 @@
       setInterval(updateClock, 1000);
 
       toast(`Welcome back, ${user.fullName}! 👋`, 'success');
+
+      // Check if there's a pending meeting invite
+      if (AppState.pendingMeetingId) {
+        const meetingId = AppState.pendingMeetingId;
+        AppState.pendingMeetingId = null;
+        save();
+
+        setTimeout(() => {
+          joinMeetingFromInvite(meetingId);
+        }, 1000);
+      }
     }
 
     function logout() {
@@ -2336,6 +2373,45 @@
     let localStream = null;
     let micEnabled = false;
     let camEnabled = false;
+    let currentMeetingId = null;
+
+    function generateMeetingId() {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
+    }
+
+    function getMeetingInviteLink() {
+      if (!currentMeetingId) {
+        currentMeetingId = generateMeetingId();
+      }
+      const baseUrl = window.location.origin + window.location.pathname;
+      return `${baseUrl}?meeting=${currentMeetingId}`;
+    }
+
+    function copyMeetingInviteLink() {
+      if (!currentMeetingId) {
+        currentMeetingId = generateMeetingId();
+      }
+      const inviteLink = getMeetingInviteLink();
+
+      navigator.clipboard.writeText(inviteLink).then(() => {
+        toast('Davet linki kopyalandı! 📋', 'success');
+      }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = inviteLink;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast('Davet linki kopyalandı! 📋', 'success');
+      });
+    }
+
+    function joinMeetingFromInvite(meetingId) {
+      currentMeetingId = meetingId;
+      toast(`Toplantıya katılınıyor: ${meetingId}`, 'info');
+      startVideoMeeting();
+    }
 
     function renderVideoMeeting() {
       // Hide video placeholder if meeting is active
@@ -2351,6 +2427,10 @@
         return;
       }
 
+      if (!currentMeetingId) {
+        currentMeetingId = generateMeetingId();
+      }
+
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         const videoElement = gid('localVideo');
@@ -2359,8 +2439,12 @@
         gid('videoPlaceholder').style.display = 'none';
         micEnabled = true;
         camEnabled = true;
-        toast('Video meeting started! 📹', 'success');
-        navigateTo('videoMeeting');
+
+        if (AppState.currentPage !== 'videoMeeting') {
+          navigateTo('videoMeeting');
+        }
+
+        toast(`Video meeting started! 📹 (ID: ${currentMeetingId})`, 'success');
       } catch (error) {
         toast('Could not access camera/microphone. Please check permissions.', 'error');
         console.error('Error accessing media devices:', error);
@@ -4509,6 +4593,9 @@
 
       // Check for successful payment from LemonSqueezy
       checkPaymentSuccess();
+
+      // Check for meeting invite link
+      checkMeetingInvite();
 
       // Close modals on overlay click
       document.querySelectorAll('.modal-overlay').forEach(overlay => {
