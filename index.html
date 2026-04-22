@@ -1361,6 +1361,30 @@
             </select>
           </div>
         </div>
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+          <div style="font-weight: 600; margin-bottom: 12px; color: var(--accent);">✨ Ekstra Özellikler</div>
+          <div class="form-group">
+            <label class="form-label">📋 Şablon</label>
+            <select class="form-select" id="meetingTemplate">
+              <option value="">Özel toplantı</option>
+              <option value="standup">Daily Standup (15 dk)</option>
+              <option value="sprint">Sprint Planning (60 dk)</option>
+              <option value="retrospective">Sprint Retrospective (60 dk)</option>
+              <option value="review">Code Review (30 dk)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">🤖 AI Asistan</label>
+            <select class="form-select" id="meetingAIAssistant">
+              <option value="false" selected>Kapalı</option>
+              <option value="true">Açık (toplantı sırasında yardım eder)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">🖼️ Sanal Arka Plan</label>
+            <input type="url" class="form-input" id="meetingVirtualBackground" placeholder="https://... (isteğe bağlı)">
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('newMeetingModal')">Cancel</button>
@@ -4374,6 +4398,13 @@
                 </div>
               </div>
             </div>
+            <div class="dashboard-card">
+              <div class="card-title">🎙️ Sesli Komutlar</div>
+              <div style="margin-top: 12px;">
+                <button class="btn btn-teal" onclick="toggleVoiceCommands()">Sesli Komutları Aç/Kapat</button>
+                <small style="display: block; margin-top: 8px; color: var(--text-muted);">"yeni toplantı", "dashboard", "proje", "görev" vb. deyin</small>
+              </div>
+            </div>
           </div>
           <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 24px;">Save Settings</button>
         `;
@@ -5025,6 +5056,9 @@
       const waitingRoom = gid('meetingWaitingRoom').value === 'true';
       const encrypted = gid('meetingEncrypted').value === 'true';
       const joinPermissions = gid('meetingJoinPermissions').value;
+      const templateId = gid('meetingTemplate').value || null;
+      const aiAssistantEnabled = gid('meetingAIAssistant').value === 'true';
+      const virtualBackground = gid('meetingVirtualBackground').value.trim() || null;
 
       // Add guest to attendees if provided
       if (guestEmail && !attendees.includes(guestEmail)) {
@@ -5053,6 +5087,9 @@
           m.waiting_room = waitingRoom;
           m.encrypted = encrypted;
           m.join_permissions = joinPermissions;
+          m.template_id = templateId;
+          m.ai_assistant_enabled = aiAssistantEnabled;
+          m.virtual_background = virtualBackground;
           m.updatedAt = Date.now();
 
           await saveToSupabase('meetings', m);
@@ -5083,6 +5120,9 @@
           waiting_room: waitingRoom,
           encrypted: encrypted,
           join_permissions: joinPermissions,
+          template_id: templateId,
+          ai_assistant_enabled: aiAssistantEnabled,
+          virtual_background: virtualBackground,
           notification_sent: false,
           late_warning_sent: false,
           createdAt: Date.now()
@@ -5553,6 +5593,9 @@
         gid('meetingWaitingRoom').value = meeting.waiting_room ? 'true' : 'false';
         gid('meetingEncrypted').value = meeting.encrypted ? 'true' : 'false';
         gid('meetingJoinPermissions').value = meeting.join_permissions || 'anyone';
+        gid('meetingTemplate').value = meeting.template_id || '';
+        gid('meetingAIAssistant').value = meeting.ai_assistant_enabled ? 'true' : 'false';
+        gid('meetingVirtualBackground').value = meeting.virtual_background || '';
         window.editingMeetingId = id;
         openModal('newMeetingModal');
       }
@@ -6379,6 +6422,71 @@
 
     function showKeyboardShortcuts() {
       alert('⌨️ Klavye Kısayolları\n\nCtrl/Cmd + M: Yeni toplantı oluştur\nCtrl/Cmd + Shift + M: Toplantılar sayfası\nCtrl/Cmd + K: Arama\nCtrl/Cmd + N: Yeni not\nCtrl/Cmd + P: Yeni proje\nCtrl/Cmd + T: Yeni görev\nESC: Modalı kapat\nCtrl/Cmd + /: Kısayolları göster');
+    }
+
+    // Category 10: Voice commands
+    let voiceCommandRecognition = null;
+    let voiceCommandEnabled = false;
+
+    function toggleVoiceCommands() {
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        toast('Sesli komutlar bu tarayıcıda desteklenmiyor 😢', 'error');
+        return;
+      }
+
+      if (voiceCommandEnabled) {
+        if (voiceCommandRecognition) {
+          voiceCommandRecognition.stop();
+        }
+        voiceCommandEnabled = false;
+        toast('Sesli komutlar kapatıldı 🎙️', 'info');
+      } else {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        voiceCommandRecognition = new SpeechRecognition();
+        voiceCommandRecognition.continuous = true;
+        voiceCommandRecognition.interimResults = false;
+        voiceCommandRecognition.lang = 'tr-TR';
+
+        voiceCommandRecognition.onresult = (event) => {
+          const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
+          handleVoiceCommand(command);
+        };
+
+        voiceCommandRecognition.onerror = (event) => {
+          console.error('Voice command error:', event.error);
+          voiceCommandEnabled = false;
+        };
+
+        voiceCommandRecognition.onend = () => {
+          if (voiceCommandEnabled) {
+            voiceCommandRecognition.start();
+          }
+        };
+
+        voiceCommandRecognition.start();
+        voiceCommandEnabled = true;
+        toast('Sesli komutlar açıldı! 🎙️ "yeni toplantı", "dashboard" vb. deyin', 'success');
+      }
+    }
+
+    function handleVoiceCommand(command) {
+      toast(`Komut algılandı: "${command}"`, 'info');
+
+      if (command.includes('yeni toplantı') || command.includes('toplantı oluştur')) {
+        openModal('newMeetingModal');
+      } else if (command.includes('toplantılar') || command.includes('meetings')) {
+        navigateTo('meetings');
+      } else if (command.includes('dashboard') || command.includes('ana sayfa')) {
+        navigateTo('dashboard');
+      } else if (command.includes('proje') || command.includes('project')) {
+        navigateTo('projects');
+      } else if (command.includes('görev') || command.includes('task')) {
+        navigateTo('tasks');
+      } else if (command.includes('kapat') || command.includes('close')) {
+        closeModal();
+      } else if (command.includes('not') || command.includes('note')) {
+        openModal('newNoteModal');
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════
