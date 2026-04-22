@@ -3832,14 +3832,21 @@
       const provider = gid('aiProvider').value;
       const chatContainer = gid('aiChatMessages');
 
-      // Add user message
-      chatContainer.innerHTML += `<div class="ai-message user">${esc(message)}</div>`;
+      // Add user message using textContent for XSS safety
+      const userMsgDiv = document.createElement('div');
+      userMsgDiv.className = 'ai-message user';
+      userMsgDiv.textContent = message;
+      chatContainer.appendChild(userMsgDiv);
       input.value = '';
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
       // Show loading
       const loadingId = 'loading-' + Date.now();
-      chatContainer.innerHTML += `<div class="ai-message system" id="${loadingId}">Thinking...</div>`;
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'ai-message system';
+      loadingDiv.id = loadingId;
+      loadingDiv.textContent = 'Thinking...';
+      chatContainer.appendChild(loadingDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
       try {
@@ -3861,9 +3868,16 @@
         document.getElementById(loadingId).remove();
 
         if (data.success && data.content) {
-          chatContainer.innerHTML += `<div class="ai-message assistant">${esc(data.content)}</div>`;
+          const assistantDiv = document.createElement('div');
+          assistantDiv.className = 'ai-message assistant';
+          assistantDiv.textContent = data.content;
+          chatContainer.appendChild(assistantDiv);
         } else {
-          chatContainer.innerHTML += `<div class="ai-message system" style="color: #ef4444;">Error: ${data.error || 'Failed to get response'}</div>`;
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'ai-message system';
+          errorDiv.style.color = '#ef4444';
+          errorDiv.textContent = `Error: ${data.error || 'Failed to get response'}`;
+          chatContainer.appendChild(errorDiv);
         }
 
         chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -3872,7 +3886,11 @@
         document.getElementById(loadingId).remove();
         console.error('AI API Error:', error);
 
-        chatContainer.innerHTML += `<div class="ai-message system" style="color: #ef4444;">Error: ${error.message || 'Failed to connect to AI service'}</div>`;
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'ai-message system';
+        errorDiv.style.color = '#ef4444';
+        errorDiv.textContent = `Error: ${error.message || 'Failed to connect to AI service'}`;
+        chatContainer.appendChild(errorDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }
@@ -3883,7 +3901,11 @@
       if (!message) return;
 
       const chatContainer = gid('quickAIChat');
-      chatContainer.innerHTML += `<div class="ai-message user">${esc(message)}</div>`;
+
+      const userMsgDiv = document.createElement('div');
+      userMsgDiv.className = 'ai-message user';
+      userMsgDiv.textContent = message;
+      chatContainer.appendChild(userMsgDiv);
       input.value = '';
 
       setTimeout(() => {
@@ -3893,16 +3915,28 @@
           "Your team has completed 85% of this month's goals. Keep up the great work! 🎉"
         ];
         const response = responses[Math.floor(Math.random() * responses.length)];
-        chatContainer.innerHTML += `<div class="ai-message assistant">${response}</div>`;
+
+        const assistantDiv = document.createElement('div');
+        assistantDiv.className = 'ai-message assistant';
+        assistantDiv.textContent = response;
+        chatContainer.appendChild(assistantDiv);
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }, 1000);
     }
 
     function clearAIChat() {
-      gid('aiChatMessages').innerHTML = `
-      <div class="ai-message system">👋 Welcome to PROJEX AI Assistant!</div>
-        <div class="ai-message system">I can help you with project planning, task organization, and productivity tips.</div>
-    `;
+      const chatContainer = gid('aiChatMessages');
+      chatContainer.innerHTML = '';
+
+      const welcomeDiv = document.createElement('div');
+      welcomeDiv.className = 'ai-message system';
+      welcomeDiv.textContent = '👋 Welcome to PROJEX AI Assistant!';
+      chatContainer.appendChild(welcomeDiv);
+
+      const helpDiv = document.createElement('div');
+      helpDiv.className = 'ai-message system';
+      helpDiv.textContent = 'I can help you with project planning, task organization, and productivity tips.';
+      chatContainer.appendChild(helpDiv);
     }
 
     function useTemplate(type) {
