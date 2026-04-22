@@ -1174,6 +1174,10 @@
           <label class="form-label">Meeting Title</label>
           <input type="text" class="form-input" id="meetingTitle" placeholder="Meeting name...">
         </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-input" id="meetingDescription" rows="2" placeholder="Meeting description..."></textarea>
+        </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
             <label class="form-label">Date</label>
@@ -1183,6 +1187,62 @@
             <label class="form-label">Time</label>
             <input type="time" class="form-input" id="meetingTime">
           </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Duration</label>
+            <select class="form-select" id="meetingDuration">
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60" selected>1 hour</option>
+              <option value="90">1.5 hours</option>
+              <option value="120">2 hours</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Timezone</label>
+            <select class="form-select" id="meetingTimezone">
+              <option value="Europe/Istanbul" selected>Istanbul (TR)</option>
+              <option value="Europe/London">London (UK)</option>
+              <option value="Europe/Paris">Paris (FR)</option>
+              <option value="Europe/Berlin">Berlin (DE)</option>
+              <option value="America/New_York">New York (US)</option>
+              <option value="America/Los_Angeles">Los Angeles (US)</option>
+              <option value="Asia/Tokyo">Tokyo (JP)</option>
+              <option value="Asia/Dubai">Dubai (AE)</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Recurrence</label>
+          <select class="form-select" id="meetingRecurrence" onchange="toggleRecurrenceEndDate()">
+            <option value="none" selected>One-time</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="biweekly">Every 2 weeks</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        <div class="form-group" id="recurrenceEndDateGroup" style="display: none;">
+          <label class="form-label">Recurrence End Date</label>
+          <input type="date" class="form-input" id="meetingRecurrenceEndDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input type="text" class="form-input" id="meetingLocation" placeholder="Physical address or 'Virtual'">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Meeting Link (Zoom, Google Meet, etc.)</label>
+          <input type="url" class="form-input" id="meetingLink" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Attendees</label>
+          <input type="text" class="form-input" id="meetingAttendees"
+            placeholder="email@example.com, email2@example.com">
+          <small style="color: var(--text-muted);">Comma-separated emails</small>
         </div>
       </div>
       <div class="modal-footer">
@@ -4033,10 +4093,19 @@
       }
       if (id === 'newMeetingModal') {
         gid('meetingDate').value = todayStr();
+        toggleRecurrenceEndDate();
       }
       if (id === 'pomodoroModal') {
         gid('pomoTaskSelect').innerHTML = '<option value="">— Select task —</option>' +
           AppState.tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('');
+      }
+    }
+
+    function toggleRecurrenceEndDate() {
+      const recurrence = gid('meetingRecurrence').value;
+      const endDateGroup = gid('recurrenceEndDateGroup');
+      if (endDateGroup) {
+        endDateGroup.style.display = recurrence !== 'none' ? 'block' : 'none';
       }
     }
 
@@ -4618,6 +4687,10 @@
       const title = gid('meetingTitle').value.trim();
       if (!title) { toast('Meeting title is required', 'error'); return; }
 
+      const duration = parseInt(gid('meetingDuration').value) || 60;
+      const recurrence = gid('meetingRecurrence').value;
+      const attendees = gid('meetingAttendees').value.split(',').map(e => e.trim()).filter(e => e);
+
       if (window.editingMeetingId) {
         // Edit mode
         const m = AppState.meetings.find(meeting => meeting.id === window.editingMeetingId);
@@ -4625,6 +4698,15 @@
           m.title = title;
           m.date = gid('meetingDate').value;
           m.time = gid('meetingTime').value;
+          m.duration = duration;
+          m.duration_preset = duration.toString();
+          m.timezone = gid('meetingTimezone').value;
+          m.recurrence = recurrence;
+          m.recurrence_end_date = gid('meetingRecurrenceEndDate').value || null;
+          m.location = gid('meetingLocation').value;
+          m.meeting_link = gid('meetingLink').value;
+          m.description = gid('meetingDescription').value;
+          m.attendees = attendees;
           m.updatedAt = Date.now();
 
           await saveToSupabase('meetings', m);
@@ -4640,7 +4722,15 @@
           title,
           date: gid('meetingDate').value,
           time: gid('meetingTime').value,
-          duration: 60,
+          duration,
+          duration_preset: duration.toString(),
+          timezone: gid('meetingTimezone').value,
+          recurrence,
+          recurrence_end_date: gid('meetingRecurrenceEndDate').value || null,
+          location: gid('meetingLocation').value,
+          meeting_link: gid('meetingLink').value,
+          description: gid('meetingDescription').value,
+          attendees,
           createdAt: Date.now()
         };
         AppState.meetings.push(newMeeting);
@@ -4990,27 +5080,32 @@
               <thead>
                 <tr>
                   <th>Title</th>
-                  <th>Date</th>
-                  <th>Time</th>
+                  <th>Date & Time</th>
                   <th>Duration</th>
-                  <th>Type</th>
+                  <th>Recurrence</th>
+                  <th>Location</th>
+                  <th>Attendees</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="meetingsTable">
                 ${meetings.map(m => `
                   <tr>
-                    <td><strong>${esc(m.title)}</strong></td>
-                    <td>${m.date}</td>
-                    <td>${m.time}</td>
+                    <td><strong>${esc(m.title)}</strong>${m.description ? `<br><small style="color: var(--text-muted);">${esc(m.description.substring(0, 50))}${m.description.length > 50 ? '...' : ''}</small>` : ''}</td>
+                    <td>
+                      <div>${m.date}</div>
+                      <small style="color: var(--text-muted);">${m.time} • ${m.timezone || 'UTC'}</small>
+                    </td>
                     <td>${m.duration} min</td>
-                    <td><span class="badge badge-${m.type?.toLowerCase() || 'video'}">${esc(m.type || 'Video')}</span></td>
+                    <td>${m.recurrence !== 'none' ? `<span class="badge badge-teal">🔄 ${m.recurrence}</span>` : '-'}</td>
+                    <td>${m.location || m.meeting_link ? (m.location ? `<small>📍 ${esc(m.location)}</small>` : `<small>🔗 Virtual</small>`) : '-'}</td>
+                    <td>${Array.isArray(m.attendees) ? m.attendees.length : 0} 👤</td>
                     <td>
                       <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')">✏️</button>
                       <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')">🗑️</button>
                     </td>
                   </tr>
-                `).join('') || '<tr><td colspan="6" class="empty-state">No meetings yet</td></tr>'}
+                `).join('') || '<tr><td colspan="7" class="empty-state">No meetings yet</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -5037,17 +5132,21 @@
       const tbody = gid('meetingsTable');
       tbody.innerHTML = filtered.map(m => `
         <tr>
-          <td><strong>${esc(m.title)}</strong></td>
-          <td>${m.date}</td>
-          <td>${m.time}</td>
+          <td><strong>${esc(m.title)}</strong>${m.description ? `<br><small style="color: var(--text-muted);">${esc(m.description.substring(0, 50))}${m.description.length > 50 ? '...' : ''}</small>` : ''}</td>
+          <td>
+            <div>${m.date}</div>
+            <small style="color: var(--text-muted);">${m.time} • ${m.timezone || 'UTC'}</small>
+          </td>
           <td>${m.duration} min</td>
-          <td><span class="badge badge-${m.type?.toLowerCase() || 'video'}">${esc(m.type || 'Video')}</span></td>
+          <td>${m.recurrence !== 'none' ? `<span class="badge badge-teal">🔄 ${m.recurrence}</span>` : '-'}</td>
+          <td>${m.location || m.meeting_link ? (m.location ? `<small>📍 ${esc(m.location)}</small>` : `<small>🔗 Virtual</small>`) : '-'}</td>
+          <td>${Array.isArray(m.attendees) ? m.attendees.length : 0} 👤</td>
           <td>
             <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')">✏️</button>
             <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')">🗑️</button>
           </td>
         </tr>
-      `).join('') || '<tr><td colspan="6" class="empty-state">No meetings found</td></tr>';
+      `).join('') || '<tr><td colspan="7" class="empty-state">No meetings found</td></tr>';
     }
 
     function editMeeting(id) {
@@ -5056,6 +5155,14 @@
         gid('meetingTitle').value = meeting.title;
         gid('meetingDate').value = meeting.date;
         gid('meetingTime').value = meeting.time;
+        gid('meetingDuration').value = meeting.duration_preset || meeting.duration || '60';
+        gid('meetingTimezone').value = meeting.timezone || 'Europe/Istanbul';
+        gid('meetingRecurrence').value = meeting.recurrence || 'none';
+        gid('meetingRecurrenceEndDate').value = meeting.recurrence_end_date || '';
+        gid('meetingLocation').value = meeting.location || '';
+        gid('meetingLink').value = meeting.meeting_link || '';
+        gid('meetingDescription').value = meeting.description || '';
+        gid('meetingAttendees').value = Array.isArray(meeting.attendees) ? meeting.attendees.join(', ') : '';
         window.editingMeetingId = id;
         openModal('newMeetingModal');
       }
