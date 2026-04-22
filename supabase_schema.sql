@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
   status TEXT DEFAULT 'active', -- 'active', 'completed', 'archived'
   color TEXT DEFAULT '#3b82f6',
   budget NUMERIC DEFAULT 0,
+  progress INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -35,7 +36,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   description TEXT,
   priority TEXT DEFAULT 'medium', -- 'low', 'medium', 'high'
   status TEXT DEFAULT 'todo', -- 'todo', 'in_progress', 'done'
-  assignee TEXT,
+  assignee TEXT DEFAULT '',
   date TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -431,3 +432,14 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ═══════════════════════════════════════════════════════════════
+-- MIGRATION HELPERS - Run these if you encounter schema errors
+-- ═══════════════════════════════════════════════════════════════
+
+-- Add missing columns to existing tables
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS budget NUMERIC DEFAULT 0;
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS progress INTEGER DEFAULT 0;
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS assignee TEXT DEFAULT '';
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 60;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();

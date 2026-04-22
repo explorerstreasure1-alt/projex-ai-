@@ -1506,10 +1506,26 @@
 
       try {
         // Convert camelCase to snake_case for Supabase compatibility
+        // Handle millisecond timestamps by converting to ISO string
+        const formatTimestamp = (ts) => {
+          if (!ts) return new Date().toISOString();
+          if (typeof ts === 'number') {
+            // Check if it's a millisecond timestamp
+            if (ts > 10000000000) return new Date(ts).toISOString();
+            return ts.toString();
+          }
+          if (typeof ts === 'string') {
+            // If it's a string number, convert to ISO
+            if (!isNaN(ts) && ts.length > 10) return new Date(parseInt(ts)).toISOString();
+            return ts;
+          }
+          return new Date().toISOString();
+        };
+
         const formattedData = {
           ...data,
-          created_at: data.createdAt || data.created_at || new Date().toISOString(),
-          updated_at: data.updatedAt || data.updated_at || new Date().toISOString()
+          created_at: formatTimestamp(data.createdAt || data.created_at),
+          updated_at: formatTimestamp(data.updatedAt || data.updated_at)
         };
         // Remove camelCase versions to avoid conflicts
         delete formattedData.createdAt;
@@ -1593,7 +1609,7 @@
               // Convert string IDs to UUID format for Supabase
               const supabaseItem = {
                 ...item,
-                id: item.id && item.id.length === 36 ? item.id : genId(), // Use genId if not UUID
+                id: item.id && item.id.length === 36 ? item.id : crypto.randomUUID(), // Use crypto.randomUUID if not UUID
                 user_id: AppState.currentUser.id
               };
 
