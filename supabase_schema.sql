@@ -74,6 +74,12 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   export_formats TEXT DEFAULT 'json', -- Available export formats: 'json', 'pdf', 'doc', 'md'
   meeting_notes TEXT, -- Additional meeting notes
   -- End Category 4
+  -- Category 6: Notifications
+  reminder_minutes INTEGER DEFAULT 15, -- Reminder before meeting (minutes): 0 (none), 5, 15, 30, 60
+  notification_sent BOOLEAN DEFAULT false, -- Whether notification was sent
+  late_warning_sent BOOLEAN DEFAULT false, -- Whether late warning was sent
+  notification_preferences JSONB DEFAULT '{}', -- User notification preferences (email, push, sound)
+  -- End Category 6
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -580,6 +586,12 @@ ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS action_items JSONB DEFAULT 
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS attendance_report JSONB;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS export_formats TEXT DEFAULT 'json';
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS meeting_notes TEXT;
+
+-- Category 6: Notifications
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS reminder_minutes INTEGER DEFAULT 15;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS notification_sent BOOLEAN DEFAULT false;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS late_warning_sent BOOLEAN DEFAULT false;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{}';
 
 -- Category 5: Integrations table
 CREATE TABLE IF NOT EXISTS public.integrations (
