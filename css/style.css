@@ -1495,12 +1495,30 @@ header .logo-slogan {
 /* Video Grid */
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 12px;
 }
 
 .video-participant {
   position: relative;
+}
+
+.video-participant.host {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.video-participant.host .video-wrapper {
+  border: 3px solid var(--amber);
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .online-dot {
