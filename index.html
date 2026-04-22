@@ -3466,8 +3466,8 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt: `Aşağıdaki ses kaydını analiz et, toparla, geliştir ve yapılandırılmış bir proje planına dönüştür. Ana fikirleri öne çıkar, eylem adımlarını listele ve özet oluştur:\n\n${mainVoiceTranscript}`,
-            system: 'Sen deneyimli bir proje yöneticisisin. Ses kayıtlarını analiz edip, yapılandırılmış ve eyleme geçirilebilir proje planlarına dönüştürüyorsun.'
+            prompt: `Bu ses kaydını analiz et ve kısa özet çıkar:\n\n${mainVoiceTranscript}`,
+            system: 'Proje yöneticisi olarak ses kayıtlarını analiz edip kısa özetler çıkarıyorsun.'
           })
         });
 
@@ -3817,8 +3817,8 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt: `Aşağıdaki ses kaydını analiz et, toparla, geliştir ve yapılandırılmış bir proje planına dönüştür. Ana fikirleri öne çıkar, eylem adımlarını listele ve özet oluştur:\n\n${voiceTranscript}`,
-            system: 'Sen deneyimli bir proje yöneticisisin. Ses kayıtlarını analiz edip, yapılandırılmış ve eyleme geçirilebilir proje planlarına dönüştürüyorsun.'
+            prompt: `Bu ses kaydını analiz et ve kısa özet çıkar:\n\n${voiceTranscript}`,
+            system: 'Proje yöneticisi olarak ses kayıtlarını analiz edip kısa özetler çıkarıyorsun.'
           })
         });
 
