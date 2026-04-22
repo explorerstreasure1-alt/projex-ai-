@@ -3672,11 +3672,15 @@
         return;
       }
 
+      // Reset state
+      mainVoiceTranscript = '';
+      mainVoiceRecordingSeconds = 0;
+      mainVoiceAudioChunks = [];
+
       // Start audio recording with MediaRecorder
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
           mainVoiceAudioStream = stream;
-          mainVoiceAudioChunks = [];
 
           // Try different MIME types for better compatibility
           const mimeTypes = [
@@ -3686,13 +3690,20 @@
             'audio/mp4',
             'audio/wav'
           ];
+          let selectedMimeType = null;
+          for (const mimeType of mimeTypes) {
+            if (MediaRecorder.isTypeSupported(mimeType)) {
+              selectedMimeType = mimeType;
+              break;
+            }
+          }
 
-          let selectedMimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || '';
+          if (!selectedMimeType) {
+            console.warn('No supported MIME type found, using default');
+            selectedMimeType = '';
+          }
 
-          mainVoiceMediaRecorder = new MediaRecorder(stream, {
-            mimeType: selectedMimeType,
-            audioBitsPerSecond: 128000
-          });
+          mainVoiceMediaRecorder = new MediaRecorder(stream, { mimeType: selectedMimeType });
 
           mainVoiceMediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
@@ -3701,7 +3712,14 @@
           };
 
           mainVoiceMediaRecorder.onstop = () => {
-            mainVoiceAudioBlob = new Blob(mainVoiceAudioChunks, { type: selectedMimeType || 'audio/webm' });
+            if (mainVoiceAudioChunks.length > 0) {
+              mainVoiceAudioBlob = new Blob(mainVoiceAudioChunks, { type: selectedMimeType || 'audio/webm' });
+            }
+          };
+
+          mainVoiceMediaRecorder.onerror = (event) => {
+            console.error('MediaRecorder error:', event.error);
+            toast('Ses kaydı hatası oluştu', 'error');
           };
 
           mainVoiceMediaRecorder.start(1000); // Save chunks every second for long recordings
@@ -3727,11 +3745,15 @@
             }
 
             mainVoiceTranscript += finalTranscript;
-            gid('mainVoiceTranscript').innerHTML = mainVoiceTranscript + '<span style="color: var(--text-muted);">' + interimTranscript + '</span>';
+            const transcriptContainer = gid('mainVoiceTranscript');
+            if (transcriptContainer) {
+              transcriptContainer.innerHTML = mainVoiceTranscript + '<span style="color: var(--text-muted);">' + interimTranscript + '</span>';
+            }
 
             // Update status to show transcript is being captured
-            if (mainVoiceTranscript.length > 0) {
-              gid('mainVoiceRecordStatus').textContent = `Kaydediliyor... (${mainVoiceTranscript.length} karakter)`;
+            const statusEl = gid('mainVoiceRecordStatus');
+            if (statusEl && mainVoiceTranscript.length > 0) {
+              statusEl.textContent = `Kaydediliyor... (${mainVoiceTranscript.length} karakter)`;
             }
           };
 
@@ -3744,32 +3766,66 @@
               console.warn('Ses algılanamadı, lütfen tekrar konuşun');
             } else if (event.error === 'network') {
               toast('Ses tanıma servisi hatası (internet bağlantısı gerekli)', 'error');
+            } else if (event.error === 'aborted') {
+              console.warn('Ses tanıma durduruldu');
+              if (mainVoiceRecording) {
+                // Try to restart
+                setTimeout(() => {
+                  try {
+                    mainVoiceRecognition.start();
+                  } catch (e) {
+                    console.error('Failed to restart recognition:', e);
+                  }
+                }, 500);
+              }
             } else {
               console.error('Speech recognition error:', event.error);
             }
           };
 
           mainVoiceRecognition.onend = () => {
-            if (mainVoiceRecording) {
-              mainVoiceRecognition.start();
+            if (mainVoiceRecording && mainVoiceRecognition) {
+              // Delay restart to avoid rapid restart loops
+              setTimeout(() => {
+                try {
+                  mainVoiceRecognition.start();
+                } catch (e) {
+                  console.error('Failed to restart recognition:', e);
+                }
+              }, 100);
             }
           };
 
           try {
             mainVoiceRecognition.start();
             mainVoiceRecording = true;
-            mainVoiceTranscript = '';
-            mainVoiceRecordingSeconds = 0;
 
             const btn = gid('mainVoiceRecordBtn');
-            btn.style.background = 'var(--red)';
-            btn.innerHTML = '⏹️';
-            btn.style.animation = 'pulse 1.5s infinite';
+            if (btn) {
+              btn.style.background = 'var(--red)';
+              btn.innerHTML = '⏹️';
+              btn.style.animation = 'pulse 1.5s infinite';
+            }
 
-            gid('mainVoiceRecordStatus').textContent = 'Kaydediliyor...';
-            gid('mainVoiceRecordTime').style.display = 'block';
-            gid('analyzeMainVoiceBtn').disabled = true;
-            gid('downloadVoiceBtn').disabled = true;
+            const statusEl = gid('mainVoiceRecordStatus');
+            if (statusEl) {
+              statusEl.textContent = 'Kaydediliyor...';
+            }
+
+            const timeEl = gid('mainVoiceRecordTime');
+            if (timeEl) {
+              timeEl.style.display = 'block';
+            }
+
+            const analyzeBtn = gid('analyzeMainVoiceBtn');
+            if (analyzeBtn) {
+              analyzeBtn.disabled = true;
+            }
+
+            const downloadBtn = gid('downloadVoiceBtn');
+            if (downloadBtn) {
+              downloadBtn.disabled = true;
+            }
 
             mainVoiceRecordingInterval = setInterval(() => {
               mainVoiceRecordingSeconds++;
@@ -3777,23 +3833,26 @@
               const minutes = Math.floor((mainVoiceRecordingSeconds % 3600) / 60);
               const seconds = mainVoiceRecordingSeconds % 60;
 
-              if (hours > 0) {
-                gid('mainVoiceRecordTime').textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-              } else {
-                gid('mainVoiceRecordTime').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+              const timeDisplayEl = gid('mainVoiceRecordTime');
+              if (timeDisplayEl) {
+                if (hours > 0) {
+                  timeDisplayEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                  timeDisplayEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
               }
             }, 1000);
 
             toast('Ses kaydı başladı 🎙️', 'success');
           } catch (error) {
             console.error('Error starting voice recognition:', error);
-            toast('Ses kaydı başlatılamadı', 'error');
+            toast('Ses kaydı başlatılamadı: ' + error.message, 'error');
+            stopMainVoiceRecording();
           }
         })
         .catch(error => {
           console.error('Audio recording error:', error);
-          toast('Ses kaydı başlatılamadı - mikrofon izni gerekli', 'error');
-          return;
+          toast('Ses kaydı başlatılamadı - mikrofon izni gerekli: ' + error.message, 'error');
         });
     }
 
