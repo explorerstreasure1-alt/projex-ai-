@@ -224,129 +224,186 @@ ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: Users can only access their own data
+-- Drop any previously created policies (including Turkish-named ones)
+DROP POLICY IF EXISTS "Kullanıcılar kendi profilini görebilir" ON public.user_profiles;
+DROP POLICY IF EXISTS "Users can view own profile" ON public.user_profiles;
 CREATE POLICY "Users can view own profile" ON public.user_profiles
   FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.user_profiles;
 CREATE POLICY "Users can insert own profile" ON public.user_profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can update own profile" ON public.user_profiles;
 CREATE POLICY "Users can update own profile" ON public.user_profiles
   FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can view own projects" ON public.projects;
 CREATE POLICY "Users can view own projects" ON public.projects
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own projects" ON public.projects;
 CREATE POLICY "Users can insert own projects" ON public.projects
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own projects" ON public.projects;
 CREATE POLICY "Users can update own projects" ON public.projects
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own projects" ON public.projects;
 CREATE POLICY "Users can delete own projects" ON public.projects
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own tasks" ON public.tasks;
 CREATE POLICY "Users can view own tasks" ON public.tasks
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own tasks" ON public.tasks;
 CREATE POLICY "Users can insert own tasks" ON public.tasks
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own tasks" ON public.tasks;
 CREATE POLICY "Users can update own tasks" ON public.tasks
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own tasks" ON public.tasks;
 CREATE POLICY "Users can delete own tasks" ON public.tasks
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own meetings" ON public.meetings;
 CREATE POLICY "Users can view own meetings" ON public.meetings
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own meetings" ON public.meetings;
 CREATE POLICY "Users can insert own meetings" ON public.meetings
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own meetings" ON public.meetings;
 CREATE POLICY "Users can update own meetings" ON public.meetings
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own meetings" ON public.meetings;
 CREATE POLICY "Users can delete own meetings" ON public.meetings
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own team" ON public.team;
 CREATE POLICY "Users can view own team" ON public.team
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own team" ON public.team;
 CREATE POLICY "Users can insert own team" ON public.team
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own team" ON public.team;
 CREATE POLICY "Users can update own team" ON public.team
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own team" ON public.team;
 CREATE POLICY "Users can delete own team" ON public.team
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own posts" ON public.posts;
 CREATE POLICY "Users can view own posts" ON public.posts
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own posts" ON public.posts;
 CREATE POLICY "Users can insert own posts" ON public.posts
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own posts" ON public.posts;
 CREATE POLICY "Users can update own posts" ON public.posts
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own posts" ON public.posts;
 CREATE POLICY "Users can delete own posts" ON public.posts
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own comments" ON public.comments;
 CREATE POLICY "Users can view own comments" ON public.comments
   FOR SELECT USING (auth.uid() = (SELECT user_id FROM public.posts WHERE id = post_id));
+DROP POLICY IF EXISTS "Users can insert own comments" ON public.comments;
 CREATE POLICY "Users can insert own comments" ON public.comments
   FOR INSERT WITH CHECK (auth.uid() = (SELECT user_id FROM public.posts WHERE id = post_id));
 
+DROP POLICY IF EXISTS "Users can view own notes" ON public.notes;
 CREATE POLICY "Users can view own notes" ON public.notes
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own notes" ON public.notes;
 CREATE POLICY "Users can insert own notes" ON public.notes
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own notes" ON public.notes;
 CREATE POLICY "Users can update own notes" ON public.notes
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own notes" ON public.notes;
 CREATE POLICY "Users can delete own notes" ON public.notes
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own images" ON public.images;
 CREATE POLICY "Users can view own images" ON public.images
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own images" ON public.images;
 CREATE POLICY "Users can insert own images" ON public.images
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own images" ON public.images;
 CREATE POLICY "Users can delete own images" ON public.images
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own resources" ON public.resources;
 CREATE POLICY "Users can view own resources" ON public.resources
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own resources" ON public.resources;
 CREATE POLICY "Users can insert own resources" ON public.resources
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own resources" ON public.resources;
 CREATE POLICY "Users can update own resources" ON public.resources
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own resources" ON public.resources;
 CREATE POLICY "Users can delete own resources" ON public.resources
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own budget" ON public.budget;
 CREATE POLICY "Users can view own budget" ON public.budget
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own budget" ON public.budget;
 CREATE POLICY "Users can insert own budget" ON public.budget
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own budget" ON public.budget;
 CREATE POLICY "Users can update own budget" ON public.budget
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own budget" ON public.budget;
 CREATE POLICY "Users can delete own budget" ON public.budget
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own risks" ON public.risks;
 CREATE POLICY "Users can view own risks" ON public.risks
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own risks" ON public.risks;
 CREATE POLICY "Users can insert own risks" ON public.risks
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own risks" ON public.risks;
 CREATE POLICY "Users can update own risks" ON public.risks
   FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own risks" ON public.risks;
 CREATE POLICY "Users can delete own risks" ON public.risks
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own activity" ON public.activity;
 CREATE POLICY "Users can view own activity" ON public.activity
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own activity" ON public.activity;
 CREATE POLICY "Users can insert own activity" ON public.activity
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own voice notes" ON public.voice_notes;
 CREATE POLICY "Users can view own voice notes" ON public.voice_notes
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own voice notes" ON public.voice_notes;
 CREATE POLICY "Users can insert own voice notes" ON public.voice_notes
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own voice notes" ON public.voice_notes;
 CREATE POLICY "Users can delete own voice notes" ON public.voice_notes
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own settings" ON public.user_settings;
 CREATE POLICY "Users can view own settings" ON public.user_settings
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own settings" ON public.user_settings;
 CREATE POLICY "Users can insert own settings" ON public.user_settings
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own settings" ON public.user_settings;
 CREATE POLICY "Users can update own settings" ON public.user_settings
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own subscription" ON public.subscriptions;
 CREATE POLICY "Users can view own subscription" ON public.subscriptions
   FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own subscription" ON public.subscriptions;
 CREATE POLICY "Users can insert own subscription" ON public.subscriptions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own subscription" ON public.subscriptions;
 CREATE POLICY "Users can update own subscription" ON public.subscriptions
   FOR UPDATE USING (auth.uid() = user_id);
 
