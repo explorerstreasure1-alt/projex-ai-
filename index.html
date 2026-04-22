@@ -189,11 +189,12 @@
     <nav class="sidebar">
       <div class="nav-section">
         <div class="nav-label">Main Menu</div>
-        <button class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+        <button class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')"
+          aria-label="Dashboard page">
           <span class="nav-icon">📊</span>
           <span>Dashboard</span>
         </button>
-        <button class="nav-item" data-page="projects" onclick="navigateTo('projects')">
+        <button class="nav-item" data-page="projects" onclick="navigateTo('projects')" aria-label="Projects page">
           <span class="nav-icon">📁</span>
           <span>Projects</span>
           <span class="nav-badge" id="projectCount">0</span>
@@ -6284,6 +6285,54 @@
 
     // Check notifications every minute
     setInterval(checkMeetingNotifications, 60000);
+
+    // Category 8: Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + M: Open new meeting modal
+      if ((e.ctrlKey || e.metaKey) && e.key === 'm' && !e.shiftKey) {
+        e.preventDefault();
+        openModal('newMeetingModal');
+      }
+      // Ctrl/Cmd + Shift + M: Open meetings page
+      if ((e.ctrlKey || e.metaKey) && e.key === 'm' && e.shiftKey) {
+        e.preventDefault();
+        navigateTo('meetings');
+      }
+      // Ctrl/Cmd + K: Open search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = gid('meetingSearch');
+        if (searchInput) searchInput.focus();
+      }
+      // Ctrl/Cmd + N: New note
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !e.shiftKey) {
+        e.preventDefault();
+        openModal('newNoteModal');
+      }
+      // Ctrl/Cmd + P: New project
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p' && !e.shiftKey) {
+        e.preventDefault();
+        openModal('newProjectModal');
+      }
+      // Ctrl/Cmd + T: New task
+      if ((e.ctrlKey || e.metaKey) && e.key === 't' && !e.shiftKey) {
+        e.preventDefault();
+        openModal('newTaskModal');
+      }
+      // Escape: Close modals
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+      // Ctrl/Cmd + /: Show keyboard shortcuts help
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        showKeyboardShortcuts();
+      }
+    });
+
+    function showKeyboardShortcuts() {
+      alert('⌨️ Klavye Kısayolları\n\nCtrl/Cmd + M: Yeni toplantı oluştur\nCtrl/Cmd + Shift + M: Toplantılar sayfası\nCtrl/Cmd + K: Arama\nCtrl/Cmd + N: Yeni not\nCtrl/Cmd + P: Yeni proje\nCtrl/Cmd + T: Yeni görev\nESC: Modalı kapat\nCtrl/Cmd + /: Kısayolları göster');
+    }
 
     // ═══════════════════════════════════════════════════════════════
     // SAMPLE DATA
