@@ -1505,11 +1505,29 @@
       if (!AppState.currentUser) return;
 
       try {
+        // Convert camelCase to snake_case for Supabase compatibility
+        const formattedData = {
+          ...data,
+          created_at: data.createdAt || data.created_at || new Date().toISOString(),
+          updated_at: data.updatedAt || data.updated_at || new Date().toISOString()
+        };
+        // Remove camelCase versions to avoid conflicts
+        delete formattedData.createdAt;
+        delete formattedData.updatedAt;
+
+        // Ensure user_id is set
+        if (!formattedData.user_id) {
+          formattedData.user_id = AppState.currentUser.id;
+        }
+
         const { error } = await supabaseClient
           .from(table)
-          .upsert({ ...data, user_id: AppState.currentUser.id });
+          .upsert(formattedData);
 
-        if (error) throw error;
+        if (error) {
+          console.error(`Error saving to ${table}:`, error.message, error.details);
+          throw error;
+        }
       } catch (error) {
         console.error(`Error saving to ${table}:`, error);
       }
@@ -1575,11 +1593,15 @@
               // Convert string IDs to UUID format for Supabase
               const supabaseItem = {
                 ...item,
-                id: item.id.length === 36 ? item.id : genId(), // Use genId if not UUID
+                id: item.id && item.id.length === 36 ? item.id : genId(), // Use genId if not UUID
                 user_id: AppState.currentUser.id
               };
 
-              await saveToSupabase(migration.table, supabaseItem);
+              try {
+                await saveToSupabase(migration.table, supabaseItem);
+              } catch (err) {
+                console.error(`Failed to migrate item to ${migration.table}:`, item, err);
+              }
             }
             console.log(`Migrated ${migration.data.length} items to ${migration.table}`);
           }
