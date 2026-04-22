@@ -93,6 +93,19 @@ CREATE TABLE IF NOT EXISTS public.meeting_participants (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Integrations table (for Category 5)
+CREATE TABLE IF NOT EXISTS public.integrations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+  integration_type TEXT NOT NULL, -- 'calendar', 'storage', 'project', 'crm', 'messaging'
+  provider TEXT NOT NULL, -- 'google', 'outlook', 'dropbox', 'jira', 'trello', 'asana', 'hubspot', 'salesforce', 'slack', 'teams'
+  config JSONB, -- Integration-specific configuration (API keys, webhooks, etc.)
+  enabled BOOLEAN DEFAULT true,
+  last_sync TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Team table
 CREATE TABLE IF NOT EXISTS public.team (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -347,6 +360,20 @@ CREATE POLICY "Users can delete meeting participants" ON public.meeting_particip
     )
   );
 
+-- Integrations RLS
+DROP POLICY IF EXISTS "Users can view own integrations" ON public.integrations;
+CREATE POLICY "Users can view own integrations" ON public.integrations
+  FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own integrations" ON public.integrations;
+CREATE POLICY "Users can insert own integrations" ON public.integrations
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own integrations" ON public.integrations;
+CREATE POLICY "Users can update own integrations" ON public.integrations
+  FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own integrations" ON public.integrations;
+CREATE POLICY "Users can delete own integrations" ON public.integrations
+  FOR DELETE USING (auth.uid() = user_id);
+
 DROP POLICY IF EXISTS "Users can view own team" ON public.team;
 CREATE POLICY "Users can view own team" ON public.team
   FOR SELECT USING (auth.uid() = user_id);
@@ -553,3 +580,16 @@ ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS action_items JSONB DEFAULT 
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS attendance_report JSONB;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS export_formats TEXT DEFAULT 'json';
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS meeting_notes TEXT;
+
+-- Category 5: Integrations table
+CREATE TABLE IF NOT EXISTS public.integrations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+  integration_type TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  config JSONB,
+  enabled BOOLEAN DEFAULT true,
+  last_sync TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
