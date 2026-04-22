@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
   description TEXT,
   status TEXT DEFAULT 'active', -- 'active', 'completed', 'archived'
   color TEXT DEFAULT '#3b82f6',
+  budget NUMERIC DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -74,7 +75,8 @@ CREATE TABLE IF NOT EXISTS public.posts (
   image TEXT,
   likes INTEGER DEFAULT 0,
   comments INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Comments table

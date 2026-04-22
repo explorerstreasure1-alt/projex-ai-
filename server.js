@@ -13,14 +13,14 @@ app.use(express.static('.'));
 
 // Supabase client
 const supabaseUrl = process.env.SUPABASE_URL || 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // AI API endpoints
 app.post('/api/groq', async (req, res) => {
   try {
     const { prompt, system } = req.body;
-    
+
     if (!prompt) {
       return res.status(400).json({ success: false, error: 'Prompt is required' });
     }
@@ -60,7 +60,7 @@ app.post('/api/groq', async (req, res) => {
 app.post('/api/mistral', async (req, res) => {
   try {
     const { prompt, system } = req.body;
-    
+
     if (!prompt) {
       return res.status(400).json({ success: false, error: 'Prompt is required' });
     }
@@ -100,7 +100,7 @@ app.post('/api/mistral', async (req, res) => {
 app.post('/api/generate-image', async (req, res) => {
   try {
     const { prompt, provider } = req.body;
-    
+
     if (!prompt) {
       return res.status(400).json({ success: false, error: 'Prompt is required' });
     }
