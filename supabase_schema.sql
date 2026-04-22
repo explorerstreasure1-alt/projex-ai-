@@ -637,3 +637,18 @@ CREATE TABLE IF NOT EXISTS public.integrations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Meeting signals table for WebRTC signaling
+CREATE TABLE IF NOT EXISTS public.meeting_signals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  meeting_id TEXT NOT NULL,
+  sender_id TEXT NOT NULL,
+  peer_id TEXT NOT NULL,
+  type TEXT NOT NULL, -- 'join', 'leave', 'offer', 'answer', 'ice-candidate'
+  data JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index for faster signaling queries
+CREATE INDEX IF NOT EXISTS idx_meeting_signals_meeting_id ON public.meeting_signals(meeting_id);
+CREATE INDEX IF NOT EXISTS idx_meeting_signals_created_at ON public.meeting_signals(created_at);
