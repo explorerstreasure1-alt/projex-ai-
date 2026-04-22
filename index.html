@@ -5395,6 +5395,8 @@
         const today = new Date().toISOString().slice(0, 10);
         const upcoming = meetings.filter(m => m.date >= today).length;
         const past = meetings.filter(m => m.date < today).length;
+        const totalParticipants = meetings.reduce((sum, m) => sum + (m.total_participants || 0), 0);
+        const avgDuration = meetings.length > 0 ? Math.round(meetings.reduce((sum, m) => sum + (m.duration || 0), 0) / meetings.length) : 0;
 
         page.innerHTML = `
           <div class="page-header">
@@ -5405,10 +5407,11 @@
             <div class="page-actions">
               <button class="btn btn-primary" onclick="openModal('newMeetingModal')">+ New Meeting</button>
               <button class="btn btn-teal" onclick="startVideoMeeting()">📹 Start Video Meeting</button>
+              <button class="btn btn-ghost" onclick="exportMeetingAnalytics()">📊 Analytics</button>
             </div>
           </div>
 
-          <!-- Meeting Stats -->
+          <!-- Meeting Stats (Category 9) -->
           <div class="dashboard-grid" style="margin-bottom: 24px;">
             <div class="dashboard-card">
               <div class="stat-value">${meetings.length}</div>
@@ -5421,6 +5424,14 @@
             <div class="dashboard-card">
               <div class="stat-value">${past}</div>
               <div class="stat-label">Past</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${totalParticipants}</div>
+              <div class="stat-label">Total Participants</div>
+            </div>
+            <div class="dashboard-card">
+              <div class="stat-value">${avgDuration}</div>
+              <div class="stat-label">Avg Duration (min)</div>
             </div>
             <div class="dashboard-card">
               <div class="stat-value">${meetings.reduce((sum, m) => sum + (m.duration || 0), 0)}</div>
@@ -5643,6 +5654,42 @@
 
       URL.revokeObjectURL(url);
       toast('Toplantı dışa aktarıldı! 📥', 'success');
+    }
+
+    // Category 9: Analytics export
+    function exportMeetingAnalytics() {
+      const meetings = AppState.meetings || [];
+      const analytics = {
+        total_meetings: meetings.length,
+        total_participants: meetings.reduce((sum, m) => sum + (m.total_participants || 0), 0),
+        total_minutes: meetings.reduce((sum, m) => sum + (m.duration || 0), 0),
+        average_duration: meetings.length > 0 ? Math.round(meetings.reduce((sum, m) => sum + (m.duration || 0), 0) / meetings.length) : 0,
+        meetings_by_recurrence: {
+          none: meetings.filter(m => !m.recurrence || m.recurrence === 'none').length,
+          daily: meetings.filter(m => m.recurrence === 'daily').length,
+          weekly: meetings.filter(m => m.recurrence === 'weekly').length,
+          monthly: meetings.filter(m => m.recurrence === 'monthly').length
+        },
+        meetings: meetings.map(m => ({
+          title: m.title,
+          date: m.date,
+          duration: m.duration,
+          participants: m.total_participants || 0,
+          recurrence: m.recurrence
+        }))
+      };
+
+      const json = JSON.stringify(analytics, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `meeting_analytics_${Date.now()}.json`;
+      a.click();
+
+      URL.revokeObjectURL(url);
+      toast('Analitik raporu dışa aktarıldı! 📊', 'success');
     }
 
     function renderTeam() {
