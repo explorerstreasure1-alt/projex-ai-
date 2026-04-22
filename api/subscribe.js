@@ -1,5 +1,14 @@
 // Lemonsqueezy Subscription Handler
 export default async function handler(req, res) {
+  // Add CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method === 'POST') {
     const { userId, variantId } = req.body;
 
@@ -48,7 +57,7 @@ export default async function handler(req, res) {
   } else if (req.method === 'GET') {
     // Verify subscription status
     const { userId } = req.query;
-    
+
     try {
       const response = await fetch(
         `https://api.lemonsqueezy.com/v1/subscriptions?filter[user_id]=${userId}`,
@@ -62,8 +71,8 @@ export default async function handler(req, res) {
 
       const data = await response.json();
       const active = data.data?.some(sub => sub.attributes.status === 'active');
-      
-      res.status(200).json({ 
+
+      res.status(200).json({
         subscribed: active,
         subscriptions: data.data
       });

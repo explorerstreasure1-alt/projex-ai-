@@ -44,30 +44,62 @@ A modern, full-featured project management platform powered by multiple AI provi
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ (for API functions)
-- Vercel CLI (for deployment)
+- Node.js 18+ (for local development)
+- Vercel account (for deployment)
 
-### Installation
+### Local Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/projex-ai.git
-cd projex-ai
+git clone https://github.com/explorerstreasure1-alt/Projex-Ai.git
+cd Projex-Ai
 
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your API keys
-
-# Run locally
+# Run locally with Vercel CLI
 vercel dev
 ```
 
+### Vercel Deployment
+
+#### Step 1: Create GitHub Repository
+1. Go to https://github.com/new
+2. Repository name: `Projex-Ai`
+3. Make it public or private as needed
+4. Click "Create repository"
+5. Push your code to GitHub
+
+#### Step 2: Deploy to Vercel
+1. Go to https://vercel.com/new
+2. Import your GitHub repository
+3. Vercel will automatically detect the project settings
+4. Click "Deploy"
+
+#### Step 3: Configure Environment Variables
+After deployment, add these environment variables in Vercel Dashboard:
+
+**Required for AI Features:**
+- `GROQ_API_KEY` - Get from https://console.groq.com/
+- `GEMINI_API_KEY` - Get from https://ai.google.dev/
+- `MISTRAL_API_KEY` - Get from https://console.mistral.ai/
+- `HF_TOKEN` - Get from https://huggingface.co/settings/tokens
+
+**Optional for Image Generation:**
+- `CLOUDFLARE_API_KEY` - Get from Cloudflare dashboard
+- `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account ID
+
+**Required for Payments:**
+- `LEMONSQUEEZY_API_KEY` - Get from https://app.lemonsqueezy.com/settings/api
+- `LEMONSQUEEZY_STORE_ID` - Your LemonSqueezy store ID
+- `LEMONSQUEEZY_WEBHOOK_SECRET` - Webhook secret for signature verification
+
+To add environment variables:
+1. Go to your project in Vercel Dashboard
+2. Navigate to Settings → Environment Variables
+3. Add each variable with its value
+4. Redeploy the project
+
 ### Environment Variables
 
-Create a `.env.local` file:
+Create a `.env.local` file for local development:
 
 ```env
 # AI API Keys
