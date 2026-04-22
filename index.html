@@ -5362,6 +5362,10 @@
                     <td>${Array.isArray(m.attendees) ? m.attendees.length : 0} 👤</td>
                     <td>
                       <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')">✏️</button>
+                      <button class="btn btn-sm btn-ghost" onclick="showMeetingSummary('${m.id}')" title="AI Summary">🤖</button>
+                      <button class="btn btn-sm btn-ghost" onclick="showMeetingActionItems('${m.id}')" title="Action Items">✅</button>
+                      <button class="btn btn-sm btn-ghost" onclick="showAttendanceReport('${m.id}')" title="Attendance">📊</button>
+                      <button class="btn btn-sm btn-ghost" onclick="exportMeeting('${m.id}')" title="Export">📥</button>
                       <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')">🗑️</button>
                     </td>
                   </tr>
@@ -5403,6 +5407,10 @@
           <td>${Array.isArray(m.attendees) ? m.attendees.length : 0} 👤</td>
           <td>
             <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')">✏️</button>
+            <button class="btn btn-sm btn-ghost" onclick="showMeetingSummary('${m.id}')" title="AI Summary">🤖</button>
+            <button class="btn btn-sm btn-ghost" onclick="showMeetingActionItems('${m.id}')" title="Action Items">✅</button>
+            <button class="btn btn-sm btn-ghost" onclick="showAttendanceReport('${m.id}')" title="Attendance">📊</button>
+            <button class="btn btn-sm btn-ghost" onclick="exportMeeting('${m.id}')" title="Export">📥</button>
             <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')">🗑️</button>
           </td>
         </tr>
@@ -5428,6 +5436,104 @@
         window.editingMeetingId = id;
         openModal('newMeetingModal');
       }
+    }
+
+    // Category 4: Post-meeting features
+    function showMeetingSummary(id) {
+      const meeting = AppState.meetings.find(m => m.id === id);
+      if (!meeting) return;
+
+      const summary = meeting.summary || 'Henüz özet oluşturulmadı. AI ile özet oluşturmak için butona tıklayın.';
+
+      alert(`📋 ${meeting.title} - Özet\n\n${summary}\n\n💡 Not: AI ile özet oluşturmak için "AI Özet Oluştur" butonuna tıklayın.`);
+    }
+
+    async function generateMeetingSummary(id) {
+      const meeting = AppState.meetings.find(m => m.id === id);
+      if (!meeting) return;
+
+      toast('AI özet oluşturuluyor...', 'info');
+
+      // Simulate AI summary generation (in production, call AI API)
+      setTimeout(() => {
+        const summary = `Bu toplantıda ${meeting.title} konusu tartışıldı.\n\nAna noktalar:\n- Proje durumu gözden geçirildi\n- Bir sonraki adımlar belirlendi\n- Sorunlar ve çözümler tartışıldı`;
+
+        meeting.summary = summary;
+        save();
+        toast('Özet oluşturuldu! 🤖', 'success');
+      }, 2000);
+    }
+
+    function showMeetingActionItems(id) {
+      const meeting = AppState.meetings.find(m => m.id === id);
+      if (!meeting) return;
+
+      const actionItems = Array.isArray(meeting.action_items) ? meeting.action_items : [];
+
+      if (actionItems.length === 0) {
+        alert('✅ Aksiyon maddesi yok');
+      } else {
+        const items = actionItems.map((item, i) => `${i + 1}. ${item.text} (${item.assignee || 'Atanmamış'}) - ${item.status || 'Beklemede'}`).join('\n');
+        alert(`✅ ${meeting.title} - Aksiyon Maddeleri\n\n${items}`);
+      }
+    }
+
+    function addActionItem(id, text, assignee) {
+      const meeting = AppState.meetings.find(m => m.id === id);
+      if (!meeting) return;
+
+      if (!meeting.action_items) meeting.action_items = [];
+
+      meeting.action_items.push({
+        id: Date.now(),
+        text,
+        assignee,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
+
+      save();
+      toast('Aksiyon maddesi eklendi! ✅', 'success');
+    }
+
+    function showAttendanceReport(id) {
+      const meeting = AppState.meetings.find(m => m.id === id);
+      if (!meeting) return;
+
+      const attendees = Array.isArray(meeting.attendees) ? meeting.attendees : [];
+
+      const report = `📊 ${meeting.title} - Katılım Raporu\n\nToplam Davetli: ${attendees.length}\nKatılımcı Sayısı: ${attendees.length}\nToplantı Süresi: ${meeting.duration} dakika\n\nKatılımcılar:\n${attendees.map(a => `- ${a}`).join('\n')}`;
+
+      alert(report);
+    }
+
+    function exportMeeting(id) {
+      const meeting = AppState.meetings.find(m => m.id === id);
+      if (!meeting) return;
+
+      const exportData = {
+        title: meeting.title,
+        date: meeting.date,
+        time: meeting.time,
+        duration: meeting.duration,
+        attendees: meeting.attendees,
+        summary: meeting.summary || '',
+        action_items: meeting.action_items || [],
+        transcription: meeting.transcription || '',
+        notes: meeting.meeting_notes || ''
+      };
+
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${meeting.title.replace(/\s+/g, '_')}_export.json`;
+      a.click();
+
+      URL.revokeObjectURL(url);
+      toast('Toplantı dışa aktarıldı! 📥', 'success');
     }
 
     function renderTeam() {
