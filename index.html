@@ -3007,6 +3007,9 @@
     let mainVoiceRecordingInterval = null;
     let mainVoiceRecordingSeconds = 0;
     let mainVoiceAudioBlob = null;
+    let mainVoiceMediaRecorder = null;
+    let mainVoiceAudioChunks = [];
+    let mainVoiceAudioStream = null;
     let savedVoiceNotesList = [];
 
     function toggleMainVoiceRecording() {
@@ -3023,6 +3026,47 @@
         return;
       }
 
+      // Start audio recording with MediaRecorder
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          mainVoiceAudioStream = stream;
+          mainVoiceAudioChunks = [];
+
+          // Try different MIME types for better compatibility
+          const mimeTypes = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus',
+            'audio/mp4',
+            'audio/wav'
+          ];
+
+          let selectedMimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || '';
+
+          mainVoiceMediaRecorder = new MediaRecorder(stream, {
+            mimeType: selectedMimeType,
+            audioBitsPerSecond: 128000
+          });
+
+          mainVoiceMediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              mainVoiceAudioChunks.push(event.data);
+            }
+          };
+
+          mainVoiceMediaRecorder.onstop = () => {
+            mainVoiceAudioBlob = new Blob(mainVoiceAudioChunks, { type: selectedMimeType || 'audio/webm' });
+          };
+
+          mainVoiceMediaRecorder.start(1000); // Save chunks every second for long recordings
+        })
+        .catch(error => {
+          console.error('Audio recording error:', error);
+          toast('Ses kaydı başlatılamadı - mikrofon izni gerekli', 'error');
+          return;
+        });
+
+      // Start speech recognition
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       mainVoiceRecognition = new SpeechRecognition();
       mainVoiceRecognition.lang = 'tr-TR';
@@ -3078,9 +3122,15 @@
 
         mainVoiceRecordingInterval = setInterval(() => {
           mainVoiceRecordingSeconds++;
-          const minutes = Math.floor(mainVoiceRecordingSeconds / 60);
+          const hours = Math.floor(mainVoiceRecordingSeconds / 3600);
+          const minutes = Math.floor((mainVoiceRecordingSeconds % 3600) / 60);
           const seconds = mainVoiceRecordingSeconds % 60;
-          gid('mainVoiceRecordTime').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+          if (hours > 0) {
+            gid('mainVoiceRecordTime').textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          } else {
+            gid('mainVoiceRecordTime').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          }
         }, 1000);
 
         toast('Ses kaydı başladı 🎙️', 'success');
@@ -3095,12 +3145,22 @@
         mainVoiceRecognition.stop();
       }
 
+      if (mainVoiceMediaRecorder && mainVoiceMediaRecorder.state !== 'inactive') {
+        mainVoiceMediaRecorder.stop();
+      }
+
+      if (mainVoiceAudioStream) {
+        mainVoiceAudioStream.getTracks().forEach(track => track.stop());
+      }
+
       if (mainVoiceRecordingInterval) {
         clearInterval(mainVoiceRecordingInterval);
       }
 
       mainVoiceRecording = false;
       mainVoiceRecognition = null;
+      mainVoiceMediaRecorder = null;
+      mainVoiceAudioStream = null;
 
       const btn = gid('mainVoiceRecordBtn');
       btn.style.background = 'var(--accent)';
@@ -3162,15 +3222,29 @@
         return;
       }
 
-      // Create a text file with the transcript
-      const blob = new Blob([mainVoiceTranscript], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `sesli-not-${new Date().toISOString()}.txt`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast('Ses notu indirildi! 📥', 'success');
+      // Download audio file if available
+      if (mainVoiceAudioBlob) {
+        const url = URL.createObjectURL(mainVoiceAudioBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        const ext = mainVoiceAudioBlob.type.includes('webm') ? 'webm' :
+          mainVoiceAudioBlob.type.includes('ogg') ? 'ogg' :
+            mainVoiceAudioBlob.type.includes('mp4') ? 'm4a' : 'wav';
+        a.download = `sesli-not-${new Date().toISOString()}.${ext}`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('Ses dosyası indirildi! 📥', 'success');
+      } else {
+        // Fallback to text file
+        const blob = new Blob([mainVoiceTranscript], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sesli-not-${new Date().toISOString()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('Ses notu metin olarak indirildi! 📥', 'success');
+      }
     }
 
     function saveVoiceNote(transcript, analysis, provider) {
@@ -3179,6 +3253,9 @@
         transcript: transcript,
         analysis: analysis,
         provider: provider,
+        audioBlob: mainVoiceAudioBlob,
+        audioType: mainVoiceAudioBlob?.type || 'audio/webm',
+        duration: mainVoiceRecordingSeconds,
         createdAt: new Date().toISOString()
       };
 
@@ -3187,7 +3264,18 @@
       if (!AppState.voiceNotes) {
         AppState.voiceNotes = [];
       }
-      AppState.voiceNotes.unshift(note);
+
+      // Don't save large audio blobs to localStorage, just metadata
+      const noteForStorage = {
+        id: note.id,
+        transcript: note.transcript,
+        analysis: note.analysis,
+        provider: note.provider,
+        duration: note.duration,
+        createdAt: note.createdAt
+      };
+
+      AppState.voiceNotes.unshift(noteForStorage);
       save();
 
       renderSavedVoiceNotes();
@@ -3202,21 +3290,71 @@
         return;
       }
 
-      container.innerHTML = savedVoiceNotesList.map(note => `
+      container.innerHTML = savedVoiceNotesList.map(note => {
+        const duration = note.duration ? formatDuration(note.duration) : '';
+        return `
         <div style="padding: 12px; background: var(--card); border-radius: var(--r); margin-bottom: 8px; border: 1px solid var(--border);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent);">${note.provider.toUpperCase()}</span>
             <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(note.createdAt).toLocaleString('tr-TR')}</span>
           </div>
+          ${duration ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">⏱️ Süre: ${duration}</div>` : ''}
           <div style="font-size: 0.85rem; color: var(--text); margin-bottom: 8px; max-height: 60px; overflow: hidden; text-overflow: ellipsis;">
             ${note.transcript.substring(0, 150)}...
           </div>
+          ${note.audioBlob ? `
+            <audio controls style="width: 100%; margin-bottom: 8px;">
+              <source src="${URL.createObjectURL(note.audioBlob)}" type="${note.audioType}">
+              Tarayıcınız ses çalmayı desteklemiyor
+            </audio>
+          ` : ''}
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-sm btn-primary" onclick="viewVoiceNote('${note.id}')">Görüntüle</button>
+            <button class="btn btn-sm btn-teal" onclick="downloadSavedVoiceNote('${note.id}')">İndir</button>
             <button class="btn btn-sm btn-red" onclick="deleteVoiceNote('${note.id}')">Sil</button>
           </div>
         </div>
-      `).join('');
+      `}).join('');
+    }
+
+    function formatDuration(seconds) {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+
+      if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      } else {
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
+      }
+    }
+
+    function downloadSavedVoiceNote(noteId) {
+      const note = savedVoiceNotesList.find(n => n.id === noteId);
+      if (note) {
+        if (note.audioBlob) {
+          const url = URL.createObjectURL(note.audioBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          const ext = note.audioType.includes('webm') ? 'webm' :
+            note.audioType.includes('ogg') ? 'ogg' :
+              note.audioType.includes('mp4') ? 'm4a' : 'wav';
+          a.download = `sesli-not-${note.id}.${ext}`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast('Ses dosyası indirildi! 📥', 'success');
+        } else {
+          // Fallback to text
+          const blob = new Blob([note.transcript], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `sesli-not-${note.id}.txt`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast('Ses notu metin olarak indirildi! 📥', 'success');
+        }
+      }
     }
 
     function viewVoiceNote(noteId) {
