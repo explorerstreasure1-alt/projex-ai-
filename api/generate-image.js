@@ -35,8 +35,16 @@ export default async function handler(req, res) {
 
     if (provider === 'cloudflare') {
       if (!process.env.CLOUDFLARE_API_KEY || !process.env.CLOUDFLARE_ACCOUNT_ID) {
-        console.error('Cloudflare credentials not configured');
-        return res.status(500).json({ error: 'Server configuration error' });
+        console.warn('Cloudflare credentials not configured, using demo mode');
+        // Demo mode: Use placeholder image service
+        imageUrl = `https://placehold.co/512x512/1a1a2e/fff?text=${encodeURIComponent(prompt.substring(0, 30))}`;
+        res.status(200).json({
+          success: true,
+          imageUrl,
+          provider: 'demo',
+          demo: true
+        });
+        return;
       }
 
       // Cloudflare Workers AI
@@ -66,8 +74,16 @@ export default async function handler(req, res) {
       imageUrl = `data:image/png;base64,${base64}`;
     } else {
       if (!process.env.HF_TOKEN) {
-        console.error('HF_TOKEN not configured');
-        return res.status(500).json({ error: 'Server configuration error' });
+        console.warn('HuggingFace token not configured, using demo mode');
+        // Demo mode: Use placeholder image service
+        imageUrl = `https://placehold.co/512x512/1a1a2e/fff?text=${encodeURIComponent(prompt.substring(0, 30))}`;
+        res.status(200).json({
+          success: true,
+          imageUrl,
+          provider: 'demo',
+          demo: true
+        });
+        return;
       }
 
       // HuggingFace Inference API
