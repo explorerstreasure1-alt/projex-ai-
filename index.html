@@ -3025,6 +3025,11 @@
           })
         });
 
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.message || `HTTP ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data.success && data.content) {
@@ -3289,6 +3294,11 @@
             system: 'Sen deneyimli bir proje yöneticisisin. Ses kayıtlarını analiz edip, yapılandırılmış ve eyleme geçirilebilir proje planlarına dönüştürüyorsun.'
           })
         });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.message || `HTTP ${response.status}`);
+        }
 
         const data = await response.json();
 
@@ -3591,6 +3601,11 @@
           })
         });
 
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.message || `HTTP ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data.success && data.content) {
@@ -3837,6 +3852,11 @@
           })
         });
 
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.message || `HTTP ${response.status}`);
+        }
+
         const data = await response.json();
         document.getElementById(loadingId).remove();
 
@@ -3941,6 +3961,11 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: fullPrompt, provider })
         });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.message || `HTTP ${response.status}`);
+        }
 
         const data = await response.json();
 
@@ -4145,7 +4170,8 @@
       const post = AppState.posts.find(p => p.id === id);
       if (!post) return;
 
-      const comment = prompt(`Add a comment on ${post.author} 's post:`);
+      // Simple inline comment input - more UX friendly than prompt
+      const comment = prompt(`Add a comment on ${post.author}'s post:`);
       if (!comment || !comment.trim()) return;
 
       if (!post.commentsList) post.commentsList = [];
@@ -5346,7 +5372,18 @@
       // Close modals on overlay click
       document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) overlay.classList.remove('active');
+          if (e.target === overlay) {
+            overlay.classList.remove('active');
+            // Reset all edit states to prevent race conditions
+            window.editingTaskId = null;
+            window.editingProjectId = null;
+            window.editingMeetingId = null;
+            window.editingTeamMemberId = null;
+            window.editingNoteId = null;
+            window.editingResourceId = null;
+            window.editingRiskId = null;
+            window.editingBudgetId = null;
+          }
         });
       });
     }
