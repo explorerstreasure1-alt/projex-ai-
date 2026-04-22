@@ -3462,20 +3462,14 @@
       gid('analyzeMainVoiceBtn').disabled = true;
 
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
-
         const response = await fetch(`/api/${provider}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
           body: JSON.stringify({
             prompt: `Aşağıdaki ses kaydını analiz et, toparla, geliştir ve yapılandırılmış bir proje planına dönüştür. Ana fikirleri öne çıkar, eylem adımlarını listele ve özet oluştur:\n\n${mainVoiceTranscript}`,
             system: 'Sen deneyimli bir proje yöneticisisin. Ses kayıtlarını analiz edip, yapılandırılmış ve eyleme geçirilebilir proje planlarına dönüştürüyorsun.'
           })
         });
-
-        clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
@@ -3498,10 +3492,7 @@
         console.error('Analysis error:', error);
         gid('mainVoiceRecordStatus').textContent = 'Analiz hatası';
 
-        if (error.name === 'AbortError') {
-          toast('Analiz zaman aşımına uğradı. API yanıt vermiyor olabilir.', 'error');
-          gid('mainVoiceAnalysis').innerHTML = '<div style="color: var(--danger);">⚠️ Analiz zaman aşımına uğradı. Lütfen tekrar deneyin veya farklı bir AI sağlayıcısı seçin.</div>';
-        } else if (error.message.includes('504')) {
+        if (error.message.includes('504')) {
           toast('Vercel timeout: API yanıt vermiyor veya API key eksik.', 'error');
           gid('mainVoiceAnalysis').innerHTML = '<div style="color: var(--danger);">⚠️ 504 Gateway Timeout: AI API yanıt vermiyor.<br><br>Olası nedenler:<br>• API key tanımlanmamış<br>• Vercel Function timeout (10s limit)<br>• AI servisi yavaş yanıt veriyor</div>';
         } else {
@@ -3821,21 +3812,15 @@
       gid('analyzeVoiceBtn').disabled = true;
 
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 25000);
-
         // Use Mistral for analysis
         const response = await fetch('/api/mistral', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
           body: JSON.stringify({
             prompt: `Aşağıdaki ses kaydını analiz et, toparla, geliştir ve yapılandırılmış bir proje planına dönüştür. Ana fikirleri öne çıkar, eylem adımlarını listele ve özet oluştur:\n\n${voiceTranscript}`,
             system: 'Sen deneyimli bir proje yöneticisisin. Ses kayıtlarını analiz edip, yapılandırılmış ve eyleme geçirilebilir proje planlarına dönüştürüyorsun.'
           })
         });
-
-        clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
@@ -3866,8 +3851,8 @@
         console.error('Analysis error:', error);
         gid('voiceRecordStatus').textContent = 'Analiz hatası';
 
-        if (error.name === 'AbortError' || error.message.includes('504')) {
-          gid('voiceTranscription').innerHTML += '<br><br><strong style="color: var(--danger);">⚠️ Analiz zaman aşımına uğradı veya API key tanımlı değil. Vercel Environment Variables kontrol edin.</strong>';
+        if (error.message.includes('504')) {
+          gid('voiceTranscription').innerHTML += '<br><br><strong style="color: var(--danger);">⚠️ 504 Timeout: Vercel 10 saniye limiti aşıldı. Daha kısa ses kaydı deneyin.</strong>';
         }
 
         toast('Analiz başarısız: ' + error.message, 'error');
