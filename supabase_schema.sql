@@ -86,6 +86,11 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   encrypted BOOLEAN DEFAULT false, -- End-to-end encryption enabled
   join_permissions TEXT DEFAULT 'anyone', -- 'anyone', 'invited_only', 'password_only', 'password_and_invited'
   -- End Category 7
+  -- Category 9: Analytics
+  total_participants INTEGER DEFAULT 0, -- Total participants who joined
+  avg_duration INTEGER, -- Average duration in minutes (for recurring meetings)
+  usage_stats JSONB DEFAULT '{}', -- Meeting usage statistics (features used, etc.)
+  -- End Category 9
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -604,6 +609,11 @@ ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS password TEXT;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS waiting_room BOOLEAN DEFAULT false;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS encrypted BOOLEAN DEFAULT false;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS join_permissions TEXT DEFAULT 'anyone';
+
+-- Category 9: Analytics
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS total_participants INTEGER DEFAULT 0;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS avg_duration INTEGER;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS usage_stats JSONB DEFAULT '{}';
 
 -- Category 5: Integrations table
 CREATE TABLE IF NOT EXISTS public.integrations (
