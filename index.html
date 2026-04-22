@@ -11,6 +11,7 @@
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -1454,6 +1455,13 @@
     };
 
     // ═══════════════════════════════════════════════════════════════
+    // SUPABASE BACKEND
+    // ═══════════════════════════════════════════════════════════════
+    const supabaseUrl = 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
+    const supabaseKey = 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // ═══════════════════════════════════════════════════════════════
     // UTILITY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════
     const gid = (id) => {
@@ -1788,26 +1796,30 @@
       if (!validateEmail(email)) { showMsg('Invalid email address', 'error'); return; }
 
       setLoading(true);
-      const hashedPassword = await hashPassword(pw);
-      const oldBtoaPassword = btoa(pw); // Backward compatibility for old accounts
 
-      setTimeout(() => {
-        // Try new SHA-256 hash first, then fall back to old btoa
-        const user = AppState.users.find(u => u.email === email.toLowerCase() && (u.password === hashedPassword || u.password === oldBtoaPassword));
-        if (!user) { showMsg('Invalid email or password', 'error'); setLoading(false); return; }
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.toLowerCase(),
+          password: pw
+        });
 
-        // If user has old btoa password, migrate to new SHA-256
-        if (user.password === oldBtoaPassword) {
-          user.password = hashedPassword;
-          save();
-        }
+        if (error) throw error;
 
-        AppState.currentUser = user;
+        AppState.currentUser = {
+          id: data.user.id,
+          email: data.user.email,
+          fullName: data.user.user_metadata.full_name || data.user.email.split('@')[0]
+        };
+
         showMsg('Login successful! Redirecting...', 'success');
         setLoading(false);
 
-        setTimeout(() => enterApp(user), 800);
-      }, 900);
+        setTimeout(() => enterApp(AppState.currentUser), 800);
+      } catch (error) {
+        console.error('Login error:', error);
+        showMsg(error.message || 'Invalid email or password', 'error');
+        setLoading(false);
+      }
     }
 
     async function handleRegister() {
@@ -1821,51 +1833,56 @@
       if (!validateEmail(email)) { showMsg('Invalid email address', 'error'); return; }
       if (pw.length < 6) { showMsg('Password must be at least 6 characters', 'error'); return; }
       if (pw !== pw2) { showMsg('Passwords do not match', 'error'); return; }
-      if (AppState.users.find(u => u.email === email.toLowerCase())) { showMsg('This email is already registered', 'error'); return; }
 
       setLoading(true);
-      const hashedPassword = await hashPassword(pw);
-      setTimeout(() => {
-        const newUser = {
-          id: genId(),
-          fullName,
+
+      try {
+        const { data, error } = await supabase.auth.signUp({
           email: email.toLowerCase(),
-          password: hashedPassword,
-          createdAt: Date.now(),
-          plan: 'trial',
-          trialEnd: Date.now() + 15 * 24 * 60 * 60 * 1000
-        };
-        AppState.users.push(newUser);
-        AppState.subscription.trialStart = Date.now();
-        save();
-        showMsg('Account created! Your 15-day trial starts now.', 'success');
+          password: pw,
+          options: {
+            data: {
+              full_name: fullName
+            }
+          }
+        });
+
+        if (error) throw error;
+
+        showMsg('Account created! Check your email to verify your account.', 'success');
         setLoading(false);
 
         setTimeout(() => switchTab('login'), 1200);
-      }, 1000);
+      } catch (error) {
+        console.error('Registration error:', error);
+        showMsg(error.message || 'Registration failed', 'error');
+        setLoading(false);
+      }
     }
 
-    function handleForgot() {
+    async function handleForgot() {
       clearMsg();
       const email = gid('resetEmail')?.value.trim();
       if (!email || !validateEmail(email)) { showMsg('Enter your email to reset password', 'error'); return; }
 
-      const user = AppState.users.find(u => u.email === email.toLowerCase());
-      if (!user) { showMsg('No account found with this email', 'error'); return; }
-
       setLoading(true);
-      setTimeout(() => {
-        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-        AppState.resetCode = resetCode;
-        AppState.resetEmail = email.toLowerCase();
-        AppState.resetCodeExpiry = Date.now() + 10 * 60 * 1000;
-        save();
 
-        showMsg(`Doğrulama kodu: ${resetCode} (Demo modu - email gönderilmedi)`, 'success');
+      try {
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.href
+        });
+
+        if (error) throw error;
+
+        showMsg('Password reset email sent! Check your inbox.', 'success');
         setLoading(false);
 
-        setTimeout(() => switchTab('verify'), 1500);
-      }, 1000);
+        setTimeout(() => switchTab('login'), 1500);
+      } catch (error) {
+        console.error('Password reset error:', error);
+        showMsg(error.message || 'Failed to send reset email', 'error');
+        setLoading(false);
+      }
     }
 
     function handleVerify() {
@@ -1946,7 +1963,7 @@
       }
     }
 
-    function logout() {
+    async function logout() {
       // Clear all intervals
       if (pomoInterval) clearInterval(pomoInterval);
       if (mainVoiceRecordingInterval) clearInterval(mainVoiceRecordingInterval);
@@ -1956,6 +1973,7 @@
         stopMainVoiceRecording();
       }
 
+      await supabase.auth.signOut();
       AppState.currentUser = null;
       gid('appView').classList.remove('active');
       gid('authView').classList.add('active');
