@@ -3908,62 +3908,44 @@
       gid('analyzeMainVoiceBtn').disabled = true;
 
       try {
-        // Use direct API call instead of backend endpoint
-        const apiKey = provider === 'groq' ? (AppState.settings?.groqApiKey || '') : (AppState.settings?.mistralApiKey || '');
-
-        if (!apiKey || apiKey === 'gsk_...' || apiKey === '...') {
-          throw new Error('API key tanımlanmamış. Settings sayfasından API key ekleyin.');
-        }
-
-        const apiUrl = provider === 'groq'
-          ? 'https://api.groq.com/openai/v1/chat/completions'
-          : 'https://api.mistral.ai/v1/chat/completions';
-
-        const response = await fetch(apiUrl, {
+        // Use backend API endpoint (Vercel environment variables)
+        const response = await fetch(`/api/${provider}`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: provider === 'groq' ? 'llama-3.3-70b-versatile' : 'mistral-large-latest',
-            messages: [
-              {
-                role: 'system',
-                content: 'Proje yöneticisi olarak ses kayıtlarını analiz edip kısa özetler çıkarıyorsun.'
-              },
-              {
-                role: 'user',
-                content: `Bu ses kaydını analiz et ve kısa özet çıkar:\n\n${mainVoiceTranscript}`
-              }
-            ],
-            max_tokens: 500,
-            temperature: 0.7
+            prompt: `Bu ses kaydını analiz et ve kısa özet çıkar:\n\n${mainVoiceTranscript}`,
+            system: 'Proje yöneticisi olarak ses kayıtlarını analiz edip kısa özetler çıkarıyorsun.'
           })
         });
 
         if (!response.ok) {
-          throw new Error(`API Error: ${response.status} ${response.statusText}`);
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${response.status}`);
         }
 
         const data = await response.json();
-        const content = data.choices?.[0]?.message?.content || data.content || '';
 
-        if (content) {
-          gid('mainVoiceAnalysis').innerHTML = `<strong>Analiz Sonucu (${provider.toUpperCase()}):</strong><br><br>${esc(content).replace(/\n/g, '<br>')}`;
+        if (data.success && data.content) {
+          gid('mainVoiceAnalysis').innerHTML = `<strong>Analiz Sonucu (${provider.toUpperCase()}):</strong><br><br>${esc(data.content).replace(/\n/g, '<br>')}`;
           gid('mainVoiceRecordStatus').textContent = 'Analiz tamamlandı';
           toast('Ses kaydı analiz edildi! 🧠', 'success');
 
           // Save to history
-          saveVoiceNote(mainVoiceTranscript, content, provider);
+          saveVoiceNote(mainVoiceTranscript, data.content, provider);
         } else {
-          throw new Error('Analiz sonucu boş döndü');
+          throw new Error(data.error || 'Analiz başarısız');
         }
       } catch (error) {
         console.error('Analysis error:', error);
         gid('mainVoiceRecordStatus').textContent = 'Analiz hatası';
-        toast('Analiz başarısız: ' + error.message, 'error');
-        gid('mainVoiceAnalysis').innerHTML = `<div style="color: var(--danger);">⚠️ Analiz hatası: ${esc(error.message)}<br><br>Not: API key tanımlamanız gerekiyor. Settings sayfasından API key ekleyin.</div>`;
+
+        if (error.message.includes('504')) {
+          toast('Vercel timeout: API yanıt vermiyor veya API key eksik.', 'error');
+          gid('mainVoiceAnalysis').innerHTML = '<div style="color: var(--danger);">⚠️ 504 Gateway Timeout: AI API yanıt vermiyor.<br><br>Olası nedenler:<br>• API key tanımlanmamış<br>• Vercel Function timeout (10s limit)<br>• AI servisi yavaş yanıt veriyor</div>';
+        } else {
+          toast('Analiz başarısız: ' + error.message, 'error');
+          gid('mainVoiceAnalysis').innerHTML = `<div style="color: var(--danger);">⚠️ Analiz hatası: ${esc(error.message)}</div>`;
+        }
       } finally {
         gid('analyzeMainVoiceBtn').disabled = false;
       }
