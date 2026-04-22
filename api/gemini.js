@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt, model = 'gemini-pro' } = req.body;
+  const { prompt, model = 'gemini-1.5-flash' } = req.body;
 
   // Request validation
   if (!prompt || typeof prompt !== 'string') {

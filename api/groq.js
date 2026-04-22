@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt, model = 'llama-3.1-70b-versatile', system } = req.body;
+  const { prompt, model = 'llama-3.3-70b-versatile', system } = req.body;
 
   // Request validation
   if (!prompt || typeof prompt !== 'string') {
