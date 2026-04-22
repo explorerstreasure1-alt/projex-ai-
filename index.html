@@ -219,6 +219,11 @@
           <span class="nav-icon">📝</span>
           <span>Notes</span>
         </button>
+        <button class="nav-item" data-page="voiceNotes" onclick="navigateTo('voiceNotes')">
+          <span class="nav-icon">🎙️</span>
+          <span>Sesli Notlar</span>
+          <span class="nav-badge teal">YENİ</span>
+        </button>
       </div>
 
       <div class="nav-section">
@@ -884,6 +889,68 @@
           </div>
         </div>
         <div id="notesContainer" class="notes-container"></div>
+      </div>
+
+      <!-- Voice Notes Page -->
+      <div class="page" id="voiceNotesPage">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">🎙️ Sesli Notlar</h1>
+            <p class="page-sub">Ses kaydedin, AI ile analiz edin ve yapılandırın</p>
+          </div>
+          <div class="page-actions">
+            <select id="voiceAIProvider"
+              style="padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r); background: var(--card); color: var(--text); margin-right: 8px;">
+              <option value="mistral">Mistral AI</option>
+              <option value="groq">Groq</option>
+            </select>
+          </div>
+        </div>
+        <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="dashboard-card">
+            <div class="card-title">🎙️ Ses Kaydı</div>
+            <div
+              style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; background: var(--card); border-radius: var(--r); margin-bottom: 16px;">
+              <button id="mainVoiceRecordBtn" onclick="toggleMainVoiceRecording()"
+                style="width: 120px; height: 120px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 3rem; cursor: pointer; transition: all 0.3s; margin-bottom: 16px;">
+                🎙️
+              </button>
+              <div id="mainVoiceRecordStatus" style="font-size: 1.2rem; font-weight: 600; margin-bottom: 8px;">Hazır
+              </div>
+              <div id="mainVoiceRecordTime"
+                style="font-size: 2rem; font-weight: 700; color: var(--accent); display: none;">00:00</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary" onclick="analyzeMainVoiceRecording()" style="flex: 1;"
+                id="analyzeMainVoiceBtn" disabled>🧠 Analiz Et</button>
+              <button class="btn btn-teal" onclick="downloadVoiceAudio()" style="flex: 1;" id="downloadVoiceBtn"
+                disabled>📥 İndir</button>
+            </div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-title">📝 Gerçek Zamanlı Transkript</div>
+            <div id="mainVoiceTranscript"
+              style="height: 300px; overflow-y: auto; padding: 16px; background: var(--card); border-radius: var(--r); font-size: 1rem; line-height: 1.6; color: var(--text);">
+              <div style="color: var(--text-muted); text-align: center; padding: 40px;">Kayıt başladığında transkript
+                burada görünecek...</div>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-card" style="margin-top: 16px;">
+          <div class="card-title">🧠 AI Analiz Sonucu</div>
+          <div id="mainVoiceAnalysis"
+            style="min-height: 200px; padding: 16px; background: var(--card); border-radius: var(--r); font-size: 1rem; line-height: 1.6; color: var(--text);">
+            <div style="color: var(--text-muted); text-align: center; padding: 40px;">Analiz sonucu burada görünecek...
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-card" style="margin-top: 16px;">
+          <div class="card-title">📚 Kaydedilen Sesli Notlar</div>
+          <div id="savedVoiceNotes" style="padding: 16px;">
+            <div style="color: var(--text-muted); text-align: center; padding: 20px;">Henüz kaydedilmiş sesli not yok
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Resources Page -->
@@ -2923,13 +2990,253 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // VOICE RECORDING
+    // VOICE RECORDING (SIDEBAR)
     // ═══════════════════════════════════════════════════════════════
     let voiceRecognition = null;
     let voiceRecording = false;
     let voiceTranscript = '';
     let voiceRecordingInterval = null;
     let voiceRecordingSeconds = 0;
+
+    // ═══════════════════════════════════════════════════════════════
+    // MAIN VOICE NOTES PAGE
+    // ═══════════════════════════════════════════════════════════════
+    let mainVoiceRecognition = null;
+    let mainVoiceRecording = false;
+    let mainVoiceTranscript = '';
+    let mainVoiceRecordingInterval = null;
+    let mainVoiceRecordingSeconds = 0;
+    let mainVoiceAudioBlob = null;
+    let savedVoiceNotesList = [];
+
+    function toggleMainVoiceRecording() {
+      if (!mainVoiceRecording) {
+        startMainVoiceRecording();
+      } else {
+        stopMainVoiceRecording();
+      }
+    }
+
+    function startMainVoiceRecording() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        toast('Ses tanıma tarayıcınızda desteklenmiyor', 'error');
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      mainVoiceRecognition = new SpeechRecognition();
+      mainVoiceRecognition.lang = 'tr-TR';
+      mainVoiceRecognition.continuous = true;
+      mainVoiceRecognition.interimResults = true;
+
+      mainVoiceRecognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        mainVoiceTranscript += finalTranscript;
+        gid('mainVoiceTranscript').innerHTML = mainVoiceTranscript + '<span style="color: var(--text-muted);">' + interimTranscript + '</span>';
+      };
+
+      mainVoiceRecognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          toast('Mikrofon izni reddedildi', 'error');
+          stopMainVoiceRecording();
+        }
+      };
+
+      mainVoiceRecognition.onend = () => {
+        if (mainVoiceRecording) {
+          mainVoiceRecognition.start();
+        }
+      };
+
+      try {
+        mainVoiceRecognition.start();
+        mainVoiceRecording = true;
+        mainVoiceTranscript = '';
+        mainVoiceRecordingSeconds = 0;
+
+        const btn = gid('mainVoiceRecordBtn');
+        btn.style.background = 'var(--red)';
+        btn.innerHTML = '⏹️';
+        btn.style.animation = 'pulse 1.5s infinite';
+
+        gid('mainVoiceRecordStatus').textContent = 'Kaydediliyor...';
+        gid('mainVoiceRecordTime').style.display = 'block';
+        gid('analyzeMainVoiceBtn').disabled = true;
+        gid('downloadVoiceBtn').disabled = true;
+
+        mainVoiceRecordingInterval = setInterval(() => {
+          mainVoiceRecordingSeconds++;
+          const minutes = Math.floor(mainVoiceRecordingSeconds / 60);
+          const seconds = mainVoiceRecordingSeconds % 60;
+          gid('mainVoiceRecordTime').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+
+        toast('Ses kaydı başladı 🎙️', 'success');
+      } catch (error) {
+        console.error('Error starting voice recognition:', error);
+        toast('Ses kaydı başlatılamadı', 'error');
+      }
+    }
+
+    function stopMainVoiceRecording() {
+      if (mainVoiceRecognition) {
+        mainVoiceRecognition.stop();
+      }
+
+      if (mainVoiceRecordingInterval) {
+        clearInterval(mainVoiceRecordingInterval);
+      }
+
+      mainVoiceRecording = false;
+      mainVoiceRecognition = null;
+
+      const btn = gid('mainVoiceRecordBtn');
+      btn.style.background = 'var(--accent)';
+      btn.innerHTML = '🎙️';
+      btn.style.animation = 'none';
+
+      gid('mainVoiceRecordStatus').textContent = 'Kayıt tamamlandı';
+      gid('mainVoiceRecordTime').style.display = 'none';
+      gid('analyzeMainVoiceBtn').disabled = false;
+      gid('downloadVoiceBtn').disabled = false;
+
+      toast('Ses kaydı durduruldu', 'info');
+    }
+
+    async function analyzeMainVoiceRecording() {
+      if (!mainVoiceTranscript.trim()) {
+        toast('Analiz edilecek ses kaydı yok', 'warn');
+        return;
+      }
+
+      const provider = gid('voiceAIProvider').value;
+      gid('mainVoiceRecordStatus').textContent = 'Analiz ediliyor...';
+      gid('analyzeMainVoiceBtn').disabled = true;
+
+      try {
+        const response = await fetch(`/api/${provider}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: `Aşağıdaki ses kaydını analiz et, toparla, geliştir ve yapılandırılmış bir proje planına dönüştür. Ana fikirleri öne çıkar, eylem adımlarını listele ve özet oluştur:\n\n${mainVoiceTranscript}`,
+            system: 'Sen deneyimli bir proje yöneticisisin. Ses kayıtlarını analiz edip, yapılandırılmış ve eyleme geçirilebilir proje planlarına dönüştürüyorsun.'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.content) {
+          gid('mainVoiceAnalysis').innerHTML = `<strong>Analiz Sonucu (${provider.toUpperCase()}):</strong><br><br>${data.content.replace(/\n/g, '<br>')}`;
+          gid('mainVoiceRecordStatus').textContent = 'Analiz tamamlandı';
+          toast('Ses kaydı analiz edildi! 🧠', 'success');
+
+          // Save to history
+          saveVoiceNote(mainVoiceTranscript, data.content, provider);
+        } else {
+          throw new Error(data.error || 'Analiz başarısız');
+        }
+      } catch (error) {
+        console.error('Analysis error:', error);
+        gid('mainVoiceRecordStatus').textContent = 'Analiz hatası';
+        toast('Analiz başarısız: ' + error.message, 'error');
+      } finally {
+        gid('analyzeMainVoiceBtn').disabled = false;
+      }
+    }
+
+    function downloadVoiceAudio() {
+      if (!mainVoiceTranscript.trim()) {
+        toast('İndirilecek ses kaydı yok', 'warn');
+        return;
+      }
+
+      // Create a text file with the transcript
+      const blob = new Blob([mainVoiceTranscript], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sesli-not-${new Date().toISOString()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Ses notu indirildi! 📥', 'success');
+    }
+
+    function saveVoiceNote(transcript, analysis, provider) {
+      const note = {
+        id: Date.now().toString(),
+        transcript: transcript,
+        analysis: analysis,
+        provider: provider,
+        createdAt: new Date().toISOString()
+      };
+
+      savedVoiceNotesList.unshift(note);
+
+      if (!AppState.voiceNotes) {
+        AppState.voiceNotes = [];
+      }
+      AppState.voiceNotes.unshift(note);
+      save();
+
+      renderSavedVoiceNotes();
+    }
+
+    function renderSavedVoiceNotes() {
+      const container = gid('savedVoiceNotes');
+      if (!container) return;
+
+      if (savedVoiceNotesList.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Henüz kaydedilmiş sesli not yok</div>';
+        return;
+      }
+
+      container.innerHTML = savedVoiceNotesList.map(note => `
+        <div style="padding: 12px; background: var(--card); border-radius: var(--r); margin-bottom: 8px; border: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent);">${note.provider.toUpperCase()}</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(note.createdAt).toLocaleString('tr-TR')}</span>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text); margin-bottom: 8px; max-height: 60px; overflow: hidden; text-overflow: ellipsis;">
+            ${note.transcript.substring(0, 150)}...
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-primary" onclick="viewVoiceNote('${note.id}')">Görüntüle</button>
+            <button class="btn btn-sm btn-red" onclick="deleteVoiceNote('${note.id}')">Sil</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function viewVoiceNote(noteId) {
+      const note = savedVoiceNotesList.find(n => n.id === noteId);
+      if (note) {
+        gid('mainVoiceTranscript').innerHTML = note.transcript;
+        gid('mainVoiceAnalysis').innerHTML = `<strong>Analiz Sonucu (${note.provider.toUpperCase()}):</strong><br><br>${note.analysis.replace(/\n/g, '<br>')}`;
+        toast('Ses notu yüklendi', 'info');
+      }
+    }
+
+    function deleteVoiceNote(noteId) {
+      savedVoiceNotesList = savedVoiceNotesList.filter(n => n.id !== noteId);
+      if (AppState.voiceNotes) {
+        AppState.voiceNotes = AppState.voiceNotes.filter(n => n.id !== noteId);
+        save();
+      }
+      renderSavedVoiceNotes();
+      toast('Ses notu silindi', 'info');
+    }
 
     function toggleVoiceRecording() {
       if (!voiceRecording) {
@@ -4822,6 +5129,11 @@
 
       // Check for meeting invite link
       checkMeetingInvite();
+
+      // Load saved voice notes
+      if (AppState.voiceNotes) {
+        savedVoiceNotesList = AppState.voiceNotes;
+      }
 
       // Close modals on overlay click
       document.querySelectorAll('.modal-overlay').forEach(overlay => {
