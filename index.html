@@ -1459,7 +1459,7 @@
     // ═══════════════════════════════════════════════════════════════
     const supabaseUrl = 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
     const supabaseKey = 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
     // ═══════════════════════════════════════════════════════════════
     // UTILITY FUNCTIONS
@@ -1798,7 +1798,7 @@
       setLoading(true);
 
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
           email: email.toLowerCase(),
           password: pw
         });
@@ -1837,7 +1837,7 @@
       setLoading(true);
 
       try {
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await supabaseClient.auth.signUp({
           email: email.toLowerCase(),
           password: pw,
           options: {
@@ -1868,7 +1868,7 @@
       setLoading(true);
 
       try {
-        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
           redirectTo: window.location.href
         });
 
@@ -1973,7 +1973,7 @@
         stopMainVoiceRecording();
       }
 
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       AppState.currentUser = null;
       gid('appView').classList.remove('active');
       gid('authView').classList.add('active');
