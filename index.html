@@ -1652,10 +1652,26 @@
       }
     }
 
-    function checkProFeature() {
-      // NOTE: Frontend-only validation. In production, ALL PRO features must be validated on the backend
-      // by checking the user's subscription status in the database before allowing access.
-      // Users can bypass this by modifying AppState.subscription.plan in browser console.
+    async function checkProFeature() {
+      // Check subscription from Supabase for backend validation
+      if (AppState.currentUser) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('subscriptions')
+            .select('plan, pro_expiry')
+            .eq('user_id', AppState.currentUser.id)
+            .single();
+
+          if (data) {
+            const isPro = data.plan === 'pro' && (!data.pro_expiry || new Date(data.pro_expiry) > new Date());
+            if (isPro) return true;
+          }
+        } catch (e) {
+          console.error('Subscription check error:', e);
+        }
+      }
+
+      // Fallback to frontend check
       if (!hasFeatureAccess()) {
         const days = getTrialDaysRemaining();
         if (days === 0) {
@@ -1885,55 +1901,20 @@
       }
     }
 
-    function handleVerify() {
-      clearMsg();
-      const code = gid('verifyCode')?.value.trim();
-      if (!code || code.length !== 6) { showMsg('Enter the 6-digit code', 'error'); return; }
+    // handleVerify and handleReset removed - using Supabase native password reset flow
 
-      if (Date.now() > AppState.resetCodeExpiry) {
-        showMsg('Code has expired. Please request a new code.', 'error');
-        setTimeout(() => switchTab('forgot'), 1500);
-        return;
+    // Listen for auth state changes
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        AppState.currentUser = {
+          id: session.user.id,
+          email: session.user.email,
+          fullName: session.user.user_metadata.full_name || session.user.email.split('@')[0]
+        };
+      } else if (event === 'SIGNED_OUT') {
+        AppState.currentUser = null;
       }
-
-      if (code !== AppState.resetCode) {
-        showMsg('Invalid code. Please try again.', 'error');
-        return;
-      }
-
-      showMsg('Code verified successfully!', 'success');
-      setTimeout(() => switchTab('reset'), 1000);
-    }
-
-    function handleReset() {
-      clearMsg();
-      const newPw = gid('newPw')?.value;
-      const confirmPw = gid('confirmNewPw')?.value;
-
-      if (!newPw || newPw.length < 6) { showMsg('Password must be at least 6 characters', 'error'); return; }
-      if (newPw !== confirmPw) { showMsg('Passwords do not match', 'error'); return; }
-
-      setLoading(true);
-      setTimeout(() => {
-        const userIndex = AppState.users.findIndex(u => u.email === AppState.resetEmail);
-        if (userIndex === -1) {
-          showMsg('User not found. Please try again.', 'error');
-          setLoading(false);
-          return;
-        }
-
-        AppState.users[userIndex].password = btoa(newPw);
-        AppState.resetCode = null;
-        AppState.resetEmail = null;
-        AppState.resetCodeExpiry = null;
-        save();
-
-        showMsg('Password reset successfully! Please login.', 'success');
-        setLoading(false);
-
-        setTimeout(() => switchTab('login'), 1500);
-      }, 1000);
-    }
+    });
 
     function enterApp(user) {
       gid('authView').classList.remove('active');
@@ -1971,6 +1952,17 @@
       // Stop voice recording if active
       if (mainVoiceRecording) {
         stopMainVoiceRecording();
+      }
+
+      // Stop video meeting stream if active
+      if (typeof localStream !== 'undefined' && localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+
+      // Stop meeting audio recording if active
+      if (meetingAudioRecording) {
+        stopMeetingAudioRecord();
       }
 
       await supabaseClient.auth.signOut();
@@ -3557,7 +3549,7 @@
         const data = await response.json();
 
         if (data.success && data.content) {
-          gid('voiceTranscription').innerHTML = `<strong>Analiz Sonucu:</strong><br><br>${data.content.replace(/\n/g, '<br>')}`;
+          gid('voiceTranscription').innerHTML = `<strong>Analiz Sonucu:</strong><br><br>${esc(data.content).replace(/\n/g, '<br>')}`;
           gid('voiceRecordStatus').textContent = 'Analiz tamamlandı';
           toast('Ses kaydı analiz edildi! 🧠', 'success');
 
