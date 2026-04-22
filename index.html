@@ -1264,6 +1264,16 @@
             </select>
           </div>
           <div class="form-group">
+            <label class="form-label">🔔 Hatırlatıcı</label>
+            <select class="form-select" id="meetingReminder">
+              <option value="0">Yok</option>
+              <option value="5">5 dakika öncesi</option>
+              <option value="15" selected>15 dakika öncesi</option>
+              <option value="30">30 dakika öncesi</option>
+              <option value="60">1 saat öncesi</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label class="form-label">Timezone</label>
             <select class="form-select" id="meetingTimezone">
               <option value="Europe/Istanbul" selected>Istanbul (TR)</option>
@@ -4979,6 +4989,7 @@
       const attendees = gid('meetingAttendees').value.split(',').map(e => e.trim()).filter(e => e);
       const guestEmail = gid('meetingGuestEmail').value.trim();
       const role = gid('meetingRole').value;
+      const reminderMinutes = parseInt(gid('meetingReminder').value) || 15;
 
       // Add guest to attendees if provided
       if (guestEmail && !attendees.includes(guestEmail)) {
@@ -5002,6 +5013,7 @@
           m.description = gid('meetingDescription').value;
           m.attendees = attendees;
           m.role = role;
+          m.reminder_minutes = reminderMinutes;
           m.updatedAt = Date.now();
 
           await saveToSupabase('meetings', m);
@@ -5027,6 +5039,9 @@
           description: gid('meetingDescription').value,
           attendees,
           role,
+          reminder_minutes: reminderMinutes,
+          notification_sent: false,
+          late_warning_sent: false,
           createdAt: Date.now()
         };
         AppState.meetings.push(newMeeting);
@@ -5040,6 +5055,11 @@
         // Simulate invite notification (in production, would send actual emails)
         if (attendees.length > 0) {
           toast(`Invites sent to ${attendees.length} participant(s) 📧`, 'info');
+        }
+
+        // Schedule reminder notification
+        if (reminderMinutes > 0) {
+          scheduleMeetingReminder(newMeeting);
         }
       }
 
@@ -5465,6 +5485,7 @@
         gid('meetingDate').value = meeting.date;
         gid('meetingTime').value = meeting.time;
         gid('meetingDuration').value = meeting.duration_preset || meeting.duration || '60';
+        gid('meetingReminder').value = meeting.reminder_minutes || 15;
         gid('meetingTimezone').value = meeting.timezone || 'Europe/Istanbul';
         gid('meetingRecurrence').value = meeting.recurrence || 'none';
         gid('meetingRecurrenceEndDate').value = meeting.recurrence_end_date || '';
@@ -6170,6 +6191,53 @@
         save();
       }, 1500);
     }
+
+    // Category 6: Notifications
+    function scheduleMeetingReminder(meeting) {
+      if (!meeting.reminder_minutes || meeting.reminder_minutes <= 0) return;
+
+      const meetingDateTime = new Date(`${meeting.date}T${meeting.time}`);
+      const reminderTime = new Date(meetingDateTime.getTime() - meeting.reminder_minutes * 60000);
+      const now = new Date();
+
+      if (reminderTime <= now) {
+        // Meeting is too soon, show notification immediately
+        toast(`🔔 ${meeting.title} toplantısı yaklaşıyor!`, 'info');
+        return;
+      }
+
+      const delay = reminderTime.getTime() - now.getTime();
+      setTimeout(() => {
+        toast(`🔔 ${meeting.title} toplantısı ${meeting.reminder_minutes} dakika sonra başlıyor!`, 'info');
+        meeting.notification_sent = true;
+        save();
+      }, delay);
+    }
+
+    function checkMeetingNotifications() {
+      const now = new Date();
+      AppState.meetings.forEach(meeting => {
+        const meetingDateTime = new Date(`${meeting.date}T${meeting.time}`);
+        const timeDiff = meetingDateTime.getTime() - now.getTime();
+
+        // Check if meeting is starting in less than 5 minutes and notification not sent
+        if (timeDiff > 0 && timeDiff < 300000 && !meeting.notification_sent && meeting.reminder_minutes > 0) {
+          toast(`🔔 ${meeting.title} toplantısı yaklaşıyor!`, 'info');
+          meeting.notification_sent = true;
+          save();
+        }
+
+        // Check for late warning (meeting started but no one joined)
+        if (timeDiff < -300000 && !meeting.late_warning_sent) {
+          toast(`⚠️ ${meeting.title} toplantısı başladı ama kimse katılmadı!`, 'warn');
+          meeting.late_warning_sent = true;
+          save();
+        }
+      });
+    }
+
+    // Check notifications every minute
+    setInterval(checkMeetingNotifications, 60000);
 
     // ═══════════════════════════════════════════════════════════════
     // SAMPLE DATA
