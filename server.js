@@ -25,6 +25,10 @@ app.post('/api/groq', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Prompt is required' });
     }
 
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({ success: false, error: 'GROQ_API_KEY not configured' });
+    }
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -32,19 +36,19 @@ app.post('/api/groq', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama2-70b-4096',
+        model: 'llama-3.3-70b-versatile',
         messages: [
-          { role: 'system', content: system || 'You are a helpful assistant.' },
+          ...(system ? [{ role: 'system', content: system }] : []),
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 1024
+        max_tokens: 4096
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP ${response.status}`);
+      throw new Error(errorData.error?.message || `HTTP ${response.status}`);
     }
 
     const data = await response.json();
@@ -65,6 +69,10 @@ app.post('/api/mistral', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Prompt is required' });
     }
 
+    if (!process.env.MISTRAL_API_KEY) {
+      return res.status(500).json({ success: false, error: 'MISTRAL_API_KEY not configured' });
+    }
+
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -72,19 +80,19 @@ app.post('/api/mistral', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'mistral-tiny',
+        model: 'mistral-large-latest',
         messages: [
-          { role: 'system', content: system || 'You are a helpful assistant.' },
+          ...(system ? [{ role: 'system', content: system }] : []),
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 1024
+        max_tokens: 4096
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP ${response.status}`);
+      throw new Error(errorData.error?.message || `HTTP ${response.status}`);
     }
 
     const data = await response.json();
