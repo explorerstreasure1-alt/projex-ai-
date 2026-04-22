@@ -34,10 +34,10 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
-  priority TEXT DEFAULT 'medium', -- 'low', 'medium', 'high'
-  status TEXT DEFAULT 'todo', -- 'todo', 'in_progress', 'done'
+  priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
+  status TEXT DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'done')),
   assignee TEXT DEFAULT '',
-  date TEXT,
+  date TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
-  date TEXT,
-  time TEXT,
+  date TIMESTAMP WITH TIME ZONE,
+  time TIMESTAMP WITH TIME ZONE,
   duration INTEGER DEFAULT 60,
   duration_preset TEXT DEFAULT '60', -- '15', '30', '45', '60', '90', '120', 'custom'
   timezone TEXT DEFAULT 'Europe/Istanbul', -- IANA timezone
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   notification_preferences JSONB DEFAULT '{}', -- User notification preferences (email, push, sound)
   -- End Category 6
   -- Category 7: Security
-  password TEXT, -- Meeting password (hashed)
+  password TEXT CHECK (password IS NULL OR length(password) >= 6), -- Meeting password (hashed)
   waiting_room BOOLEAN DEFAULT false, -- Enable waiting room
   encrypted BOOLEAN DEFAULT false, -- End-to-end encryption enabled
   join_permissions TEXT DEFAULT 'anyone', -- 'anyone', 'invited_only', 'password_only', 'password_and_invited'
@@ -158,6 +158,7 @@ CREATE TABLE IF NOT EXISTS public.posts (
 CREATE TABLE IF NOT EXISTS public.comments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
   author TEXT NOT NULL,
   content TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -352,7 +353,9 @@ DROP POLICY IF EXISTS "Users can delete own meetings" ON public.meetings;
 CREATE POLICY "Users can delete own meetings" ON public.meetings
   FOR DELETE USING (auth.uid() = user_id);
 
--- Meeting participants RLS
+--- Meeting participants RLS
+ALTER TABLE public.meeting_participants ENABLE ROW LEVEL SECURITY;
+
 DROP POLICY IF EXISTS "Users can view meeting participants" ON public.meeting_participants;
 CREATE POLICY "Users can view meeting participants" ON public.meeting_participants
   FOR SELECT USING (
@@ -410,8 +413,8 @@ CREATE POLICY "Users can delete own team" ON public.team
   FOR DELETE USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can view own posts" ON public.posts;
-CREATE POLICY "Users can view own posts" ON public.posts
-  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view all posts" ON public.posts
+  FOR SELECT USING (auth.role() = 'authenticated');
 DROP POLICY IF EXISTS "Users can insert own posts" ON public.posts;
 CREATE POLICY "Users can insert own posts" ON public.posts
   FOR INSERT WITH CHECK (auth.uid() = user_id);
@@ -424,10 +427,10 @@ CREATE POLICY "Users can delete own posts" ON public.posts
 
 DROP POLICY IF EXISTS "Users can view own comments" ON public.comments;
 CREATE POLICY "Users can view own comments" ON public.comments
-  FOR SELECT USING (auth.uid() = (SELECT user_id FROM public.posts WHERE id = post_id));
+  FOR SELECT USING (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Users can insert own comments" ON public.comments;
 CREATE POLICY "Users can insert own comments" ON public.comments
-  FOR INSERT WITH CHECK (auth.uid() = (SELECT user_id FROM public.posts WHERE id = post_id));
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can view own notes" ON public.notes;
 CREATE POLICY "Users can view own notes" ON public.notes
@@ -625,19 +628,6 @@ ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS template_id TEXT;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS ai_assistant_enabled BOOLEAN DEFAULT false;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS virtual_background TEXT;
 
--- Category 5: Integrations table
-CREATE TABLE IF NOT EXISTS public.integrations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
-  integration_type TEXT NOT NULL,
-  provider TEXT NOT NULL,
-  config JSONB,
-  enabled BOOLEAN DEFAULT true,
-  last_sync TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 -- Meeting signals table for WebRTC signaling
 CREATE TABLE IF NOT EXISTS public.meeting_signals (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -652,3 +642,48 @@ CREATE TABLE IF NOT EXISTS public.meeting_signals (
 -- Index for faster signaling queries
 CREATE INDEX IF NOT EXISTS idx_meeting_signals_meeting_id ON public.meeting_signals(meeting_id);
 CREATE INDEX IF NOT EXISTS idx_meeting_signals_created_at ON public.meeting_signals(created_at);
+
+-- Auto-update updated_at trigger function
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create triggers for all tables with updated_at
+CREATE TRIGGER trg_projects_updated_at BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_tasks_updated_at BEFORE UPDATE ON public.tasks FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_meetings_updated_at BEFORE UPDATE ON public.meetings FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_user_profiles_updated_at BEFORE UPDATE ON public.user_profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_posts_updated_at BEFORE UPDATE ON public.posts FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_comments_updated_at BEFORE UPDATE ON public.comments FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_notes_updated_at BEFORE UPDATE ON public.notes FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER tg_integrations_updated_at BEFORE UPDATE ON public.integrations FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- RLS for meeting_signals
+ALTER TABLE public.meeting_signals ENABLE ROW LEVEL SECURITY;
+
+-- Users can only read/write signals for meetings they are participants in
+-- For now, allow all authenticated users to access (signaling requires open access for WebRTC)
+CREATE POLICY "Users can read meeting signals" ON public.meeting_signals
+  FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Users can insert meeting signals" ON public.meeting_signals
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Users can delete meeting signals" ON public.meeting_signals
+  FOR DELETE USING (auth.role() = 'authenticated');
+
+-- Meeting signals cleanup function (call periodically)
+CREATE OR REPLACE FUNCTION cleanup_old_meeting_signals()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM public.meeting_signals
+  WHERE created_at < NOW() - INTERVAL '1 day';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create a comment for documentation
+COMMENT ON FUNCTION cleanup_old_meeting_signals() IS 'Cleans up meeting signals older than 1 day. Call this function periodically via pg_cron or external scheduler.';
