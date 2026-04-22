@@ -2213,7 +2213,16 @@
 
         if (error) throw error;
 
-        showMsg('Account created! Check your email to verify your account.', 'success');
+        // Start 15-day free trial
+        AppState.subscription = {
+          plan: 'trial',
+          trialStart: Date.now(),
+          trialEnd: Date.now() + (15 * 24 * 60 * 60 * 1000), // 15 days
+          features: ['ai', 'images', 'video', 'analytics']
+        };
+        save();
+
+        showMsg('Account created! 15-day free trial started. Check your email to verify.', 'success');
         setLoading(false);
 
         setTimeout(() => switchTab('login'), 1200);
