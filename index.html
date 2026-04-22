@@ -4083,22 +4083,43 @@
 
       container.innerHTML = savedVoiceNotesList.map(note => {
         const duration = note.duration ? formatDuration(note.duration) : '';
+        let audioElement = '';
+
+        // Safely create object URL only if audioBlob is a valid Blob
+        if (note.audioBlob && note.audioBlob instanceof Blob) {
+          try {
+            const audioUrl = URL.createObjectURL(note.audioBlob);
+            audioElement = `
+              <audio controls style="width: 100%; margin-bottom: 8px;">
+                <source src="${audioUrl}" type="${note.audioType || 'audio/webm'}">
+                Tarayıcınız ses çalmayı desteklemiyor
+              </audio>
+            `;
+          } catch (error) {
+            console.error('Error creating audio URL:', error);
+            audioElement = '<div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">⚠️ Ses dosyası yüklenemedi</div>';
+          }
+        } else if (note.audioUrl) {
+          // Use audioUrl if available (from Supabase storage)
+          audioElement = `
+            <audio controls style="width: 100%; margin-bottom: 8px;">
+              <source src="${note.audioUrl}" type="${note.audioType || 'audio/webm'}">
+              Tarayıcınız ses çalmayı desteklemiyor
+            </audio>
+          `;
+        }
+
         return `
         <div style="padding: 12px; background: var(--card); border-radius: var(--r); margin-bottom: 8px; border: 1px solid var(--border);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent);">${note.provider.toUpperCase()}</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent);">${note.provider?.toUpperCase() || 'VOICE'}</span>
             <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(note.createdAt).toLocaleString('tr-TR')}</span>
           </div>
           ${duration ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">⏱️ Süre: ${duration}</div>` : ''}
           <div style="font-size: 0.85rem; color: var(--text); margin-bottom: 8px; max-height: 60px; overflow: hidden; text-overflow: ellipsis;">
-            ${note.transcript.substring(0, 150)}...
+            ${(note.transcript || '').substring(0, 150)}...
           </div>
-          ${note.audioBlob ? `
-            <audio controls style="width: 100%; margin-bottom: 8px;">
-              <source src="${URL.createObjectURL(note.audioBlob)}" type="${note.audioType}">
-              Tarayıcınız ses çalmayı desteklemiyor
-            </audio>
-          ` : ''}
+          ${audioElement}
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-sm btn-primary" onclick="viewVoiceNote('${note.id}')">Görüntüle</button>
             <button class="btn btn-sm btn-teal" onclick="downloadSavedVoiceNote('${note.id}')">İndir</button>
