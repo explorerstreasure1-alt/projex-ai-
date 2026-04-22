@@ -564,6 +564,7 @@ ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS progress INTEGER DEFAULT 0;
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS assignee TEXT DEFAULT '';
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 60;
 ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE;
 
 -- Category 1: Meeting Planning & Scheduling columns
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS duration_preset TEXT DEFAULT '60';
