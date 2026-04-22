@@ -759,7 +759,7 @@
             </div>
             <div class="dashboard-card">
               <div class="card-title">👥 Katılımcılar</div>
-              <div id="participantList" style="padding: 8px;">
+              <div id="participantList" style="padding: 8px; max-height: 200px; overflow-y: auto;">
                 <div
                   style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--card); border-radius: var(--r);">
                   <div
@@ -771,6 +771,13 @@
                   </div>
                   <div style="width: 8px; height: 8px; background: var(--green); border-radius: 50%;"></div>
                 </div>
+              </div>
+            </div>
+            <div class="dashboard-card">
+              <div class="card-title">📋 Aktivite Logu</div>
+              <div id="meetingActivityLog"
+                style="padding: 8px; max-height: 150px; overflow-y: auto; font-size: 0.75rem; color: var(--text-muted);">
+                <div style="color: var(--text-muted); text-align: center;">Toplantı başladı</div>
               </div>
             </div>
             <div class="dashboard-card">
@@ -2404,6 +2411,10 @@
     let micEnabled = false;
     let camEnabled = false;
     let currentMeetingId = null;
+    let meetingParticipants = [];
+    let meetingHost = null;
+    let pinnedParticipantId = null;
+    let meetingActivityLog = [];
 
     function generateMeetingId() {
       return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -2443,6 +2454,112 @@
       startVideoMeeting();
     }
 
+    function addParticipant(user) {
+      const participant = {
+        id: user.id,
+        name: user.fullName,
+        email: user.email,
+        joinedAt: new Date().toISOString(),
+        isHost: false,
+        isMuted: false,
+        isVideoOff: false
+      };
+
+      meetingParticipants.push(participant);
+      meetingActivityLog.push({
+        action: 'join',
+        participant: participant.name,
+        timestamp: new Date().toISOString()
+      });
+
+      renderParticipants();
+      renderActivityLog();
+    }
+
+    function removeParticipant(participantId) {
+      const participant = meetingParticipants.find(p => p.id === participantId);
+      if (participant) {
+        meetingParticipants = meetingParticipants.filter(p => p.id !== participantId);
+        meetingActivityLog.push({
+          action: 'leave',
+          participant: participant.name,
+          timestamp: new Date().toISOString()
+        });
+
+        renderParticipants();
+        renderActivityLog();
+        toast(`${participant.name} toplantıdan çıkarıldı`, 'info');
+      }
+    }
+
+    function pinParticipant(participantId) {
+      pinnedParticipantId = participantId;
+      renderVideoGrid();
+      toast('Katılımcı ana ekrana sabitlendi', 'info');
+    }
+
+    function unpinParticipant() {
+      pinnedParticipantId = null;
+      renderVideoGrid();
+      toast('Sabitleme kaldırıldı', 'info');
+    }
+
+    function renderParticipants() {
+      const participantList = gid('participantList');
+      if (!participantList) return;
+
+      participantList.innerHTML = meetingParticipants.map(p => `
+        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--card); border-radius: var(--r); margin-bottom: 4px;">
+          <div style="width: 32px; height: 32px; background: ${p.isHost ? 'var(--amber)' : 'var(--accent)'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600;">${p.name.charAt(0)}</div>
+          <div style="flex: 1;">
+            <div style="font-size: 0.85rem; font-weight: 600;">${p.name} ${p.isHost ? '👑' : ''}</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">${p.email}</div>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <button class="btn btn-sm btn-ghost" onclick="pinParticipant('${p.id}')" title="Sabitle">📌</button>
+            ${meetingHost === AppState.currentUser?.id ? `<button class="btn btn-sm btn-red" onclick="removeParticipant('${p.id}')" title="Çıkar">🚫</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderActivityLog() {
+      const activityLog = gid('meetingActivityLog');
+      if (!activityLog) return;
+
+      activityLog.innerHTML = meetingActivityLog.slice(-10).map(log => `
+        <div style="font-size: 0.75rem; color: var(--text-muted); padding: 4px 0; border-bottom: 1px solid var(--border);">
+          ${log.action === 'join' ? '✅' : '🚪'} ${log.participant} - ${new Date(log.timestamp).toLocaleTimeString('tr-TR')}
+        </div>
+      `).join('');
+    }
+
+    function renderVideoGrid() {
+      const videoGrid = gid('videoGrid');
+      if (!videoGrid) return;
+
+      // Render pinned participant as main video
+      if (pinnedParticipantId) {
+        const pinned = meetingParticipants.find(p => p.id === pinnedParticipantId);
+        if (pinned) {
+          videoGrid.innerHTML = `
+            <div class="video-participant host" style="grid-column: span 2; grid-row: span 2;">
+              <div class="video-wrapper" style="border: 3px solid var(--accent);">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center;">
+                  <div style="font-size: 3rem;">👤</div>
+                  <div style="font-size: 1.2rem; font-weight: 600;">${pinned.name}</div>
+                </div>
+                <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
+                  ${pinned.name} (Sabitlendi)
+                </div>
+                <button onclick="unpinParticipant()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">❌</button>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
     function renderVideoMeeting() {
       // Hide video placeholder if meeting is active
       if (localStream) {
@@ -2461,6 +2578,30 @@
         currentMeetingId = generateMeetingId();
       }
 
+      // Set host if not set
+      if (!meetingHost) {
+        meetingHost = AppState.currentUser?.id;
+      }
+
+      // Add current user as participant
+      if (AppState.currentUser && !meetingParticipants.find(p => p.id === AppState.currentUser.id)) {
+        const hostParticipant = {
+          id: AppState.currentUser.id,
+          name: AppState.currentUser.fullName,
+          email: AppState.currentUser.email,
+          joinedAt: new Date().toISOString(),
+          isHost: true,
+          isMuted: false,
+          isVideoOff: false
+        };
+        meetingParticipants.push(hostParticipant);
+        meetingActivityLog.push({
+          action: 'join',
+          participant: hostParticipant.name,
+          timestamp: new Date().toISOString()
+        });
+      }
+
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         const videoElement = gid('localVideo');
@@ -2474,6 +2615,8 @@
           navigateTo('videoMeeting');
         }
 
+        renderParticipants();
+        renderActivityLog();
         toast(`Video meeting started! 📹 (ID: ${currentMeetingId})`, 'success');
       } catch (error) {
         toast('Could not access camera/microphone. Please check permissions.', 'error');
@@ -2491,6 +2634,16 @@
       gid('videoPlaceholder').style.display = 'flex';
       micEnabled = false;
       camEnabled = false;
+
+      // Clear meeting data
+      meetingParticipants = [];
+      meetingHost = null;
+      pinnedParticipantId = null;
+      meetingActivityLog = [];
+      currentMeetingId = null;
+
+      renderParticipants();
+      renderActivityLog();
       toast('Video meeting ended', 'info');
       navigateTo('meetings');
     }
