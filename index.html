@@ -2508,17 +2508,17 @@
       const chatContainer = gid('aiChatMessages');
 
       // Add user message
-      chatContainer.innerHTML += `< div class="ai-message user" > ${esc(message)}</div > `;
+      chatContainer.innerHTML += `<div class="ai-message user">${esc(message)}</div>`;
       input.value = '';
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
       // Show loading
       const loadingId = 'loading-' + Date.now();
-      chatContainer.innerHTML += `< div class="ai-message system" id = "${loadingId}" > Thinking...</div > `;
+      chatContainer.innerHTML += `<div class="ai-message system" id="${loadingId}">Thinking...</div>`;
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
       try {
-        const response = await fetch(`/ api / ${provider} `, {
+        const response = await fetch(`/api/${provider}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -2530,23 +2530,19 @@
         const data = await response.json();
         document.getElementById(loadingId).remove();
 
-        chatContainer.innerHTML += `< div class="ai-message assistant" > ${esc(data.content)}</div > `;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        if (data.success && data.content) {
+          chatContainer.innerHTML += `<div class="ai-message assistant">${esc(data.content)}</div>`;
+        } else {
+          chatContainer.innerHTML += `<div class="ai-message system" style="color: #ef4444;">Error: ${data.error || 'Failed to get response'}</div>`;
+        }
 
+        chatContainer.scrollTop = chatContainer.scrollHeight;
         addActivity(`Used AI Assistant(${provider})`, '🤖');
       } catch (error) {
         document.getElementById(loadingId).remove();
+        console.error('AI API Error:', error);
 
-        // Fallback response
-        const fallbackResponses = [
-          "I suggest breaking this project into 3 phases: Planning (2 weeks), Development (4 weeks), and Testing (2 weeks).",
-          "Based on your task list, I recommend prioritizing the critical tasks first. Would you like me to help organize them?",
-          "You could improve team productivity by implementing daily standups and using the Pomodoro technique.",
-          "Consider using a Kanban board to visualize your workflow and identify bottlenecks."
-        ];
-        const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-
-        chatContainer.innerHTML += `< div class="ai-message assistant" > ${randomResponse}</div > `;
+        chatContainer.innerHTML += `<div class="ai-message system" style="color: #ef4444;">Error: ${error.message || 'Failed to connect to AI service'}</div>`;
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }
@@ -2557,7 +2553,7 @@
       if (!message) return;
 
       const chatContainer = gid('quickAIChat');
-      chatContainer.innerHTML += `< div class="ai-message user" > ${esc(message)}</div > `;
+      chatContainer.innerHTML += `<div class="ai-message user">${esc(message)}</div>`;
       input.value = '';
 
       setTimeout(() => {
@@ -2567,14 +2563,14 @@
           "Your team has completed 85% of this month's goals. Keep up the great work! 🎉"
         ];
         const response = responses[Math.floor(Math.random() * responses.length)];
-        chatContainer.innerHTML += `< div class="ai-message assistant" > ${response}</div > `;
+        chatContainer.innerHTML += `<div class="ai-message assistant">${response}</div>`;
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }, 1000);
     }
 
     function clearAIChat() {
       gid('aiChatMessages').innerHTML = `
-      < div class="ai-message system" >👋 Welcome to PROJEX AI Assistant!</div >
+      <div class="ai-message system">👋 Welcome to PROJEX AI Assistant!</div>
         <div class="ai-message system">I can help you with project planning, task organization, and productivity tips.</div>
     `;
     }
