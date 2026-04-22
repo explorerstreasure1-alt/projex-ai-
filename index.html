@@ -160,7 +160,7 @@
           <div class="logo-icon"></div>
           <div class="logo-text-wrapper">
             <span class="logo-text">PROJEX AI</span>
-            <span class="logo-slogan">YAPAY ZEKA DESTEKLI IŞ BIRLIĞI</span>
+            <span class="logo-slogan">YAPAY ZEKA DESTEKLİ İŞ BİRLİĞİ</span>
           </div>
         </div>
       </a>
@@ -1456,11 +1456,18 @@
     // ═══════════════════════════════════════════════════════════════
     // UTILITY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════
-    const gid = (id) => document.getElementById(id);
+    const gid = (id) => {
+      const el = document.getElementById(id);
+      if (!el) {
+        console.warn(`Element with id "${id}" not found`);
+        return null;
+      }
+      return el;
+    };
     const genId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
     const todayStr = () => new Date().toISOString().slice(0, 10);
     const esc = (str) => String(str || '').replace(/[<>&"']/g, (m) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', '\'': '&#39;' }[m]));
-    const fmtDate = (ts) => new Date(ts).toLocaleDateString('en-US');
+    const fmtDate = (ts) => ts ? new Date(ts).toLocaleDateString('en-US') : '-';
 
     function save() {
       localStorage.setItem('projex_data', JSON.stringify(AppState));
@@ -1638,6 +1645,9 @@
     }
 
     function checkProFeature() {
+      // NOTE: Frontend-only validation. In production, ALL PRO features must be validated on the backend
+      // by checking the user's subscription status in the database before allowing access.
+      // Users can bypass this by modifying AppState.subscription.plan in browser console.
       if (!hasFeatureAccess()) {
         const days = getTrialDaysRemaining();
         if (days === 0) {
@@ -1656,7 +1666,7 @@
     // ═══════════════════════════════════════════════════════════════
     let authTab = 'login';
     let loading = false;
-    let editingTaskId = null;
+    window.editingTaskId = null;
 
     function switchTab(newTab) {
       authTab = newTab;
@@ -1761,7 +1771,16 @@
       btn.innerHTML = on ? `<span class="spinner"></span> Processing...` : buttonText[authTab];
     }
 
-    function handleLogin() {
+    async function hashPassword(password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hash));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+
+    async function handleLogin() {
       clearMsg();
       const email = gid('em')?.value.trim();
       const pw = gid('pw')?.value;
@@ -1769,8 +1788,9 @@
       if (!validateEmail(email)) { showMsg('Invalid email address', 'error'); return; }
 
       setLoading(true);
+      const hashedPassword = await hashPassword(pw);
       setTimeout(() => {
-        const user = AppState.users.find(u => u.email === email.toLowerCase() && u.password === btoa(pw));
+        const user = AppState.users.find(u => u.email === email.toLowerCase() && u.password === hashedPassword);
         if (!user) { showMsg('Invalid email or password', 'error'); setLoading(false); return; }
 
         AppState.currentUser = user;
@@ -1781,7 +1801,7 @@
       }, 900);
     }
 
-    function handleRegister() {
+    async function handleRegister() {
       clearMsg();
       const fullName = gid('fn')?.value.trim();
       const email = gid('em')?.value.trim();
@@ -1795,12 +1815,13 @@
       if (AppState.users.find(u => u.email === email.toLowerCase())) { showMsg('This email is already registered', 'error'); return; }
 
       setLoading(true);
+      const hashedPassword = await hashPassword(pw);
       setTimeout(() => {
         const newUser = {
           id: genId(),
           fullName,
           email: email.toLowerCase(),
-          password: btoa(pw),
+          password: hashedPassword,
           createdAt: Date.now(),
           plan: 'trial',
           trialEnd: Date.now() + 15 * 24 * 60 * 60 * 1000
@@ -1831,7 +1852,7 @@
         AppState.resetCodeExpiry = Date.now() + 10 * 60 * 1000;
         save();
 
-        showMsg(`Doğrulama kodu ${email} adresine gönderildi.`, 'success');
+        showMsg(`Doğrulama kodu: ${resetCode} (Demo modu - email gönderilmedi)`, 'success');
         setLoading(false);
 
         setTimeout(() => switchTab('verify'), 1500);
@@ -1917,6 +1938,15 @@
     }
 
     function logout() {
+      // Clear all intervals
+      if (pomoInterval) clearInterval(pomoInterval);
+      if (mainVoiceRecordingInterval) clearInterval(mainVoiceRecordingInterval);
+
+      // Stop voice recording if active
+      if (mainVoiceRecording) {
+        stopMainVoiceRecording();
+      }
+
       AppState.currentUser = null;
       gid('appView').classList.remove('active');
       gid('authView').classList.add('active');
@@ -3060,85 +3090,85 @@
           };
 
           mainVoiceMediaRecorder.start(1000); // Save chunks every second for long recordings
+
+          // Start speech recognition only after audio succeeds
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          mainVoiceRecognition = new SpeechRecognition();
+          mainVoiceRecognition.lang = 'tr-TR';
+          mainVoiceRecognition.continuous = true;
+          mainVoiceRecognition.interimResults = true;
+
+          mainVoiceRecognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const transcript = event.results[i][0].transcript;
+              if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+              } else {
+                interimTranscript += transcript;
+              }
+            }
+
+            mainVoiceTranscript += finalTranscript;
+            gid('mainVoiceTranscript').innerHTML = mainVoiceTranscript + '<span style="color: var(--text-muted);">' + interimTranscript + '</span>';
+          };
+
+          mainVoiceRecognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            if (event.error === 'not-allowed') {
+              toast('Mikrofon izni reddedildi', 'error');
+              stopMainVoiceRecording();
+            }
+          };
+
+          mainVoiceRecognition.onend = () => {
+            if (mainVoiceRecording) {
+              mainVoiceRecognition.start();
+            }
+          };
+
+          try {
+            mainVoiceRecognition.start();
+            mainVoiceRecording = true;
+            mainVoiceTranscript = '';
+            mainVoiceRecordingSeconds = 0;
+
+            const btn = gid('mainVoiceRecordBtn');
+            btn.style.background = 'var(--red)';
+            btn.innerHTML = '⏹️';
+            btn.style.animation = 'pulse 1.5s infinite';
+
+            gid('mainVoiceRecordStatus').textContent = 'Kaydediliyor...';
+            gid('mainVoiceRecordTime').style.display = 'block';
+            gid('analyzeMainVoiceBtn').disabled = true;
+            gid('downloadVoiceBtn').disabled = true;
+
+            mainVoiceRecordingInterval = setInterval(() => {
+              mainVoiceRecordingSeconds++;
+              const hours = Math.floor(mainVoiceRecordingSeconds / 3600);
+              const minutes = Math.floor((mainVoiceRecordingSeconds % 3600) / 60);
+              const seconds = mainVoiceRecordingSeconds % 60;
+
+              if (hours > 0) {
+                gid('mainVoiceRecordTime').textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+              } else {
+                gid('mainVoiceRecordTime').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+              }
+            }, 1000);
+
+            toast('Ses kaydı başladı 🎙️', 'success');
+          } catch (error) {
+            console.error('Error starting voice recognition:', error);
+            toast('Ses kaydı başlatılamadı', 'error');
+          }
         })
         .catch(error => {
           console.error('Audio recording error:', error);
           toast('Ses kaydı başlatılamadı - mikrofon izni gerekli', 'error');
           return;
         });
-
-      // Start speech recognition
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      mainVoiceRecognition = new SpeechRecognition();
-      mainVoiceRecognition.lang = 'tr-TR';
-      mainVoiceRecognition.continuous = true;
-      mainVoiceRecognition.interimResults = true;
-
-      mainVoiceRecognition.onresult = (event) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-
-        mainVoiceTranscript += finalTranscript;
-        gid('mainVoiceTranscript').innerHTML = mainVoiceTranscript + '<span style="color: var(--text-muted);">' + interimTranscript + '</span>';
-      };
-
-      mainVoiceRecognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        if (event.error === 'not-allowed') {
-          toast('Mikrofon izni reddedildi', 'error');
-          stopMainVoiceRecording();
-        }
-      };
-
-      mainVoiceRecognition.onend = () => {
-        if (mainVoiceRecording) {
-          mainVoiceRecognition.start();
-        }
-      };
-
-      try {
-        mainVoiceRecognition.start();
-        mainVoiceRecording = true;
-        mainVoiceTranscript = '';
-        mainVoiceRecordingSeconds = 0;
-
-        const btn = gid('mainVoiceRecordBtn');
-        btn.style.background = 'var(--red)';
-        btn.innerHTML = '⏹️';
-        btn.style.animation = 'pulse 1.5s infinite';
-
-        gid('mainVoiceRecordStatus').textContent = 'Kaydediliyor...';
-        gid('mainVoiceRecordTime').style.display = 'block';
-        gid('analyzeMainVoiceBtn').disabled = true;
-        gid('downloadVoiceBtn').disabled = true;
-
-        mainVoiceRecordingInterval = setInterval(() => {
-          mainVoiceRecordingSeconds++;
-          const hours = Math.floor(mainVoiceRecordingSeconds / 3600);
-          const minutes = Math.floor((mainVoiceRecordingSeconds % 3600) / 60);
-          const seconds = mainVoiceRecordingSeconds % 60;
-
-          if (hours > 0) {
-            gid('mainVoiceRecordTime').textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-          } else {
-            gid('mainVoiceRecordTime').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-          }
-        }, 1000);
-
-        toast('Ses kaydı başladı 🎙️', 'success');
-      } catch (error) {
-        console.error('Error starting voice recognition:', error);
-        toast('Ses kaydı başlatılamadı', 'error');
-      }
     }
 
     function stopMainVoiceRecording() {
@@ -3199,7 +3229,7 @@
         const data = await response.json();
 
         if (data.success && data.content) {
-          gid('mainVoiceAnalysis').innerHTML = `<strong>Analiz Sonucu (${provider.toUpperCase()}):</strong><br><br>${data.content.replace(/\n/g, '<br>')}`;
+          gid('mainVoiceAnalysis').innerHTML = `<strong>Analiz Sonucu (${provider.toUpperCase()}):</strong><br><br>${esc(data.content).replace(/\n/g, '<br>')}`;
           gid('mainVoiceRecordStatus').textContent = 'Analiz tamamlandı';
           toast('Ses kaydı analiz edildi! 🧠', 'success');
 
@@ -3362,7 +3392,7 @@
       const note = savedVoiceNotesList.find(n => n.id === noteId);
       if (note) {
         gid('mainVoiceTranscript').innerHTML = note.transcript;
-        gid('mainVoiceAnalysis').innerHTML = `<strong>Analiz Sonucu (${note.provider.toUpperCase()}):</strong><br><br>${note.analysis.replace(/\n/g, '<br>')}`;
+        gid('mainVoiceAnalysis').innerHTML = `<strong>Analiz Sonucu (${note.provider.toUpperCase()}):</strong><br><br>${esc(note.analysis).replace(/\n/g, '<br>')}`;
         toast('Ses notu yüklendi', 'info');
       }
     }
@@ -3691,6 +3721,23 @@
 
     function closeModal(id) {
       gid(id).classList.remove('active');
+      resetModalEditState(id);
+    }
+
+    function resetModalEditState(id) {
+      if (id === 'newTaskModal') {
+        const titleEl = gid('newTaskModal').querySelector('.modal-title');
+        if (titleEl) titleEl.textContent = 'New Task';
+        window.editingTaskId = null;
+        if (gid('taskTitle')) gid('taskTitle').value = '';
+        if (gid('taskDesc')) gid('taskDesc').value = '';
+        if (gid('taskDueDate')) gid('taskDueDate').value = '';
+      }
+      if (id === 'newProjectModal') {
+        window.editingProjectId = null;
+        if (gid('projectTitle')) gid('projectTitle').value = '';
+        if (gid('projectDesc')) gid('projectDesc').value = '';
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -4047,7 +4094,7 @@
       post.comments++;
       save();
       renderSocialFeed();
-      toast('Comment added! �', 'success');
+      toast('Comment added! 💬', 'success');
     }
 
     function sharePost(id) {
@@ -4156,8 +4203,8 @@
       if (!title) { toast('Task title is required', 'error'); return; }
 
       // Check if editing existing task
-      if (editingTaskId) {
-        const t = AppState.tasks.find(task => task.id === editingTaskId);
+      if (window.editingTaskId) {
+        const t = AppState.tasks.find(task => task.id === window.editingTaskId);
         if (t) {
           t.title = title;
           t.description = gid('taskDesc').value.trim();
@@ -4170,7 +4217,7 @@
           toast('Task updated! ✅', 'success');
           addActivity(`Updated task: ${title}`, '✅');
         }
-        editingTaskId = null;
+        window.editingTaskId = null;
       } else {
         // Create new task
         AppState.tasks.push({
@@ -4196,19 +4243,33 @@
       const title = gid('meetingTitle').value.trim();
       if (!title) { toast('Meeting title is required', 'error'); return; }
 
-      AppState.meetings.push({
-        id: genId(),
-        title,
-        date: gid('meetingDate').value,
-        time: gid('meetingTime').value,
-        duration: 60,
-        createdAt: Date.now()
-      });
+      if (window.editingMeetingId) {
+        // Edit mode
+        const meeting = AppState.meetings.find(m => m.id === window.editingMeetingId);
+        if (meeting) {
+          meeting.title = title;
+          meeting.date = gid('meetingDate').value;
+          meeting.time = gid('meetingTime').value;
+          meeting.updatedAt = Date.now();
+        }
+        window.editingMeetingId = null;
+        toast('Meeting updated!', 'success');
+      } else {
+        // New meeting
+        AppState.meetings.push({
+          id: genId(),
+          title,
+          date: gid('meetingDate').value,
+          time: gid('meetingTime').value,
+          duration: 60,
+          createdAt: Date.now()
+        });
+        toast('Meeting scheduled!', 'success');
+        addActivity(`Scheduled meeting: ${title}`, '📅');
+      }
 
       save();
       closeModal('newMeetingModal');
-      toast('Meeting scheduled!', 'success');
-      addActivity(`Scheduled meeting: ${title}`, '📅');
       renderAll();
     }
 
@@ -4236,19 +4297,35 @@
       const name = gid('teamName').value.trim();
       if (!name) { toast('Name is required', 'error'); return; }
 
-      AppState.team.push({
-        id: genId(),
-        name,
-        role: gid('teamRole').value.trim(),
-        dept: gid('teamDept').value,
-        email: gid('teamEmail').value.trim(),
-        initials: name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
-        createdAt: Date.now()
-      });
+      if (window.editingTeamMemberId) {
+        // Edit mode
+        const member = AppState.team.find(t => t.id === window.editingTeamMemberId);
+        if (member) {
+          member.name = name;
+          member.role = gid('teamRole').value.trim();
+          member.dept = gid('teamDept').value;
+          member.email = gid('teamEmail').value.trim();
+          member.initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+          member.updatedAt = Date.now();
+        }
+        window.editingTeamMemberId = null;
+        toast('Team member updated!', 'success');
+      } else {
+        // New team member
+        AppState.team.push({
+          id: genId(),
+          name,
+          role: gid('teamRole').value.trim(),
+          dept: gid('teamDept').value,
+          email: gid('teamEmail').value.trim(),
+          initials: name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+          createdAt: Date.now()
+        });
+        toast('Team member added!', 'success');
+      }
 
       save();
       closeModal('newTeamModal');
-      toast('Team member added!', 'success');
       renderAll();
     }
 
@@ -5021,13 +5098,13 @@
     // ═══════════════════════════════════════════════════════════════
     // EDIT FUNCTIONS
     // ═══════════════════════════════════════════════════════════════
-    let editingProjectId = null;
+    window.editingProjectId = null;
 
     function editTask(id) {
       const task = AppState.tasks.find(t => t.id === id);
       if (!task) return;
 
-      editingTaskId = id;
+      window.editingTaskId = id;
 
       // Pre-fill modal
       gid('taskTitle').value = task.title || '';
@@ -5044,31 +5121,11 @@
       openModal('newTaskModal');
     }
 
-    // Close modal handler - reset edit states
-    const originalCloseModal = closeModal;
-    closeModal = function (id) {
-      originalCloseModal(id);
-      if (id === 'newTaskModal') {
-        const titleEl = gid('newTaskModal').querySelector('.modal-title');
-        if (titleEl) titleEl.textContent = 'New Task';
-        editingTaskId = null;
-        // Reset form
-        if (gid('taskTitle')) gid('taskTitle').value = '';
-        if (gid('taskDesc')) gid('taskDesc').value = '';
-        if (gid('taskDueDate')) gid('taskDueDate').value = '';
-      }
-      if (id === 'newProjectModal') {
-        editingProjectId = null;
-        gid('projectTitle').value = '';
-        gid('projectDesc').value = '';
-      }
-    };
-
     function editProject(id) {
       const project = AppState.projects.find(p => p.id === id);
       if (!project) return;
 
-      editingProjectId = id;
+      window.editingProjectId = id;
       gid('projectTitle').value = project.title || '';
       gid('projectDesc').value = project.description || '';
       gid('projectStatus').value = project.status || 'active';
