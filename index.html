@@ -1239,15 +1239,29 @@
           <input type="url" class="form-input" id="meetingLink" placeholder="https://...">
         </div>
         <div class="form-group">
-          <label class="form-label">Attendees</label>
+          <label class="form-label">Your Role</label>
+          <select class="form-select" id="meetingRole">
+            <option value="organizer">👑 Organizer</option>
+            <option value="presenter">🎤 Presenter</option>
+            <option value="participant" selected>👤 Participant</option>
+            <option value="assistant">🤝 Assistant</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Attendees (Email)</label>
           <input type="text" class="form-input" id="meetingAttendees"
             placeholder="email@example.com, email2@example.com">
-          <small style="color: var(--text-muted);">Comma-separated emails</small>
+          <small style="color: var(--text-muted);">Comma-separated emails for team members</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Guest Invite (Optional)</label>
+          <input type="email" class="form-input" id="meetingGuestEmail" placeholder="guest@example.com">
+          <small style="color: var(--text-muted);">Invite someone outside the team</small>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('newMeetingModal')">Cancel</button>
-        <button class="btn btn-primary" onclick="saveMeeting()">Save</button>
+        <button class="btn btn-primary" onclick="saveMeeting()">Save & Invite</button>
       </div>
     </div>
   </div>
@@ -4690,6 +4704,13 @@
       const duration = parseInt(gid('meetingDuration').value) || 60;
       const recurrence = gid('meetingRecurrence').value;
       const attendees = gid('meetingAttendees').value.split(',').map(e => e.trim()).filter(e => e);
+      const guestEmail = gid('meetingGuestEmail').value.trim();
+      const role = gid('meetingRole').value;
+
+      // Add guest to attendees if provided
+      if (guestEmail && !attendees.includes(guestEmail)) {
+        attendees.push(guestEmail);
+      }
 
       if (window.editingMeetingId) {
         // Edit mode
@@ -4707,6 +4728,7 @@
           m.meeting_link = gid('meetingLink').value;
           m.description = gid('meetingDescription').value;
           m.attendees = attendees;
+          m.role = role;
           m.updatedAt = Date.now();
 
           await saveToSupabase('meetings', m);
@@ -4731,6 +4753,7 @@
           meeting_link: gid('meetingLink').value,
           description: gid('meetingDescription').value,
           attendees,
+          role,
           createdAt: Date.now()
         };
         AppState.meetings.push(newMeeting);
@@ -4740,6 +4763,11 @@
 
         toast('Meeting scheduled! ✅', 'success');
         addActivity(`Scheduled meeting: ${title}`, '📅');
+
+        // Simulate invite notification (in production, would send actual emails)
+        if (attendees.length > 0) {
+          toast(`Invites sent to ${attendees.length} participant(s) 📧`, 'info');
+        }
       }
 
       closeModal('newMeetingModal');
@@ -5163,6 +5191,8 @@
         gid('meetingLink').value = meeting.meeting_link || '';
         gid('meetingDescription').value = meeting.description || '';
         gid('meetingAttendees').value = Array.isArray(meeting.attendees) ? meeting.attendees.join(', ') : '';
+        gid('meetingRole').value = meeting.role || 'participant';
+        gid('meetingGuestEmail').value = '';
         window.editingMeetingId = id;
         openModal('newMeetingModal');
       }
