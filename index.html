@@ -318,6 +318,29 @@
         </div>
       </div>
 
+      <div class="sidebar-divider"></div>
+
+      <div class="nav-section">
+        <div class="nav-label">🎙️ Sesli Not Al</div>
+        <div class="voice-notes-panel">
+          <button class="btn btn-primary" id="voiceRecordBtn" onclick="toggleVoiceRecording()"
+            style="width: 100%; margin-bottom: 8px;">
+            <span id="voiceRecordIcon">🎙️</span> <span id="voiceRecordText">Kaydet</span>
+          </button>
+          <div id="voiceRecordStatus" style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px;">Hazır
+          </div>
+          <div id="voiceRecordTime" style="font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; display: none;">
+            00:00</div>
+          <button class="btn btn-teal" onclick="analyzeVoiceRecording()" style="width: 100%;" id="analyzeVoiceBtn"
+            disabled>
+            🧠 Toparla Analiz Et
+          </button>
+          <div id="voiceTranscription"
+            style="margin-top: 12px; font-size: 0.75rem; color: var(--text-muted); max-height: 150px; overflow-y: auto;">
+          </div>
+        </div>
+      </div>
+
       <div class="sidebar-user">
         <div class="online-dot"></div>
         <div>
@@ -695,22 +718,42 @@
             <button class="btn btn-ghost" onclick="navigateTo('meetings')">← Back to Meetings</button>
           </div>
         </div>
-        <div class="dashboard-grid" style="grid-template-columns: 1fr;">
+        <div class="dashboard-grid" style="grid-template-columns: 2fr 1fr; gap: 16px;">
           <div class="dashboard-card">
-            <div
-              style="background: #000; border-radius: 12px; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; position: relative;">
-              <video id="localVideo" autoplay muted
-                style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"></video>
-              <div id="videoPlaceholder"
-                style="position: absolute; display: flex; flex-direction: column; align-items: center; gap: 12px; color: white;">
-                <div style="font-size: 4rem;">📹</div>
-                <div style="font-size: 1.2rem; font-weight: 600;">Click "Start Video Meeting" to begin</div>
+            <div id="videoGrid" class="video-grid">
+              <div class="video-participant" id="localParticipant">
+                <div
+                  style="position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden;">
+                  <video id="localVideo" autoplay muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  <div id="videoPlaceholder"
+                    style="position: absolute; display: flex; flex-direction: column; align-items: center; gap: 12px; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div style="font-size: 4rem;">📹</div>
+                    <div style="font-size: 1.2rem; font-weight: 600;">Click "Start Video Meeting" to begin</div>
+                  </div>
+                  <div
+                    style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
+                    👤 Sen</div>
+                </div>
               </div>
             </div>
             <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
               <button class="btn btn-primary" onclick="toggleMic()">🎙️ Mic</button>
               <button class="btn btn-primary" onclick="toggleCam()">📷 Camera</button>
               <button class="btn btn-primary" onclick="toggleScreenShare()">🖥️ Share Screen</button>
+              <button class="btn btn-teal" onclick="toggleMeetingAudioRecord()">🎙️ Ses Kayıt</button>
+            </div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-title">📝 Toplantı Notları</div>
+            <div id="meetingNotesPanel" style="height: 400px; display: flex; flex-direction: column;">
+              <textarea id="meetingNotes" placeholder="Toplantı notlarını buraya yazın..."
+                style="flex: 1; width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--r); background: var(--card); color: var(--text); resize: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;"></textarea>
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button class="btn btn-primary" onclick="saveMeetingNotes()" style="flex: 1;">💾 Kaydet</button>
+                <button class="btn btn-teal" onclick="transcribeMeetingAudio()" style="flex: 1;">🧠 Analiz Et</button>
+              </div>
+            </div>
+            <div id="meetingRecordingStatus" style="margin-top: 12px; font-size: 0.75rem; color: var(--text-muted);">
             </div>
           </div>
         </div>
@@ -2359,7 +2402,372 @@
     }
 
     function toggleScreenShare() {
-      toast('Screen sharing feature coming soon! 🖥️', 'info');
+      if (!screenShareStream) {
+        startScreenShare();
+      } else {
+        stopScreenShare();
+      }
+    }
+
+    let screenShareStream = null;
+    let screenRecorder = null;
+    let screenRecordingChunks = [];
+
+    async function startScreenShare() {
+      try {
+        screenShareStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: "always" },
+          audio: true
+        });
+
+        const videoElement = document.createElement('video');
+        videoElement.srcObject = screenShareStream;
+        videoElement.autoplay = true;
+        videoElement.muted = true;
+
+        // Add to video grid
+        const videoGrid = gid('videoGrid');
+        if (videoGrid) {
+          const participantDiv = document.createElement('div');
+          participantDiv.className = 'video-participant';
+          participantDiv.id = 'screenShareParticipant';
+          participantDiv.innerHTML = `
+            <div style="position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden;">
+              <video autoplay muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+              <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">🖥️ Ekran Paylaşımı</div>
+            </div>
+          `;
+          participantDiv.querySelector('video').srcObject = screenShareStream;
+          videoGrid.appendChild(participantDiv);
+        }
+
+        // Start recording
+        screenRecorder = new MediaRecorder(screenShareStream);
+        screenRecordingChunks = [];
+
+        screenRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            screenRecordingChunks.push(event.data);
+          }
+        };
+
+        screenRecorder.onstop = () => {
+          const blob = new Blob(screenRecordingChunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `ekran-kaydi-${new Date().toISOString()}.webm`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast('Ekran kaydı indirildi! 📹', 'success');
+        };
+
+        screenRecorder.start();
+        toast('Ekran paylaşımı başladı 🖥️', 'success');
+      } catch (error) {
+        console.error('Screen share error:', error);
+        toast('Ekran paylaşımı başlatılamadı', 'error');
+      }
+    }
+
+    function stopScreenShare() {
+      if (screenRecorder && screenRecorder.state !== 'inactive') {
+        screenRecorder.stop();
+      }
+
+      if (screenShareStream) {
+        screenShareStream.getTracks().forEach(track => track.stop());
+      }
+
+      const participantDiv = gid('screenShareParticipant');
+      if (participantDiv) {
+        participantDiv.remove();
+      }
+
+      screenShareStream = null;
+      screenRecorder = null;
+      toast('Ekran paylaşımı durduruldu', 'info');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MEETING AUDIO RECORDING
+    // ═══════════════════════════════════════════════════════════════
+    let meetingAudioRecorder = null;
+    let meetingAudioStream = null;
+    let meetingAudioChunks = [];
+    let meetingAudioRecording = false;
+
+    function toggleMeetingAudioRecord() {
+      if (!meetingAudioRecording) {
+        startMeetingAudioRecord();
+      } else {
+        stopMeetingAudioRecord();
+      }
+    }
+
+    async function startMeetingAudioRecord() {
+      try {
+        meetingAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        meetingAudioRecorder = new MediaRecorder(meetingAudioStream);
+        meetingAudioChunks = [];
+
+        meetingAudioRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            meetingAudioChunks.push(event.data);
+          }
+        };
+
+        meetingAudioRecorder.onstop = () => {
+          const blob = new Blob(meetingAudioChunks, { type: 'audio/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `toplanti-ses-kaydi-${new Date().toISOString()}.webm`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast('Toplantı ses kaydı indirildi! 🎙️', 'success');
+        };
+
+        meetingAudioRecorder.start();
+        meetingAudioRecording = true;
+        gid('meetingRecordingStatus').textContent = '🔴 Ses kaydı aktif...';
+        toast('Toplantı ses kaydı başladı 🎙️', 'success');
+      } catch (error) {
+        console.error('Audio recording error:', error);
+        toast('Ses kaydı başlatılamadı', 'error');
+      }
+    }
+
+    function stopMeetingAudioRecord() {
+      if (meetingAudioRecorder && meetingAudioRecorder.state !== 'inactive') {
+        meetingAudioRecorder.stop();
+      }
+
+      if (meetingAudioStream) {
+        meetingAudioStream.getTracks().forEach(track => track.stop());
+      }
+
+      meetingAudioRecording = false;
+      meetingAudioStream = null;
+      meetingAudioRecorder = null;
+      gid('meetingRecordingStatus').textContent = 'Ses kaydı durduruldu';
+      toast('Toplantı ses kaydı durduruldu', 'info');
+    }
+
+    function saveMeetingNotes() {
+      const notes = gid('meetingNotes').value;
+      if (!notes.trim()) {
+        toast('Kaydedilecek not yok', 'warn');
+        return;
+      }
+
+      if (!AppState.meetingNotes) {
+        AppState.meetingNotes = [];
+      }
+
+      AppState.meetingNotes.unshift({
+        id: Date.now().toString(),
+        content: notes,
+        date: new Date().toISOString(),
+        meetingId: AppState.currentMeetingId || 'general'
+      });
+
+      save();
+      gid('meetingNotes').value = '';
+      toast('Toplantı notları kaydedildi! 💾', 'success');
+    }
+
+    async function transcribeMeetingAudio() {
+      const notes = gid('meetingNotes').value;
+      if (!notes.trim()) {
+        toast('Analiz edilecek not yok', 'warn');
+        return;
+      }
+
+      gid('meetingRecordingStatus').textContent = 'Analiz ediliyor...';
+
+      try {
+        const response = await fetch('/api/mistral', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: `Aşağıdaki toplantı notlarını analiz et, toparla, yapılandır ve eylem adımları çıkar:\n\n${notes}`,
+            system: 'Sen deneyimli bir toplantı notları yöneticisisin. Toplantı notlarını analiz edip, yapılandırılmış ve eyleme geçirilebilir özetlere dönüştürüyorsun.'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.content) {
+          gid('meetingNotes').value = data.content;
+          gid('meetingRecordingStatus').textContent = 'Analiz tamamlandı';
+          toast('Toplantı notları analiz edildi! 🧠', 'success');
+        } else {
+          throw new Error(data.error || 'Analiz başarısız');
+        }
+      } catch (error) {
+        console.error('Analysis error:', error);
+        gid('meetingRecordingStatus').textContent = 'Analiz hatası';
+        toast('Analiz başarısız: ' + error.message, 'error');
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // VOICE RECORDING
+    // ═══════════════════════════════════════════════════════════════
+    let voiceRecognition = null;
+    let voiceRecording = false;
+    let voiceTranscript = '';
+    let voiceRecordingInterval = null;
+    let voiceRecordingSeconds = 0;
+
+    function toggleVoiceRecording() {
+      if (!voiceRecording) {
+        startVoiceRecording();
+      } else {
+        stopVoiceRecording();
+      }
+    }
+
+    function startVoiceRecording() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        toast('Ses tanıma tarayıcınızda desteklenmiyor', 'error');
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      voiceRecognition = new SpeechRecognition();
+      voiceRecognition.lang = 'tr-TR';
+      voiceRecognition.continuous = true;
+      voiceRecognition.interimResults = true;
+
+      voiceRecognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        voiceTranscript += finalTranscript;
+        gid('voiceTranscription').innerHTML = voiceTranscript + '<span style="color: var(--text-muted);">' + interimTranscript + '</span>';
+      };
+
+      voiceRecognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          toast('Mikrofon izni reddedildi', 'error');
+          stopVoiceRecording();
+        }
+      };
+
+      voiceRecognition.onend = () => {
+        if (voiceRecording) {
+          voiceRecognition.start();
+        }
+      };
+
+      try {
+        voiceRecognition.start();
+        voiceRecording = true;
+        voiceTranscript = '';
+        voiceRecordingSeconds = 0;
+
+        gid('voiceRecordBtn').classList.add('recording');
+        gid('voiceRecordIcon').textContent = '⏹️';
+        gid('voiceRecordText').textContent = 'Durdur';
+        gid('voiceRecordStatus').textContent = 'Kaydediliyor...';
+        gid('voiceRecordTime').style.display = 'block';
+        gid('analyzeVoiceBtn').disabled = true;
+
+        voiceRecordingInterval = setInterval(() => {
+          voiceRecordingSeconds++;
+          const minutes = Math.floor(voiceRecordingSeconds / 60);
+          const seconds = voiceRecordingSeconds % 60;
+          gid('voiceRecordTime').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+
+        toast('Ses kaydı başladı 🎙️', 'success');
+      } catch (error) {
+        console.error('Error starting voice recognition:', error);
+        toast('Ses kaydı başlatılamadı', 'error');
+      }
+    }
+
+    function stopVoiceRecording() {
+      if (voiceRecognition) {
+        voiceRecognition.stop();
+      }
+
+      if (voiceRecordingInterval) {
+        clearInterval(voiceRecordingInterval);
+      }
+
+      voiceRecording = false;
+      voiceRecognition = null;
+
+      gid('voiceRecordBtn').classList.remove('recording');
+      gid('voiceRecordIcon').textContent = '🎙️';
+      gid('voiceRecordText').textContent = 'Kaydet';
+      gid('voiceRecordStatus').textContent = 'Kayıt tamamlandı';
+      gid('voiceRecordTime').style.display = 'none';
+      gid('analyzeVoiceBtn').disabled = false;
+
+      toast('Ses kaydı durduruldu', 'info');
+    }
+
+    async function analyzeVoiceRecording() {
+      if (!voiceTranscript.trim()) {
+        toast('Analiz edilecek ses kaydı yok', 'warn');
+        return;
+      }
+
+      gid('voiceRecordStatus').textContent = 'Analiz ediliyor...';
+      gid('analyzeVoiceBtn').disabled = true;
+
+      try {
+        // Use Mistral for analysis
+        const response = await fetch('/api/mistral', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: `Aşağıdaki ses kaydını analiz et, toparla, geliştir ve yapılandırılmış bir proje planına dönüştür. Ana fikirleri öne çıkar, eylem adımlarını listele ve özet oluştur:\n\n${voiceTranscript}`,
+            system: 'Sen deneyimli bir proje yöneticisisin. Ses kayıtlarını analiz edip, yapılandırılmış ve eyleme geçirilebilir proje planlarına dönüştürüyorsun.'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.content) {
+          gid('voiceTranscription').innerHTML = `<strong>Analiz Sonucu:</strong><br><br>${data.content.replace(/\n/g, '<br>')}`;
+          gid('voiceRecordStatus').textContent = 'Analiz tamamlandı';
+          toast('Ses kaydı analiz edildi! 🧠', 'success');
+
+          // Save to notes
+          if (AppState.notes) {
+            AppState.notes.unshift({
+              id: Date.now().toString(),
+              title: 'Sesli Not Analizi',
+              content: data.content,
+              createdAt: new Date().toISOString()
+            });
+            save();
+          }
+        } else {
+          throw new Error(data.error || 'Analiz başarısız');
+        }
+      } catch (error) {
+        console.error('Analysis error:', error);
+        gid('voiceRecordStatus').textContent = 'Analiz hatası';
+        toast('Analiz başarısız: ' + error.message, 'error');
+      } finally {
+        gid('analyzeVoiceBtn').disabled = false;
+      }
     }
 
     function renderReports() {
