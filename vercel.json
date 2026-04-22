@@ -1,4 +1,21 @@
 {
   "version": 2,
-  "name": "projex-ai"
+  "name": "projex-ai",
+  "buildCommand": "npm install",
+  "outputDirectory": ".",
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
 }
