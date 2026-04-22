@@ -80,6 +80,12 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   late_warning_sent BOOLEAN DEFAULT false, -- Whether late warning was sent
   notification_preferences JSONB DEFAULT '{}', -- User notification preferences (email, push, sound)
   -- End Category 6
+  -- Category 7: Security
+  password TEXT, -- Meeting password (hashed)
+  waiting_room BOOLEAN DEFAULT false, -- Enable waiting room
+  encrypted BOOLEAN DEFAULT false, -- End-to-end encryption enabled
+  join_permissions TEXT DEFAULT 'anyone', -- 'anyone', 'invited_only', 'password_only', 'password_and_invited'
+  -- End Category 7
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -592,6 +598,12 @@ ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS reminder_minutes INTEGER DE
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS notification_sent BOOLEAN DEFAULT false;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS late_warning_sent BOOLEAN DEFAULT false;
 ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{}';
+
+-- Category 7: Security
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS password TEXT;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS waiting_room BOOLEAN DEFAULT false;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS encrypted BOOLEAN DEFAULT false;
+ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS join_permissions TEXT DEFAULT 'anyone';
 
 -- Category 5: Integrations table
 CREATE TABLE IF NOT EXISTS public.integrations (
