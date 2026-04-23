@@ -3971,7 +3971,10 @@
             } else if (event.error === 'no-speech') {
               console.warn('Ses algılanamadı, lütfen tekrar konuşun');
             } else if (event.error === 'network') {
-              toast('Ses tanıma servisi hatası (internet bağlantısı gerekli)', 'error');
+              // Network error: don't stop recording, just warn and continue
+              console.warn('Ses tanıma servisi geçici olarak kullanılamıyor. Ses kaydı devam ediyor, ancak transkript yapılamayacak.');
+              toast('Ses tanıma servisi geçici olarak kullanılamıyor. Ses kaydı devam ediyor.', 'warn');
+              // Don't stop recording - MediaRecorder will still capture audio
             } else if (event.error === 'aborted') {
               console.warn('Ses tanıma durduruldu');
               if (mainVoiceRecording) {
