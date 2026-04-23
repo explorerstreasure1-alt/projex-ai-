@@ -615,7 +615,8 @@ CREATE POLICY "Users can insert own subscription" ON public.subscriptions FOR IN
 CREATE POLICY "Users can update own subscription" ON public.subscriptions FOR UPDATE USING (auth.uid() = user_id);
 
 -- meeting_signals
--- [FIX-05] INSERT now validates sender_id matches the authenticated user
+-- [FIX-05] Removed sender_id validation for WebRTC compatibility
+-- PeerJS IDs are random strings, not UUIDs, so auth.uid() check breaks signaling
 DROP POLICY IF EXISTS "Users can read meeting signals"   ON public.meeting_signals;
 DROP POLICY IF EXISTS "Users can insert meeting signals" ON public.meeting_signals;
 DROP POLICY IF EXISTS "Users can delete meeting signals" ON public.meeting_signals;
@@ -624,16 +625,10 @@ CREATE POLICY "Users can read meeting signals" ON public.meeting_signals
   FOR SELECT USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Users can insert meeting signals" ON public.meeting_signals
-  FOR INSERT WITH CHECK (
-    auth.role() = 'authenticated'
-    AND sender_id = auth.uid()::text
-  );
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 CREATE POLICY "Users can delete meeting signals" ON public.meeting_signals
-  FOR DELETE USING (
-    auth.role() = 'authenticated'
-    AND sender_id = auth.uid()::text
-  );
+  FOR DELETE USING (auth.role() = 'authenticated');
 
 -- ----------------------------------------------------------------
 -- SIGNUP TRIGGER
