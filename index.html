@@ -407,6 +407,16 @@
             <div class="stat-card-label">Team Members</div>
             <div class="stat-card-change up">+1 new</div>
           </div>
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashVisitorCount">0</div>
+            <div class="stat-card-label">Total Visitors</div>
+            <div class="stat-card-change up">This session</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashUserCount">0</div>
+            <div class="stat-card-label">Total Users</div>
+            <div class="stat-card-change">Registered</div>
+          </div>
         </div>
 
         <div class="dashboard-grid">
@@ -5230,11 +5240,34 @@
     // ═══════════════════════════════════════════════════════════════
     // DASHBOARD RENDER
     // ═══════════════════════════════════════════════════════════════
+    async function fetchUserCount() {
+      try {
+        const { count, error } = await supabaseClient
+          .from('user_profiles')
+          .select('*', { count: 'exact', head: true });
+
+        if (error) throw error;
+        gid('dashUserCount').textContent = count ? count.toLocaleString() : '0';
+      } catch (error) {
+        console.error('Failed to fetch user count:', error);
+        gid('dashUserCount').textContent = '-';
+      }
+    }
+
     function renderDashboard() {
       gid('dashProjectCount').textContent = AppState.projects.filter(p => p.status === 'active').length;
       gid('dashTaskCount').textContent = AppState.tasks.filter(t => t.status === 'done').length;
       gid('dashMeetingCount').textContent = AppState.meetings.filter(m => m.date >= todayStr()).length;
       gid('dashTeamCount').textContent = AppState.team.length;
+
+      // Update visitor count (stored in localStorage)
+      let visitorCount = parseInt(localStorage.getItem('visitorCount') || '0');
+      visitorCount++;
+      localStorage.setItem('visitorCount', visitorCount);
+      gid('dashVisitorCount').textContent = visitorCount.toLocaleString();
+
+      // Update total users count from Supabase
+      fetchUserCount();
 
       // Priority tasks
       const priorityTasks = AppState.tasks
@@ -6859,7 +6892,7 @@
           if (e.target === overlay) {
             overlay.classList.remove('active');
             // Reset all edit states to prevent race conditions
-            window.editingTaskId = null;
+            window.editingTaskId = ll;
             window.editingProjectId = null;
             window.editingMeetingId = null;
             window.editingTeamMemberId = null;
