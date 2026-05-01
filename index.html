@@ -43,6 +43,7 @@
 <body>
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
+  <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="handleImportFile(this)">
 
   <!-- ═══════════════════════════════════════════════════════════════
        AUTH VIEW - Login / Register
@@ -176,11 +177,32 @@
                 <div class="pw-label" id="pw-lbl" style="font-size:0.7rem;color:#8888a8"></div>
               </div>
               <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="regPasswordConfirm" type="password" placeholder="••••••••" autocomplete="new-password"></div>
-              <button class="submit-btn" type="button" onclick="handleRegister()">Create Account</button>
+              <button class="submit-btn" id="registerSubmitBtn" type="button" onclick="handleRegister()">Create Account</button>
             </div>
             <div class="tab-panel" id="forgotForm" style="display:none;">
               <div class="fg"><label class="flabel">Email</label><input class="finput" id="resetEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
-              <button class="submit-btn" type="button" onclick="handleForgot()">Send Reset Link</button>
+              <button class="submit-btn" id="forgotBtn" type="button" onclick="handleForgot()">Send Reset Link</button>
+              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('login')">← Back to Login</button></div>
+            </div>
+            <div class="tab-panel" id="verifyForm" style="display:none;">
+              <div style="text-align:center;margin-bottom:16px;">
+                <span style="font-size:2rem;">📧</span>
+                <h3 style="margin:8px 0;color:var(--text);">Verify Email</h3>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Enter the 6-digit code sent to your email</p>
+              </div>
+              <div class="fg"><label class="flabel">Verification Code</label><input class="finput" id="verifyCode" type="text" placeholder="000000" maxlength="6" style="letter-spacing:8px;font-size:1.4rem;text-align:center;font-family:'JetBrains Mono',monospace"></div>
+              <button class="submit-btn" id="verifyBtn" type="button" onclick="handleVerify()">Verify Code</button>
+              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('forgot')">← Back</button></div>
+            </div>
+            <div class="tab-panel" id="resetForm" style="display:none;">
+              <div style="text-align:center;margin-bottom:16px;">
+                <span style="font-size:2rem;">🔐</span>
+                <h3 style="margin:8px 0;color:var(--text);">Reset Password</h3>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Enter your new password</p>
+              </div>
+              <div class="fg"><label class="flabel">New Password</label><input class="finput" id="newPw" type="password" placeholder="min. 6 characters" autocomplete="new-password"></div>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="confirmNewPw" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <button class="submit-btn" id="resetBtn" type="button" onclick="handleReset()">Reset Password</button>
               <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('login')">← Back to Login</button></div>
             </div>
             <div class="tab-panel" id="recoveryForm" style="display:none;">
@@ -191,7 +213,7 @@
               </div>
               <div class="fg"><label class="flabel">New Password</label><input class="finput" id="newPw" type="password" placeholder="min. 6 characters" autocomplete="new-password"></div>
               <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="newPw2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
-              <button class="submit-btn" type="button" onclick="handleRecovery()">Update Password</button>
+              <button class="submit-btn" id="recoveryBtn" type="button" onclick="handleRecovery()">Update Password</button>
             </div>
           </div>
           <div class="trial-note">
@@ -1900,6 +1922,66 @@
       if (!AppState.subscription) AppState.subscription = { plan: 'trial', trialStart: Date.now(), trialDays: 15 };
     }
 
+    // Export/Import Functions
+    function exportData() {
+      const exportObj = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        user: AppState.currentUser?.email,
+        data: AppState
+      };
+      
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `projex-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast('Veriler başarıyla dışa aktarıldı!', 'success');
+    }
+
+    async function importData(file) {
+      try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const importObj = JSON.parse(e.target.result);
+            
+            if (!importObj.data) {
+              toast('Geçersiz yedekleme dosyası', 'error');
+              return;
+            }
+            
+            // Merge imported data
+            const merged = {
+              ...AppState,
+              ...importObj.data,
+              currentUser: AppState.currentUser // Keep current user
+            };
+            
+            Object.assign(AppState, merged);
+            await save();
+            renderAll();
+            
+            toast('Veriler başarıyla içe aktarıldı!', 'success');
+            
+          } catch (err) {
+            console.error('Import parse error:', err);
+            toast('Dosya okunamadı', 'error');
+          }
+        };
+        reader.readAsText(file);
+        
+      } catch (error) {
+        console.error('Import error:', error);
+        toast('İçe aktarma başarısız', 'error');
+      }
+    }
+
     // Supabase data access functions
     async function saveToSupabase(table, data) {
       if (!AppState.currentUser) return;
@@ -2239,11 +2321,14 @@
       gid('loginForm').style.display = authTab === 'login' ? 'block' : 'none';
       gid('registerForm').style.display = authTab === 'register' ? 'block' : 'none';
       gid('forgotForm').style.display = authTab === 'forgot' ? 'block' : 'none';
+      gid('verifyForm').style.display = authTab === 'verify' ? 'block' : 'none';
+      gid('resetForm').style.display = authTab === 'reset' ? 'block' : 'none';
       gid('recoveryForm').style.display = authTab === 'recovery' ? 'block' : 'none';
       
       // Update tab buttons visibility
-      gid('loginTabBtn').style.display = (authTab === 'recovery') ? 'none' : 'inline-block';
-      gid('registerTabBtn').style.display = (authTab === 'recovery' || authTab === 'forgot') ? 'none' : 'inline-block';
+      const showTabs = !['forgot', 'verify', 'reset', 'recovery'].includes(authTab);
+      gid('loginTabBtn').style.display = showTabs ? 'inline-block' : 'none';
+      gid('registerTabBtn').style.display = showTabs ? 'inline-block' : 'none';
     }
 
     function showMsg(txt, type) {
@@ -2252,71 +2337,8 @@
 
     function clearMsg() { gid('msg-area').innerHTML = ''; }
 
-    function renderAuthForm() {
-      console.log('renderAuthForm called, authTab:', authTab);
-      const area = gid('form-area');
-      if (!area) {
-        console.error('form-area element not found!');
-        return;
-      }
-      if (authTab === 'login') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
-            <div class="fg"><label class="flabel">Password</label><input class="finput" id="pw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
-            <div class="forgot-row"><button class="forgot-btn" onclick="showForgotPassword()">Şifreyi unuttun mu?</button></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleLogin()">Sign In</button>
-          </div>
-        `;
-      } else if (authTab === 'register') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Full Name</label><input class="finput" id="fn" type="text" placeholder="Your name" autocomplete="name"></div>
-            <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
-            <div class="fg">
-              <label class="flabel">Password</label>
-              <input class="finput" id="pw-field" type="password" placeholder="min. 6 characters" oninput="updateStrength()" autocomplete="new-password">
-              <div class="pw-strength" id="pw-bar" style="width:0%;background:#ef4444"></div>
-              <div class="pw-label" id="pw-lbl"></div>
-            </div>
-            <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="pw2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleRegister()">Create Account</button>
-          </div>
-        `;
-      } else if (authTab === 'forgot') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Email</label><input class="finput" id="resetEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleForgot()">Kod Gönder</button>
-            <div class="back-link"><button class="forgot-btn" onclick="switchTab('login')">← Girişe Dön</button></div>
-          </div>
-        `;
-      } else if (authTab === 'verify') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Doğrulama Kodu</label><input class="finput" id="verifyCode" type="text" placeholder="6 haneli kod girin" maxlength="6" style="letter-spacing: 4px; font-size: 1.2rem; text-align: center;"></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleVerify()">Kodu Doğrula</button>
-            <div class="back-link"><button class="forgot-btn" onclick="switchTab('forgot')">← Geri</button></div>
-          </div>
-        `;
-      } else if (authTab === 'reset') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Yeni Şifre</label><input class="finput" id="newPw" type="password" placeholder="min. 6 karakter" autocomplete="new-password"></div>
-            <div class="fg"><label class="flabel">Yeni Şifre Onayla</label><input class="finput" id="confirmNewPw" type="password" placeholder="••••••••" autocomplete="new-password"></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleReset()">Şifreyi Değiştir</button>
-            <div class="back-link"><button class="forgot-btn" onclick="switchTab('login')">← Girişe Dön</button></div>
-          </div>
-        `;
-      }
-    }
-
     function showForgotPassword() {
-      authTab = 'forgot';
-      gid('loginTabBtn').classList.remove('active');
-      gid('registerTabBtn').classList.remove('active');
-      clearMsg();
-      renderAuthForm();
+      switchTab('forgot');
     }
 
     function updateStrength() {
@@ -2331,28 +2353,70 @@
 
     function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
-    function setLoading(on) {
-      loading = on;
-      const btn = gid('sub-btn');
-      if (!btn) return;
-      btn.disabled = on;
-      const buttonText = {
-        'login': 'Sign In',
-        'register': 'Create Account',
-        'forgot': 'Send Reset Code',
-        'verify': 'Verify Code',
-        'reset': 'Reset Password'
-      };
-      btn.innerHTML = on ? `<span class="spinner"></span> Processing...` : buttonText[authTab];
+    async function handleVerify() {
+      clearMsg();
+      const code = gid('verifyCode')?.value.trim();
+      if (!code || code.length !== 6) { showMsg('Lütfen 6 haneli doğrulama kodunu girin', 'error'); return; }
+      
+      setLoading(true);
+      
+      try {
+        const { error } = await supabaseClient.auth.verifyOtp({
+          email: pendingVerificationEmail,
+          token: code,
+          type: 'email'
+        });
+        
+        if (error) throw error;
+        
+        showMsg('Email başarıyla doğrulandı!', 'success');
+        setTimeout(() => switchTab('login'), 1500);
+        
+      } catch (error) {
+        console.error('Verify error:', error);
+        showMsg(error.message || 'Doğrulama kodu hatalı', 'error');
+      }
+      
+      setLoading(false);
     }
 
-    async function hashPassword(password) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hash = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hash));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      return hashHex;
+    async function handleReset() {
+      clearMsg();
+      const newPw = gid('newPw')?.value;
+      const confirmPw = gid('confirmNewPw')?.value;
+      
+      if (!newPw || !confirmPw) { showMsg('Lütfen şifreyi girin', 'error'); return; }
+      if (newPw.length < 6) { showMsg('Şifre en az 6 karakter olmalı', 'error'); return; }
+      if (newPw !== confirmPw) { showMsg('Şifreler eşleşmiyor', 'error'); return; }
+      
+      setLoading(true);
+      
+      try {
+        const { error } = await supabaseClient.auth.updateUser({ password: newPw });
+        if (error) throw error;
+        
+        showMsg('Şifre başarıyla güncellendi!', 'success');
+        setTimeout(() => switchTab('login'), 1500);
+        
+      } catch (error) {
+        console.error('Reset error:', error);
+        showMsg(error.message || 'Şifre güncellenirken hata oluştu', 'error');
+      }
+      
+      setLoading(false);
+    }
+
+    function setLoading(on) {
+      loading = on;
+      const activeBtn = authTab === 'login' ? gid('loginBtn') : 
+                        authTab === 'register' ? gid('registerSubmitBtn') :
+                        authTab === 'forgot' ? gid('forgotBtn') :
+                        authTab === 'verify' ? gid('verifyBtn') :
+                        authTab === 'recovery' ? gid('recoveryBtn') : null;
+      
+      if (!activeBtn) return;
+      activeBtn.disabled = on;
+      activeBtn.textContent = on ? 'Processing...' : activeBtn.dataset.originalText || activeBtn.textContent;
     }
 
     async function handleLogin() {
@@ -4915,8 +4979,22 @@
             <div class="dashboard-card">
               <div class="stat-value">${Math.round((AppState.tasks.filter(t => t.status === 'done').length / (AppState.tasks.length || 1)) * 100)}%</div>
               <div class="stat-label">Completion Rate</div>
+</div>
             </div>
-      </div>
+            <div class="dashboard-card">
+              <div class="card-title">💾 Yedekleme</div>
+              <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-primary" onclick="exportData()">
+                  📤 Verileri Dışa Aktar
+                </button>
+                <button class="btn btn-teal" onclick="triggerImport()">
+                  📥 Verileri İçe Aktar
+                </button>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+                  Yedekleme dosyası JSON formatındadır. İçe aktarma mevcut verilerin üzerine yazar.
+                </p>
+              </div>
+            </div>
         `;
       }
     }
@@ -5078,10 +5156,21 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `projex-backup-${Date.now()}.json`;
+      a.download = `projex-ai-backup-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       toast('Data exported successfully!', 'success');
+    }
+
+    function handleImportFile(input) {
+      if (input.files && input.files[0]) {
+        importData(input.files[0]);
+        input.value = ''; // Reset for next import
+      }
+    }
+
+    function triggerImport() {
+      gid('importFileInput').click();
     }
 
     function clearData() {
@@ -5584,6 +5673,37 @@ function renderSocialFeed() {
         await saveToSupabase('posts', post);
         await save();
         renderSocialFeed();
+      }
+    }
+
+    async function editPost(id) {
+      const post = AppState.posts.find(p => p.id === id);
+      if (!post) return;
+      
+      const newContent = prompt('Gönderiyi düzenle:', post.content);
+      if (!newContent || newContent.trim() === post.content) return;
+      
+      post.content = newContent.trim();
+      post.updatedAt = Date.now();
+      
+      await saveToSupabase('posts', post);
+      await save();
+      renderSocialFeed();
+      toast('Gönderi güncellendi', 'success');
+    }
+
+    async function deletePost(id) {
+      if (!confirm('Bu gönderiyi silmek istediğinize emin misiniz?')) return;
+      
+      try {
+        await deleteFromSupabase('posts', id);
+        AppState.posts = AppState.posts.filter(p => p.id !== id);
+        await save();
+        renderSocialFeed();
+        toast('Gönderi silindi', 'success');
+      } catch (error) {
+        console.error('Delete post error:', error);
+        toast('Gönderi silinemedi', 'error');
       }
     }
 
@@ -6276,17 +6396,58 @@ function renderSocialFeed() {
     }
 
     async function deleteItem(type, id) {
-      if (!confirm('Are you sure you want to delete this?')) return;
+      // Her modül için özel onay mesajları
+      const confirmMessages = {
+        project: 'Bu projeyi silmek istediğinize emin misiniz? Tüm görevler de silinecek.',
+        task: 'Bu görevi silmek istediğinize emin misiniz?',
+        meeting: 'Bu tolantıyı silmek istediğinize emin misiniz?',
+        note: 'Bu notu silmek istediğinize emin misiniz?',
+        team: 'Bu ekip üyesini silmek istediğinize emin misiniz?',
+        resource: 'Bu kaynağı silmek istediğinize emin misiniz?',
+        budget: 'Bu bütçe kalemini silmek istediğinize emin misiniz?',
+        risk: 'Bu riski silmek istediğinize emin misiniz?',
+        post: 'Bu gönderiyi silmek istediğinize emin misiniz?',
+        image: 'Bu görseli silmek istediğinize emin misiniz?'
+      };
       
-      // Delete from Supabase
-      await deleteFromSupabase(type, id);
+      const typeLabels = {
+        project: 'Proje',
+        task: 'Görev',
+        meeting: 'Toplantı',
+        note: 'Not',
+        team: 'Ekip Üyesi',
+        resource: 'Kaynak',
+        risk: 'Risk',
+        post: 'Gönderi',
+        image: 'Görsel'
+      };
       
-      // Delete from local state
-      AppState[type] = AppState[type].filter(item => item.id !== id);
-      await save();
+      const message = confirmMessages[type] || `${typeLabels[type] || 'Bu öğeyi'} silmek istediğinize emin misiniz?`;
       
-      renderAll();
-      toast('Deleted successfully ✅', 'success');
+      if (!confirm(message)) return;
+      
+      try {
+        // Delete from Supabase
+        await deleteFromSupabase(type, id);
+        
+        // Delete from local state
+        if (AppState[type]) {
+          AppState[type] = AppState[type].filter(item => item.id !== id);
+        } else if (type === 'post') {
+          AppState.posts = AppState.posts.filter(p => p.id !== id);
+        } else if (type === 'image') {
+          AppState.images = AppState.images.filter(i => i.id !== id);
+        }
+        
+        await save();
+        renderAll();
+        
+        toast(`${typeLabels[type] || 'Öğe'} başarıyla silindi`, 'success');
+        
+      } catch (error) {
+        console.error('Delete error:', error);
+        toast('Silme işlemi başarısız', 'error');
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════
