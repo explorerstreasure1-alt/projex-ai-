@@ -1,16 +1,21 @@
 {
   "version": 2,
   "name": "projex-ai",
-  "buildCommand": "npm install",
+  "framework": null,
+  "buildCommand": null,
   "outputDirectory": ".",
-  "rewrites": [
+  "installCommand": "npm install",
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
