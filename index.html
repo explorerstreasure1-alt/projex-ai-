@@ -2043,6 +2043,7 @@
           .eq('user_id', AppState.currentUser.id);
 
         if (error) throw error;
+        AppState.pendingVerificationEmail = email;
         return data || [];
       } catch (error) {
         console.error(`Error loading from ${table}:`, error);
@@ -2530,6 +2531,56 @@
       } catch (error) {
         console.error('Password reset error:', error);
         showMsg(error.message || 'Failed to send reset email', 'error');
+        setLoading(false);
+      }
+    }
+
+    // Verify email after signup
+    async function handleVerify() {
+      clearMsg();
+      const code = gid('verifyCode')?.value?.trim();
+      if (!code) { showMsg('Lütfen doğrulama kodunu girin', 'error'); return; }
+      if (!AppState.pendingVerificationEmail) { showMsg('Bekleyen doğrulama yok', 'error'); return; }
+      if (!supabaseClient) { showMsg('Sunucu bağlantısı yok', 'error'); return; }
+      setLoading(true);
+      try {
+        // Supabase OTP doğrulama (örnek, API sürümüne göre uyarlanabilir)
+        const { error } = await supabaseClient.auth.verifyOtp({
+          email: AppState.pendingVerificationEmail,
+          token: code,
+          type: 'signup'
+        });
+        if (error) throw error;
+        showMsg('Doğrulama başarılı. Giriş yapabilirsiniz.', 'success');
+        AppState.pendingVerificationEmail = null;
+        setLoading(false);
+        switchTab('login');
+      } catch (err) {
+        console.error('Verify error:', err);
+        showMsg(err?.message || 'Doğrulama başarısız', 'error');
+        setLoading(false);
+      }
+    }
+
+    // Reset (password) flow - basit entegrasyon
+    async function handleReset() {
+      clearMsg();
+      const newPw = gid('newPw')?.value;
+      const confirmPw = gid('confirmNewPw')?.value;
+      if (!newPw || !confirmPw || newPw !== confirmPw) {
+        showMsg('Şifre eşleşmiyor veya eksik', 'error');
+        return;
+      }
+      setLoading(true);
+      try {
+        const { error } = await supabaseClient.auth.updateUser({ password: newPw });
+        if (error) throw error;
+        showMsg('Şifre başarıyla güncellendi', 'success');
+        setLoading(false);
+        switchTab('login');
+      } catch (e) {
+        console.error('Reset error:', e);
+        showMsg(e?.message || 'Şifre güncelleme hatası', 'error');
         setLoading(false);
       }
     }
