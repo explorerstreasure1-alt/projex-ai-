@@ -1,21 +1,26 @@
 {
   "version": 2,
   "name": "projex-ai",
-  "framework": null,
-  "buildCommand": null,
+  "build": {
+    "env": {
+      "SUPABASE_URL": "@supabase-url",
+      "SUPABASE_ANON_KEY": "@supabase-anon-key",
+      "GROQ_API_KEY": "@groq-api-key",
+      "GEMINI_API_KEY": "@gemini-api-key",
+      "MISTRAL_API_KEY": "@mistral-api-key"
+    }
+  },
+  "buildCommand": "echo 'Static site - no build required'",
   "outputDirectory": ".",
   "installCommand": "npm install",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }

@@ -5,12 +5,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROJEX AI — AI-Powered Project Management with Social Collaboration</title>
-  <meta name="description"
-    content="AI-powered project management platform with social features, real-time collaboration, and advanced AI tools">
+  <meta name="description" content="AI-powered project management platform with social features, real-time collaboration, and advanced AI tools">
+  <meta name="keywords" content="project management, AI, collaboration, task management, team collaboration, productivity, AI assistant, digital transformation">
+  <meta name="author" content="PROJEX AI Team">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="PROJEX AI - AI-Powered Project Management">
+  <meta property="og:description" content="Modern project management with AI, team collaboration, and productivity tools">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+  
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
+  <script>
+    // Environment Variables Configuration
+    // Vercel'den gelen environment variables'ı window objesine aktarır
+    (function() {
+      window.env = {
+        SUPABASE_URL: 'SUPABASE_URL' in window ? window.SUPABASE_URL : undefined,
+        SUPABASE_ANON_KEY: 'SUPABASE_ANON_KEY' in window ? window.SUPABASE_ANON_KEY : undefined,
+        GROQ_API_KEY: 'GROQ_API_KEY' in window ? window.GROQ_API_KEY : undefined,
+        GEMINI_API_KEY: 'GEMINI_API_KEY' in window ? window.GEMINI_API_KEY : undefined,
+        MISTRAL_API_KEY: 'MISTRAL_API_KEY' in window ? window.MISTRAL_API_KEY : undefined
+      };
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -136,16 +161,21 @@
           <div id="msg-area"></div>
           <div id="form-area">
             <div class="tab-panel active" id="loginForm">
-              <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
-              <div class="fg"><label class="flabel">Password</label><input class="finput" id="pw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="loginEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <div class="fg"><label class="flabel">Password</label><input class="finput" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"></div>
               <div class="forgot-row"><button class="forgot-btn" type="button" onclick="showForgotPassword()">Şifreyi unuttun mu?</button></div>
-              <button class="submit-btn" id="sub-btn" type="button" onclick="handleLogin()">Sign In</button>
+              <button class="submit-btn" id="loginBtn" type="button" onclick="handleLogin()">Sign In</button>
             </div>
             <div class="tab-panel" id="registerForm" style="display:none;">
-              <div class="fg"><label class="flabel">Full Name</label><input class="finput" id="fn" type="text" placeholder="Your name" autocomplete="name"></div>
-              <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
-              <div class="fg"><label class="flabel">Password</label><input class="finput" id="pw-field" type="password" placeholder="min. 6 characters" autocomplete="new-password"></div>
-              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="pw2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <div class="fg"><label class="flabel">Full Name</label><input class="finput" id="regFullName" type="text" placeholder="Your name" autocomplete="name"></div>
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="regEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <div class="fg">
+                <label class="flabel">Password</label>
+                <input class="finput" id="regPassword" type="password" placeholder="min. 6 characters" autocomplete="new-password" oninput="updateStrength()">
+                <div class="pw-strength" id="pw-bar" style="width:0%;background:#ef4444"></div>
+                <div class="pw-label" id="pw-lbl" style="font-size:0.7rem;color:#8888a8"></div>
+              </div>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="regPasswordConfirm" type="password" placeholder="••••••••" autocomplete="new-password"></div>
               <button class="submit-btn" type="button" onclick="handleRegister()">Create Account</button>
             </div>
             <div class="tab-panel" id="forgotForm" style="display:none;">
@@ -1706,8 +1736,8 @@
     // ═══════════════════════════════════════════════════════════════
     // SUPABASE BACKEND
     // ═══════════════════════════════════════════════════════════════
-    const supabaseUrl = 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
-    const supabaseKey = 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
+    const supabaseUrl = window.env?.SUPABASE_URL || 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
+    const supabaseKey = window.env?.SUPABASE_ANON_KEY || 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
     // ═══════════════════════════════════════════════════════════════
@@ -2290,7 +2320,7 @@
     }
 
     function updateStrength() {
-      const pw = gid('pw-field')?.value || '';
+      const pw = gid('regPassword')?.value || '';
       const s = Math.min(Math.floor(pw.length / 3), 5);
       const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#7c6aff'];
       const bar = gid('pw-bar');
@@ -2327,8 +2357,8 @@
 
     async function handleLogin() {
       clearMsg();
-      const email = gid('em')?.value.trim();
-      const pw = gid('pw')?.value;
+      const email = gid('loginEmail')?.value.trim();
+      const pw = gid('loginPassword')?.value;
       if (!email || !pw) { showMsg('Please fill in all fields', 'error'); return; }
       if (!validateEmail(email)) { showMsg('Invalid email address', 'error'); return; }
 
@@ -2368,10 +2398,10 @@
 
     async function handleRegister() {
       clearMsg();
-      const fullName = gid('fn')?.value.trim();
-      const email = gid('em')?.value.trim();
-      const pw = gid('pw-field')?.value;
-      const pw2 = gid('pw2')?.value;
+      const fullName = gid('regFullName')?.value.trim();
+      const email = gid('regEmail')?.value.trim();
+      const pw = gid('regPassword')?.value;
+      const pw2 = gid('regPasswordConfirm')?.value;
 
       if (!fullName || !email || !pw || !pw2) { showMsg('Please fill in all fields', 'error'); return; }
       if (!validateEmail(email)) { showMsg('Invalid email address', 'error'); return; }
