@@ -813,6 +813,7 @@
               </div>
               <div style="display: flex; gap: 8px; margin-top: 8px;">
                 <button class="btn btn-sm btn-ghost" onclick="clearWhiteboard()">Temizle</button>
+                <button class="btn btn-sm btn-primary" onclick="saveWhiteboardToSupabase()">💾 Kaydet</button>
                 <input type="color" id="whiteboardColor" value="#000000" style="width: 40px; height: 32px;">
               </div>
             </div>
@@ -1487,6 +1488,9 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('newNoteModal')">Cancel</button>
+        <button class="btn btn-red" id="deleteNoteBtn"
+          onclick="if(window.editingNoteId){deleteNote(window.editingNoteId);closeModal('newNoteModal');}"
+          style="display: none;">🗑️ Delete</button>
         <button class="btn btn-primary" onclick="saveNote()">Save Note</button>
       </div>
     </div>
@@ -1659,9 +1663,31 @@
     // ═══════════════════════════════════════════════════════════════
     // SUPABASE BACKEND
     // ═══════════════════════════════════════════════════════════════
-    const supabaseUrl = 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
-    const supabaseKey = 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
+    // Get Supabase config from environment variables or window object
+    const supabaseUrl = window.ENV?.SUPABASE_URL || 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
+    const supabaseKey = window.ENV?.SUPABASE_ANON_KEY || 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // Track connection status
+    let supabaseConnected = false;
+    let supabaseConnectionRetries = 0;
+    const MAX_RETRIES = 3;
+
+    // Check Supabase connection
+    async function checkSupabaseConnection() {
+      try {
+        const { data, error } = await supabaseClient.from('projects').select('id').limit(1);
+        if (!error) {
+          supabaseConnected = true;
+          console.log('✅ Supabase connection successful');
+          return true;
+        }
+      } catch (err) {
+        console.error('❌ Supabase connection failed:', err);
+      }
+      supabaseConnected = false;
+      return false;
+    }
 
     // ═══════════════════════════════════════════════════════════════
     // UTILITY FUNCTIONS
@@ -1703,8 +1729,18 @@
     }
 
     // Supabase data access functions
-    async function saveToSupabase(table, data) {
-      if (!AppState.currentUser) return;
+    async function saveToSupabase(table, data, retryCount = 0) {
+      if (!AppState.currentUser) {
+        console.warn('Cannot save: No current user');
+        return { success: false, error: 'No current user' };
+      }
+
+      // If Supabase is not connected and we've exceeded retries, use localStorage only
+      if (!supabaseConnected && retryCount >= MAX_RETRIES) {
+        console.warn(`Supabase unavailable, saving to localStorage only: ${table}`);
+        save(); // Save to localStorage as fallback
+        return { success: false, offline: true };
+      }
 
       try {
         // Convert camelCase to snake_case for Supabase compatibility
@@ -1727,7 +1763,7 @@
         const formattedData = {
           ...data,
           created_at: formatTimestamp(data.createdAt || data.created_at),
-          updated_at: formatTimestamp(data.updatedAt || data.updated_at)
+          updated_at: formatTimestamp(data.updatedAt || data.updated_at || Date.now())
         };
         // Remove camelCase versions to avoid conflicts
         delete formattedData.createdAt;
@@ -1744,10 +1780,33 @@
 
         if (error) {
           console.error(`Error saving to ${table}:`, error.message, error.details);
+
+          // Retry on network errors
+          if (retryCount < MAX_RETRIES && (error.message?.includes('network') || error.code === 'NETWORK_ERROR')) {
+            console.log(`Retrying save to ${table}... (${retryCount + 1}/${MAX_RETRIES})`);
+            await new Promise(r => setTimeout(r, 1000 * (retryCount + 1)));
+            return saveToSupabase(table, data, retryCount + 1);
+          }
+
           throw error;
         }
+
+        console.log(`✅ Saved to ${table}:`, data.id);
+        supabaseConnected = true;
+        return { success: true };
+
       } catch (error) {
-        console.error(`Error saving to ${table}:`, error);
+        console.error(`❌ Error saving to ${table}:`, error);
+
+        // Save to localStorage as fallback
+        save();
+
+        // Show user notification on final retry
+        if (retryCount >= MAX_RETRIES) {
+          toast(`⚠️ Veri kaydedilemedi. Çevrimdışı mod aktif.`, 'warn');
+        }
+
+        return { success: false, error: error.message };
       }
     }
 
@@ -2292,50 +2351,70 @@
 
       updateTrialDisplay();
 
-      // Load data from Supabase
+      // Check Supabase connection first
+      toast('🔄 Veriler yükleniyor...', 'info');
+      const isConnected = await checkSupabaseConnection();
+
+      // Load data from Supabase or fallback to localStorage
       try {
-        AppState.projects = await loadFromSupabase('projects');
-        AppState.tasks = await loadFromSupabase('tasks');
-        AppState.meetings = await loadFromSupabase('meetings');
-        AppState.team = await loadFromSupabase('team');
-        AppState.notes = await loadFromSupabase('notes');
-        AppState.resources = await loadFromSupabase('resources');
-        AppState.posts = await loadFromSupabase('posts');
-        AppState.images = await loadFromSupabase('images');
-        AppState.budget = await loadFromSupabase('budget');
-        AppState.risks = await loadFromSupabase('risks');
+        if (isConnected) {
+          console.log('📡 Loading from Supabase...');
+          AppState.projects = await loadFromSupabase('projects') || [];
+          AppState.tasks = await loadFromSupabase('tasks') || [];
+          AppState.meetings = await loadFromSupabase('meetings') || [];
+          AppState.team = await loadFromSupabase('team') || [];
+          AppState.notes = await loadFromSupabase('notes') || [];
+          AppState.resources = await loadFromSupabase('resources') || [];
+          AppState.posts = await loadFromSupabase('posts') || [];
+          AppState.images = await loadFromSupabase('images') || [];
+          AppState.budget = await loadFromSupabase('budget') || [];
+          AppState.risks = await loadFromSupabase('risks') || [];
 
-        console.log('Data loaded from Supabase');
+          console.log('✅ Data loaded from Supabase');
 
-        // Check if Supabase is empty and localStorage has data
-        const supabaseEmpty = !AppState.projects.length && !AppState.tasks.length && !AppState.meetings.length;
-        if (supabaseEmpty) {
-          load(); // Load localStorage data
-          const localDataExists = AppState.projects.length || AppState.tasks.length || AppState.meetings.length;
+          // Check if Supabase is empty and localStorage has data
+          const supabaseEmpty = !AppState.projects.length && !AppState.tasks.length && !AppState.meetings.length;
+          if (supabaseEmpty) {
+            load(); // Load localStorage data
+            const localDataExists = AppState.projects.length || AppState.tasks.length || AppState.meetings.length;
 
-          if (localDataExists) {
-            // Auto-migrate localStorage data to Supabase
-            await migrateLocalStorageToSupabase();
-            // Reload from Supabase after migration
-            AppState.projects = await loadFromSupabase('projects');
-            AppState.tasks = await loadFromSupabase('tasks');
-            AppState.meetings = await loadFromSupabase('meetings');
-            AppState.team = await loadFromSupabase('team');
-            AppState.notes = await loadFromSupabase('notes');
-            AppState.resources = await loadFromSupabase('resources');
-            AppState.posts = await loadFromSupabase('posts');
-            AppState.images = await loadFromSupabase('images');
-            AppState.budget = await loadFromSupabase('budget');
-            AppState.risks = await loadFromSupabase('risks');
+            if (localDataExists) {
+              console.log('🔄 Migrating localStorage data to Supabase...');
+              toast('📤 Veriler senkronize ediliyor...', 'info');
+              // Auto-migrate localStorage data to Supabase
+              await migrateLocalStorageToSupabase();
+              // Reload from Supabase after migration
+              AppState.projects = await loadFromSupabase('projects') || [];
+              AppState.tasks = await loadFromSupabase('tasks') || [];
+              AppState.meetings = await loadFromSupabase('meetings') || [];
+              AppState.team = await loadFromSupabase('team') || [];
+              AppState.notes = await loadFromSupabase('notes') || [];
+              AppState.resources = await loadFromSupabase('resources') || [];
+              AppState.posts = await loadFromSupabase('posts') || [];
+              AppState.images = await loadFromSupabase('images') || [];
+              AppState.budget = await loadFromSupabase('budget') || [];
+              AppState.risks = await loadFromSupabase('risks') || [];
+              toast('✅ Veriler senkronize edildi!', 'success');
+            }
+          } else {
+            toast('✅ Veriler yüklendi!', 'success');
           }
+        } else {
+          console.warn('⚠️ Supabase unavailable, using localStorage');
+          load(); // Fallback to localStorage
+          toast('⚠️ Çevrimdışı mod: Veriler yerel depodan yüklendi', 'warn');
         }
       } catch (error) {
-        console.error('Error loading from Supabase, using localStorage fallback:', error);
+        console.error('❌ Error loading data:', error);
         load(); // Fallback to localStorage
+        toast('⚠️ Veri yükleme hatası. Yerel depo kullanılıyor.', 'error');
       }
 
       initSampleData();
       renderAll();
+
+      // Subscribe to realtime notes updates
+      subscribeToNotesRealtime();
 
       updateClock();
       clockInterval = setInterval(updateClock, 1000);
@@ -2515,12 +2594,15 @@
           <!-- Note Grid -->
           <div id="notesContainer" class="notes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
             ${notes.map(n => `
-              <div class="dashboard-card note-card" onclick="editNote('${n.id}')" style="cursor: pointer; transition: transform 0.2s;">
-                <div class="note-title">${esc(n.title)}</div>
-                <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
+              <div class="dashboard-card note-card" style="cursor: pointer; transition: transform 0.2s; position: relative;">
+                <div onclick="editNote('${n.id}')" style="flex: 1;">
+                  <div class="note-title">${esc(n.title)}</div>
+                  <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
+                </div>
                 <div class="note-meta" style="display: flex; justify-content: space-between; align-items: center;">
                   <span class="note-date" style="font-size: 0.75rem; color: var(--text-muted);">${fmtDate(n.createdAt)}</span>
                   ${n.tags?.length ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag" style="background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${esc(t)}</span>`).join('')}</div>` : ''}
+                  <button class="btn btn-sm btn-red" onclick="event.stopPropagation(); deleteNote('${n.id}');" title="Sil" style="margin-left: 8px; padding: 4px 8px; font-size: 0.7rem;">🗑️</button>
                 </div>
               </div>
             `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">📝</div><div class="empty-state-title">No notes yet</div></div>'}
@@ -2545,12 +2627,15 @@
 
       const container = gid('notesContainer');
       container.innerHTML = filtered.map(n => `
-        <div class="dashboard-card note-card" onclick="editNote('${n.id}')" style="cursor: pointer;">
-          <div class="note-title">${esc(n.title)}</div>
-          <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
+        <div class="dashboard-card note-card" style="cursor: pointer; position: relative;">
+          <div onclick="editNote('${n.id}')" style="flex: 1;">
+            <div class="note-title">${esc(n.title)}</div>
+            <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
+          </div>
           <div class="note-meta" style="display: flex; justify-content: space-between; align-items: center;">
             <span class="note-date" style="font-size: 0.75rem; color: var(--text-muted);">${fmtDate(n.createdAt)}</span>
             ${n.tags?.length ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag" style="background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${esc(t)}</span>`).join('')}</div>` : ''}
+            <button class="btn btn-sm btn-red" onclick="event.stopPropagation(); deleteNote('${n.id}');" title="Sil" style="margin-left: 8px; padding: 4px 8px; font-size: 0.7rem;">🗑️</button>
           </div>
         </div>
       `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">📝</div><div class="empty-state-title">No notes found</div></div>';
@@ -2563,6 +2648,11 @@
         gid('noteContent').value = note.content || '';
         gid('noteTags').value = (note.tags || []).join(', ');
         window.editingNoteId = id;
+
+        // Show delete button in edit mode
+        const deleteBtn = gid('deleteNoteBtn');
+        if (deleteBtn) deleteBtn.style.display = 'inline-block';
+
         openModal('newNoteModal');
       }
     }
@@ -3323,13 +3413,16 @@
           participant: hostParticipant.name,
           timestamp: new Date().toISOString()
         });
+
+        // Save participant to Supabase
+        await saveMeetingParticipant(hostParticipant);
       }
 
       // Initialize Category 3 features
       initMeetingFeatures();
 
-      // Initialize PeerJS for WebRTC
-      initPeerJS();
+      // Initialize PeerJS for WebRTC with retry
+      await initPeerJSWithRetry();
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -3347,6 +3440,12 @@
         // Send join signal
         await sendSignalingMessage('join', { peer_id: myPeerId });
 
+        // Update meeting as active in Supabase
+        await updateMeetingStatus(currentMeetingId, { is_active: true, peer_id: myPeerId });
+
+        // Subscribe to meeting messages
+        subscribeToMeetingMessages(currentMeetingId);
+
         renderParticipants();
         renderActivityLog();
         toast(`Video meeting started! 📹 (ID: ${currentMeetingId})`, 'success');
@@ -3356,7 +3455,143 @@
       }
     }
 
-    function endVideoMeeting() {
+    // Save meeting participant to Supabase
+    async function saveMeetingParticipant(participant) {
+      if (!AppState.currentUser || !currentMeetingId) return;
+
+      try {
+        // Find meeting in Supabase by meeting code
+        const { data: meetingData, error: meetingError } = await supabaseClient
+          .from('meetings')
+          .select('id')
+          .eq('id', currentMeetingId)
+          .single();
+
+        if (meetingError || !meetingData) {
+          console.warn('Meeting not found in Supabase, skipping participant save');
+          return;
+        }
+
+        const participantData = {
+          meeting_id: meetingData.id,
+          user_id: participant.id,
+          name: participant.name,
+          email: participant.email,
+          peer_id: myPeerId,
+          is_host: participant.isHost,
+          is_muted: participant.isMuted,
+          is_video_off: participant.isVideoOff,
+          joined_at: participant.joinedAt
+        };
+
+        const { error } = await supabaseClient
+          .from('meeting_participants')
+          .upsert(participantData);
+
+        if (error) {
+          console.error('Error saving meeting participant:', error);
+        } else {
+          console.log('✅ Meeting participant saved to Supabase');
+        }
+      } catch (error) {
+        console.error('Error saving meeting participant:', error);
+      }
+    }
+
+    // Update meeting status in Supabase
+    async function updateMeetingStatus(meetingId, updates) {
+      try {
+        const { error } = await supabaseClient
+          .from('meetings')
+          .update(updates)
+          .eq('id', meetingId);
+
+        if (error) {
+          console.error('Error updating meeting status:', error);
+        }
+      } catch (error) {
+        console.error('Error updating meeting status:', error);
+      }
+    }
+
+    // Initialize PeerJS with retry mechanism
+    async function initPeerJSWithRetry(maxRetries = 3) {
+      let retries = 0;
+
+      while (retries < maxRetries) {
+        try {
+          if (peer && !peer.destroyed) {
+            return; // Already initialized
+          }
+
+          peer = new Peer(null, {
+            debug: 2,
+            config: {
+              iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+              ]
+            }
+          });
+
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('PeerJS connection timeout'));
+            }, 10000);
+
+            peer.on('open', (id) => {
+              myPeerId = id;
+              clearTimeout(timeout);
+              console.log('✅ PeerJS connected with ID:', id);
+              subscribeToMeetingChannel();
+              resolve();
+            });
+
+            peer.on('error', (err) => {
+              clearTimeout(timeout);
+              reject(err);
+            });
+          });
+
+          return; // Success
+        } catch (error) {
+          retries++;
+          console.warn(`PeerJS connection attempt ${retries}/${maxRetries} failed:`, error);
+
+          if (retries >= maxRetries) {
+            toast('⚠️ Video bağlantısı kurulamadı. Lütfen tekrar deneyin.', 'warn');
+            console.error('PeerJS connection failed after all retries');
+            return;
+          }
+
+          await new Promise(r => setTimeout(r, 2000 * retries)); // Exponential backoff
+        }
+      }
+    }
+
+    async function endVideoMeeting() {
+      // Update meeting status in Supabase before closing
+      if (currentMeetingId) {
+        try {
+          // Update meeting as inactive
+          await updateMeetingStatus(currentMeetingId, { is_active: false });
+
+          // Update participant left time
+          await supabaseClient
+            .from('meeting_participants')
+            .update({ left_at: new Date().toISOString() })
+            .eq('meeting_id', currentMeetingId)
+            .eq('user_id', AppState.currentUser?.id);
+
+          // Unsubscribe from meeting messages
+          unsubscribeFromMeetingMessages();
+
+          console.log('✅ Meeting ended and status updated in Supabase');
+        } catch (error) {
+          console.error('Error updating meeting end status:', error);
+        }
+      }
+
       // Send leave signal
       sendSignalingMessage('leave', { peer_id: myPeerId });
 
@@ -3568,13 +3803,14 @@
       toast('Toplantı ses kaydı durduruldu', 'info');
     }
 
-    function saveMeetingNotes() {
+    async function saveMeetingNotes() {
       const notes = gid('meetingNotes').value;
       if (!notes.trim()) {
         toast('Kaydedilecek not yok', 'warn');
         return;
       }
 
+      // Save to local state
       if (!AppState.meetingNotes) {
         AppState.meetingNotes = [];
       }
@@ -3583,12 +3819,49 @@
         id: Date.now().toString(),
         content: notes,
         date: new Date().toISOString(),
-        meetingId: AppState.currentMeetingId || 'general'
+        meetingId: currentMeetingId || 'general'
       });
 
       save();
       gid('meetingNotes').value = '';
       toast('Toplantı notları kaydedildi! 💾', 'success');
+
+      // Save to Supabase if in an active meeting
+      if (currentMeetingId && AppState.currentUser) {
+        await saveMeetingNotesToSupabase(notes);
+      }
+    }
+
+    // Save meeting notes to Supabase
+    async function saveMeetingNotesToSupabase(notes) {
+      try {
+        const { data: meetingData, error: meetingError } = await supabaseClient
+          .from('meetings')
+          .select('id')
+          .eq('id', currentMeetingId)
+          .single();
+
+        if (meetingError || !meetingData) {
+          console.warn('Meeting not found in Supabase, notes not saved');
+          return;
+        }
+
+        const { error } = await supabaseClient
+          .from('meetings')
+          .update({
+            meeting_notes: notes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', meetingData.id);
+
+        if (error) {
+          console.error('Error saving meeting notes to Supabase:', error);
+        } else {
+          console.log('✅ Meeting notes saved to Supabase');
+        }
+      } catch (error) {
+        console.error('Error saving meeting notes:', error);
+      }
     }
 
     async function transcribeMeetingAudio() {
@@ -3635,8 +3908,90 @@
     // MEETING CHAT
     // ═══════════════════════════════════════════════════════════════
     let meetingChatMessages = [];
+    let meetingSubscription = null;
+    let meetingMessagesSubscription = null;
 
-    function sendMeetingChatMessage() {
+    // Subscribe to meeting messages from Supabase
+    function subscribeToMeetingMessages(meetingId) {
+      if (!meetingId || !AppState.currentUser) return;
+
+      // First load existing messages
+      loadMeetingMessages(meetingId);
+
+      // Subscribe to new messages
+      meetingMessagesSubscription = supabaseClient
+        .channel(`meeting-messages-${meetingId}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'meeting_messages',
+          filter: `meeting_id=eq.${meetingId}`
+        }, (payload) => {
+          const newMessage = payload.new;
+          // Don't add if it's from current user (already added locally)
+          if (newMessage.sender_id !== AppState.currentUser.id) {
+            const chatMessage = {
+              id: newMessage.id,
+              user: newMessage.sender_name,
+              message: newMessage.message,
+              time: new Date(newMessage.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+              isLocal: false
+            };
+            meetingChatMessages.push(chatMessage);
+            renderMeetingChat();
+            // Scroll to bottom
+            const chatContainer = gid('meetingChatMessages');
+            if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+        })
+        .subscribe();
+
+      console.log('✅ Subscribed to meeting messages:', meetingId);
+    }
+
+    // Unsubscribe from meeting messages
+    function unsubscribeFromMeetingMessages() {
+      if (meetingMessagesSubscription) {
+        meetingMessagesSubscription.unsubscribe();
+        meetingMessagesSubscription = null;
+        console.log('✅ Unsubscribed from meeting messages');
+      }
+    }
+
+    // Load existing meeting messages from Supabase
+    async function loadMeetingMessages(meetingId) {
+      try {
+        const { data: messages, error } = await supabaseClient
+          .from('meeting_messages')
+          .select('*')
+          .eq('meeting_id', meetingId)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error loading meeting messages:', error);
+          return;
+        }
+
+        if (messages && messages.length > 0) {
+          meetingChatMessages = messages.map(msg => ({
+            id: msg.id,
+            user: msg.sender_name,
+            message: msg.message,
+            time: new Date(msg.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+            isLocal: msg.sender_id === AppState.currentUser?.id
+          }));
+          renderMeetingChat();
+          // Scroll to bottom
+          const chatContainer = gid('meetingChatMessages');
+          if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+      } catch (error) {
+        console.error('Error loading meeting messages:', error);
+      }
+    }
+
+    // Send chat message to Supabase
+    async function sendMeetingChatMessage() {
       const input = gid('meetingChatInput');
       const message = input.value.trim();
       if (!message) return;
@@ -3659,6 +4014,46 @@
       // Scroll to bottom
       const chatContainer = gid('meetingChatMessages');
       chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      // Save to Supabase
+      await saveMeetingMessage(message, userName);
+    }
+
+    // Save message to Supabase
+    async function saveMeetingMessage(message, senderName) {
+      if (!currentMeetingId || !AppState.currentUser) return;
+
+      try {
+        // Find the actual meeting UUID from Supabase
+        const { data: meetingData, error: meetingError } = await supabaseClient
+          .from('meetings')
+          .select('id').eq('id', currentMeetingId).single();
+
+        if (meetingError || !meetingData) {
+          console.warn('Meeting not found in Supabase, message not saved');
+          return;
+        }
+
+        const messageData = {
+          meeting_id: meetingData.id,
+          sender_id: AppState.currentUser.id,
+          sender_name: senderName,
+          message: message,
+          message_type: 'text'
+        };
+
+        const { error } = await supabaseClient
+          .from('meeting_messages')
+          .insert(messageData);
+
+        if (error) {
+          console.error('Error saving meeting message:', error);
+        } else {
+          console.log('✅ Meeting message saved to Supabase');
+        }
+      } catch (error) {
+        console.error('Error saving meeting message:', error);
+      }
     }
 
     function renderMeetingChat() {
@@ -3720,7 +4115,7 @@
 
     // Category 3: Polls
     let meetingPolls = [];
-    function createPoll() {
+    async function createPoll() {
       const question = gid('pollQuestion').value.trim();
       const options = gid('pollOptions').value.split(',').map(o => o.trim()).filter(o => o);
 
@@ -3729,8 +4124,9 @@
         return;
       }
 
+      const pollId = Date.now().toString();
       const poll = {
-        id: Date.now(),
+        id: pollId,
         question,
         options: options.map(opt => ({ text: opt, votes: 0 })),
         createdAt: new Date().toISOString()
@@ -3741,6 +4137,49 @@
       gid('pollQuestion').value = '';
       gid('pollOptions').value = '';
       toast('Anket oluşturuldu! 📊', 'success');
+
+      // Save poll to Supabase
+      await saveMeetingPoll(pollId, question, options);
+    }
+
+    // Save poll to Supabase
+    async function saveMeetingPoll(pollId, question, options) {
+      if (!currentMeetingId || !AppState.currentUser) return;
+
+      try {
+        // Find the actual meeting UUID from Supabase
+        const { data: meetingData, error: meetingError } = await supabaseClient
+          .from('meetings')
+          .select('id')
+          .eq('id', currentMeetingId)
+          .single();
+
+        if (meetingError || !meetingData) {
+          console.warn('Meeting not found in Supabase, poll not saved');
+          return;
+        }
+
+        const pollData = {
+          meeting_id: meetingData.id,
+          question: question,
+          options: JSON.stringify(options),
+          results: JSON.stringify(options.reduce((acc, opt) => ({ ...acc, [opt]: 0 }), {})),
+          created_by: AppState.currentUser.id,
+          is_active: true
+        };
+
+        const { error } = await supabaseClient
+          .from('meeting_polls')
+          .insert(pollData);
+
+        if (error) {
+          console.error('Error saving meeting poll:', error);
+        } else {
+          console.log('✅ Meeting poll saved to Supabase');
+        }
+      } catch (error) {
+        console.error('Error saving meeting poll:', error);
+      }
     }
 
     function renderPolls() {
@@ -3767,7 +4206,7 @@
       `).join('');
     }
 
-    function votePoll(pollId, optionText) {
+    async function votePoll(pollId, optionText) {
       const poll = meetingPolls.find(p => p.id === pollId);
       if (poll) {
         const option = poll.options.find(o => o.text === optionText);
@@ -3775,7 +4214,49 @@
           option.votes++;
           renderPolls();
           toast('Oyunuz kaydedildi! 🗳️', 'success');
+
+          // Save vote to Supabase
+          await saveMeetingVote(pollId, optionText);
         }
+      }
+    }
+
+    // Save vote to Supabase
+    async function saveMeetingVote(pollId, optionText) {
+      if (!AppState.currentUser) return;
+
+      try {
+        // Find the poll in Supabase (pollId is timestamp, need to find by question)
+        const poll = meetingPolls.find(p => p.id === pollId);
+        if (!poll) return;
+
+        const { data: pollData, error: pollError } = await supabaseClient
+          .from('meeting_polls')
+          .select('id, results')
+          .eq('question', poll.question)
+          .single();
+
+        if (pollError || !pollData) {
+          console.warn('Poll not found in Supabase');
+          return;
+        }
+
+        // Update results
+        const results = JSON.parse(pollData.results || '{}');
+        results[optionText] = (results[optionText] || 0) + 1;
+
+        const { error: updateError } = await supabaseClient
+          .from('meeting_polls')
+          .update({ results: JSON.stringify(results) })
+          .eq('id', pollData.id);
+
+        if (updateError) {
+          console.error('Error updating poll results:', updateError);
+        } else {
+          console.log('✅ Poll vote saved to Supabase');
+        }
+      } catch (error) {
+        console.error('Error saving poll vote:', error);
       }
     }
 
@@ -3819,6 +4300,50 @@
       const canvas = gid('whiteboardCanvas');
       if (canvas && whiteboardCtx) {
         whiteboardCtx.clearRect(0, 0, canvas.width, canvas.height);
+        toast('Beyaz tahta temizlendi', 'info');
+      }
+    }
+
+    // Save whiteboard to Supabase
+    async function saveWhiteboardToSupabase() {
+      if (!currentMeetingId || !AppState.currentUser) return;
+
+      const canvas = gid('whiteboardCanvas');
+      if (!canvas) return;
+
+      try {
+        // Convert canvas to base64
+        const canvasData = canvas.toDataURL('image/png');
+
+        const { data: meetingData, error: meetingError } = await supabaseClient
+          .from('meetings')
+          .select('id')
+          .eq('id', currentMeetingId)
+          .single();
+
+        if (meetingError || !meetingData) {
+          console.warn('Meeting not found in Supabase, whiteboard not saved');
+          return;
+        }
+
+        const whiteboardData = {
+          meeting_id: meetingData.id,
+          canvas_data: canvasData,
+          created_by: AppState.currentUser.id
+        };
+
+        const { error } = await supabaseClient
+          .from('meeting_whiteboards')
+          .insert(whiteboardData);
+
+        if (error) {
+          console.error('Error saving whiteboard:', error);
+        } else {
+          console.log('✅ Whiteboard snapshot saved to Supabase');
+          toast('Beyaz tahta kaydedildi! 🎨', 'success');
+        }
+      } catch (error) {
+        console.error('Error saving whiteboard:', error);
       }
     }
 
@@ -4208,6 +4733,8 @@
 
       // Upload audio blob to Supabase Storage
       let audioUrl = null;
+      let uploadSuccess = false;
+
       if (mainVoiceAudioBlob && AppState.currentUser) {
         try {
           const fileName = `voice-notes/${AppState.currentUser.id}/${note.id}.webm`;
@@ -4224,9 +4751,15 @@
               .from('voice-recordings')
               .getPublicUrl(fileName);
             audioUrl = publicUrl;
+            uploadSuccess = true;
+            console.log('✅ Audio uploaded to Supabase Storage:', publicUrl);
+          } else {
+            console.error('❌ Error uploading audio:', uploadError);
+            toast('⚠️ Ses dosyası yüklenemedi, sadece transkript kaydedildi', 'warn');
           }
         } catch (error) {
           console.error('Error uploading audio to Supabase Storage:', error);
+          toast('⚠️ Ses dosyası yüklenemedi, sadece transkript kaydedildi', 'warn');
         }
       }
 
@@ -4241,23 +4774,36 @@
         createdAt: note.createdAt
       };
 
-      await saveToSupabase('voice_notes', noteForStorage);
+      try {
+        const result = await saveToSupabase('voice_notes', noteForStorage);
 
-      // Keep localStorage as fallback (without audio blob)
-      const noteForLocal = {
-        id: note.id,
-        transcript: note.transcript,
-        analysis: note.analysis,
-        provider: note.provider,
-        duration: note.duration,
-        audio_url: audioUrl,
-        createdAt: note.createdAt
-      };
+        // Keep localStorage as fallback (without audio blob)
+        const noteForLocal = {
+          id: note.id,
+          transcript: note.transcript,
+          analysis: note.analysis,
+          provider: note.provider,
+          duration: note.duration,
+          audio_url: audioUrl,
+          createdAt: note.createdAt
+        };
 
-      AppState.voiceNotes.unshift(noteForLocal);
-      save();
+        AppState.voiceNotes.unshift(noteForLocal);
+        save();
 
-      renderSavedVoiceNotes();
+        if (result.success || uploadSuccess) {
+          toast('✅ Sesli not kaydedildi!', 'success');
+        } else {
+          toast('⚠️ Sesli not yerel depoda saklandı', 'warn');
+        }
+
+        renderSavedVoiceNotes();
+      } catch (error) {
+        console.error('Error saving voice note:', error);
+        toast('❌ Sesli not kaydedilirken hata oluştu', 'error');
+        // Still save to localStorage
+        save();
+      }
     }
 
     function renderSavedVoiceNotes() {
@@ -4757,6 +5303,13 @@
       if (id === 'pomodoroModal') {
         gid('pomoTaskSelect').innerHTML = '<option value="">— Select task —</option>' +
           AppState.tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('');
+      }
+      if (id === 'newNoteModal') {
+        // If not in edit mode (no editingNoteId), hide delete button
+        if (!window.editingNoteId) {
+          const deleteBtn = gid('deleteNoteBtn');
+          if (deleteBtn) deleteBtn.style.display = 'none';
+        }
       }
     }
 
@@ -5296,200 +5849,245 @@
       const title = gid('taskTitle').value.trim();
       if (!title) { toast('Task title is required', 'error'); return; }
 
-      // Check if editing existing task
-      if (window.editingTaskId) {
-        const t = AppState.tasks.find(task => task.id === window.editingTaskId);
-        if (t) {
-          t.title = title;
-          t.description = gid('taskDesc').value.trim();
-          t.priority = gid('taskPriority').value;
-          t.status = gid('taskStatus').value;
-          t.assignee = gid('taskAssignee').value;
-          t.date = gid('taskDueDate').value;
-          t.updatedAt = Date.now();
+      try {
+        // Check if editing existing task
+        if (window.editingTaskId) {
+          const t = AppState.tasks.find(task => task.id === window.editingTaskId);
+          if (t) {
+            t.title = title;
+            t.description = gid('taskDesc').value.trim();
+            t.priority = gid('taskPriority').value;
+            t.status = gid('taskStatus').value;
+            t.assignee = gid('taskAssignee').value;
+            t.date = gid('taskDueDate').value;
+            t.updatedAt = Date.now();
 
-          // Save to Supabase
-          await saveToSupabase('tasks', t);
+            // Save to Supabase with error handling
+            const result = await saveToSupabase('tasks', t);
+            save(); // Keep localStorage as fallback
+
+            if (!result.success && !result.offline) {
+              toast('⚠️ Görev Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
+            } else {
+              toast('Task updated! ✅', 'success');
+              addActivity(`Updated task: ${title}`, '✅');
+            }
+          }
+          window.editingTaskId = null;
+        } else {
+          // Create new task
+          const newTask = {
+            id: genId(),
+            title,
+            description: gid('taskDesc').value.trim(),
+            priority: gid('taskPriority').value,
+            status: gid('taskStatus').value,
+            assignee: gid('taskAssignee').value,
+            date: gid('taskDueDate').value,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+          AppState.tasks.push(newTask);
+
+          // Save to Supabase with error handling
+          const result = await saveToSupabase('tasks', newTask);
           save(); // Keep localStorage as fallback
 
-          toast('Task updated! ✅', 'success');
-          addActivity(`Updated task: ${title}`, '✅');
+          if (!result.success && !result.offline) {
+            toast('⚠️ Görev Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
+          } else {
+            toast('Task created! ✅', 'success');
+            addActivity(`Created task: ${title}`, '✅');
+          }
         }
-        window.editingTaskId = null;
-      } else {
-        // Create new task
-        const newTask = {
-          id: genId(),
-          title,
-          description: gid('taskDesc').value.trim(),
-          priority: gid('taskPriority').value,
-          status: gid('taskStatus').value,
-          assignee: gid('taskAssignee').value,
-          date: gid('taskDueDate').value,
-          createdAt: Date.now()
-        };
-        AppState.tasks.push(newTask);
 
-        // Save to Supabase
-        await saveToSupabase('tasks', newTask);
-        save(); // Keep localStorage as fallback
-
-        toast('Task created! ✅', 'success');
-        addActivity(`Created task: ${title}`, '✅');
+        closeModal('newTaskModal');
+        renderAll();
+      } catch (error) {
+        console.error('Error saving task:', error);
+        toast('❌ Görev kaydedilirken hata oluştu', 'error');
+        save(); // Still save to localStorage
       }
-
-      closeModal('newTaskModal');
-      renderAll();
     }
 
     async function saveMeeting() {
-      const title = gid('meetingTitle').value.trim();
-      if (!title) { toast('Meeting title is required', 'error'); return; }
+      try {
+        const title = gid('meetingTitle').value.trim();
+        if (!title) { toast('Meeting title is required', 'error'); return; }
 
-      const duration = parseInt(gid('meetingDuration').value) || 60;
-      const recurrence = gid('meetingRecurrence').value;
-      const attendees = gid('meetingAttendees').value.split(',').map(e => e.trim()).filter(e => e);
-      const guestEmail = gid('meetingGuestEmail').value.trim();
-      const role = gid('meetingRole').value;
-      const reminderMinutes = parseInt(gid('meetingReminder').value) || 15;
-      const password = gid('meetingPassword').value.trim();
-      const waitingRoom = gid('meetingWaitingRoom').value === 'true';
-      const encrypted = gid('meetingEncrypted').value === 'true';
-      const joinPermissions = gid('meetingJoinPermissions').value;
-      const templateId = gid('meetingTemplate').value || null;
-      const aiAssistantEnabled = gid('meetingAIAssistant').value === 'true';
-      const virtualBackground = gid('meetingVirtualBackground').value.trim() || null;
+        const duration = parseInt(gid('meetingDuration').value) || 60;
+        const recurrence = gid('meetingRecurrence').value;
+        const attendees = gid('meetingAttendees').value.split(',').map(e => e.trim()).filter(e => e);
+        const guestEmail = gid('meetingGuestEmail').value.trim();
+        const role = gid('meetingRole').value;
+        const reminderMinutes = parseInt(gid('meetingReminder').value) || 15;
+        const password = gid('meetingPassword').value.trim();
+        const waitingRoom = gid('meetingWaitingRoom').value === 'true';
+        const encrypted = gid('meetingEncrypted').value === 'true';
+        const joinPermissions = gid('meetingJoinPermissions').value;
+        const templateId = gid('meetingTemplate').value || null;
+        const aiAssistantEnabled = gid('meetingAIAssistant').value === 'true';
+        const virtualBackground = gid('meetingVirtualBackground').value.trim() || null;
 
-      // Add guest to attendees if provided
-      if (guestEmail && !attendees.includes(guestEmail)) {
-        attendees.push(guestEmail);
+        // Add guest to attendees if provided
+        if (guestEmail && !attendees.includes(guestEmail)) {
+          attendees.push(guestEmail);
+        }
+
+        if (window.editingMeetingId) {
+          // Edit mode
+          const m = AppState.meetings.find(meeting => meeting.id === window.editingMeetingId);
+          if (m) {
+            m.title = title;
+            m.date = gid('meetingDate').value;
+            m.time = gid('meetingTime').value;
+            m.duration = duration;
+            m.duration_preset = duration.toString();
+            m.timezone = gid('meetingTimezone').value;
+            m.recurrence = recurrence;
+            m.recurrence_end_date = gid('meetingRecurrenceEndDate').value || null;
+            m.location = gid('meetingLocation').value;
+            m.meeting_link = gid('meetingLink').value;
+            m.description = gid('meetingDescription').value;
+            m.attendees = attendees;
+            m.role = role;
+            m.reminder_minutes = reminderMinutes;
+            m.password = password || null;
+            m.waiting_room = waitingRoom;
+            m.encrypted = encrypted;
+            m.join_permissions = joinPermissions;
+            m.template_id = templateId;
+            m.ai_assistant_enabled = aiAssistantEnabled;
+            m.virtual_background = virtualBackground;
+            m.updatedAt = Date.now();
+
+            const result = await saveToSupabase('meetings', m);
+            save(); // Always save to localStorage
+
+            if (!result.success && !result.offline) {
+              toast('⚠️ Toplantı Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
+            } else {
+              toast('Meeting updated! ✅', 'success');
+            }
+          }
+          window.editingMeetingId = null;
+        } else {
+          // New meeting
+          const newMeeting = {
+            id: genId(),
+            title,
+            date: gid('meetingDate').value,
+            time: gid('meetingTime').value,
+            duration,
+            duration_preset: duration.toString(),
+            timezone: gid('meetingTimezone').value,
+            recurrence,
+            recurrence_end_date: gid('meetingRecurrenceEndDate').value || null,
+            location: gid('meetingLocation').value,
+            meeting_link: gid('meetingLink').value,
+            description: gid('meetingDescription').value,
+            attendees,
+            role,
+            reminder_minutes: reminderMinutes,
+            password: password || null,
+            waiting_room: waitingRoom,
+            encrypted: encrypted,
+            join_permissions: joinPermissions,
+            template_id: templateId,
+            ai_assistant_enabled: aiAssistantEnabled,
+            virtual_background: virtualBackground,
+            notification_sent: false,
+            late_warning_sent: false,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+          AppState.meetings.push(newMeeting);
+
+          const result = await saveToSupabase('meetings', newMeeting);
+          save(); // Always save to localStorage
+
+          if (!result.success && !result.offline) {
+            toast('⚠️ Toplantı Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
+          } else {
+            toast('Meeting scheduled! ✅', 'success');
+            addActivity(`Scheduled meeting: ${title}`, '📅');
+
+            // Simulate invite notification (in production, would send actual emails)
+            if (attendees.length > 0) {
+              toast(`Invites sent to ${attendees.length} participant(s) 📧`, 'info');
+            }
+
+            // Schedule reminder notification
+            if (reminderMinutes > 0) {
+              scheduleMeetingReminder(newMeeting);
+            }
+          }
+        }
+
+        closeModal('newMeetingModal');
+        renderAll();
+      } catch (error) {
+        console.error('Error saving meeting:', error);
+        toast('❌ Toplantı kaydedilirken hata oluştu', 'error');
+        save(); // Still save to localStorage
       }
-
-      if (window.editingMeetingId) {
-        // Edit mode
-        const m = AppState.meetings.find(meeting => meeting.id === window.editingMeetingId);
-        if (m) {
-          m.title = title;
-          m.date = gid('meetingDate').value;
-          m.time = gid('meetingTime').value;
-          m.duration = duration;
-          m.duration_preset = duration.toString();
-          m.timezone = gid('meetingTimezone').value;
-          m.recurrence = recurrence;
-          m.recurrence_end_date = gid('meetingRecurrenceEndDate').value || null;
-          m.location = gid('meetingLocation').value;
-          m.meeting_link = gid('meetingLink').value;
-          m.description = gid('meetingDescription').value;
-          m.attendees = attendees;
-          m.role = role;
-          m.reminder_minutes = reminderMinutes;
-          m.password = password || null;
-          m.waiting_room = waitingRoom;
-          m.encrypted = encrypted;
-          m.join_permissions = joinPermissions;
-          m.template_id = templateId;
-          m.ai_assistant_enabled = aiAssistantEnabled;
-          m.virtual_background = virtualBackground;
-          m.updatedAt = Date.now();
-
-          await saveToSupabase('meetings', m);
-          save();
-
-          toast('Meeting updated! ✅', 'success');
-        }
-        window.editingMeetingId = null;
-      } else {
-        // New meeting
-        const newMeeting = {
-          id: genId(),
-          title,
-          date: gid('meetingDate').value,
-          time: gid('meetingTime').value,
-          duration,
-          duration_preset: duration.toString(),
-          timezone: gid('meetingTimezone').value,
-          recurrence,
-          recurrence_end_date: gid('meetingRecurrenceEndDate').value || null,
-          location: gid('meetingLocation').value,
-          meeting_link: gid('meetingLink').value,
-          description: gid('meetingDescription').value,
-          attendees,
-          role,
-          reminder_minutes: reminderMinutes,
-          password: password || null,
-          waiting_room: waitingRoom,
-          encrypted: encrypted,
-          join_permissions: joinPermissions,
-          template_id: templateId,
-          ai_assistant_enabled: aiAssistantEnabled,
-          virtual_background: virtualBackground,
-          notification_sent: false,
-          late_warning_sent: false,
-          createdAt: Date.now()
-        };
-        AppState.meetings.push(newMeeting);
-
-        await saveToSupabase('meetings', newMeeting);
-        save();
-
-        toast('Meeting scheduled! ✅', 'success');
-        addActivity(`Scheduled meeting: ${title}`, '📅');
-
-        // Simulate invite notification (in production, would send actual emails)
-        if (attendees.length > 0) {
-          toast(`Invites sent to ${attendees.length} participant(s) 📧`, 'info');
-        }
-
-        // Schedule reminder notification
-        if (reminderMinutes > 0) {
-          scheduleMeetingReminder(newMeeting);
-        }
-      }
-
-      closeModal('newMeetingModal');
-      renderAll();
     }
 
     async function saveProject() {
       const title = gid('projectTitle').value.trim();
       if (!title) { toast('Project name is required', 'error'); return; }
 
-      // Check if editing existing project
-      if (window.editingProjectId) {
-        const p = AppState.projects.find(project => project.id === window.editingProjectId);
-        if (p) {
-          p.title = title;
-          p.description = gid('projectDesc').value.trim();
-          p.status = gid('projectStatus').value;
-          p.updatedAt = Date.now();
+      try {
+        // Check if editing existing project
+        if (window.editingProjectId) {
+          const p = AppState.projects.find(project => project.id === window.editingProjectId);
+          if (p) {
+            p.title = title;
+            p.description = gid('projectDesc').value.trim();
+            p.status = gid('projectStatus').value;
+            p.updatedAt = Date.now();
 
-          await saveToSupabase('projects', p);
-          save();
+            const result = await saveToSupabase('projects', p);
+            save(); // Always save to localStorage
 
-          toast('Project updated! ✅', 'success');
-          addActivity(`Updated project: ${title}`, '📊');
+            if (!result.success && !result.offline) {
+              toast('⚠️ Proje Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
+            } else {
+              toast('Project updated! ✅', 'success');
+              addActivity(`Updated project: ${title}`, '📊');
+            }
+          }
+          window.editingProjectId = null;
+        } else {
+          const newProject = {
+            id: genId(),
+            title,
+            description: gid('projectDesc').value.trim(),
+            status: gid('projectStatus').value,
+            progress: 0,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+          AppState.projects.push(newProject);
+
+          const result = await saveToSupabase('projects', newProject);
+          save(); // Always save to localStorage
+
+          if (!result.success && !result.offline) {
+            toast('⚠️ Proje Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
+          } else {
+            toast('Project created! ✅', 'success');
+            addActivity(`Created project: ${title}`, '📊');
+          }
         }
-        window.editingProjectId = null;
-      } else {
-        const newProject = {
-          id: genId(),
-          title,
-          description: gid('projectDesc').value.trim(),
-          status: gid('projectStatus').value,
-          progress: 0,
-          createdAt: Date.now()
-        };
-        AppState.projects.push(newProject);
 
-        await saveToSupabase('projects', newProject);
-        save();
-
-        toast('Project created! ✅', 'success');
-        addActivity(`Created project: ${title}`, '📊');
+        closeModal('newProjectModal');
+        renderAll();
+      } catch (error) {
+        console.error('Error saving project:', error);
+        toast('❌ Proje kaydedilirken hata oluştu', 'error');
+        save(); // Still save to localStorage
       }
-
-      closeModal('newProjectModal');
-      renderAll();
     }
 
     function saveTeamMember() {
@@ -5532,41 +6130,175 @@
       const title = gid('noteTitle').value.trim();
       if (!title) { toast('Title is required', 'error'); return; }
 
-      if (window.editingNoteId) {
-        // Edit mode
-        const note = AppState.notes.find(n => n.id === window.editingNoteId);
-        if (note) {
-          note.title = title;
-          note.content = gid('noteContent').value.trim();
-          note.tags = gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t);
-          note.updatedAt = Date.now();
+      try {
+        const tags = gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t);
 
-          await saveToSupabase('notes', note);
-          save();
+        if (window.editingNoteId) {
+          // Edit mode
+          const note = AppState.notes.find(n => n.id === window.editingNoteId);
+          if (note) {
+            note.title = title;
+            note.content = gid('noteContent').value.trim();
+            note.tags = tags;
+            note.updatedAt = Date.now();
 
-          window.editingNoteId = null;
-          toast('Note updated! ✅', 'success');
+            // Ensure note has UUID format ID for Supabase
+            const noteForSupabase = {
+              ...note,
+              id: note.id.length === 36 ? note.id : crypto.randomUUID(),
+              tags: tags // Ensure tags is an array
+            };
+
+            // Save to Supabase with error handling
+            const result = await saveToSupabase('notes', noteForSupabase);
+
+            // Update local note ID if it was converted to UUID
+            if (result.success && note.id !== noteForSupabase.id) {
+              note.id = noteForSupabase.id;
+            }
+
+            save(); // Always save to localStorage as fallback
+
+            if (!result.success && !result.offline) {
+              toast('⚠️ Not Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
+            } else {
+              toast('Note updated! ✅', 'success');
+            }
+            window.editingNoteId = null;
+          }
+        } else {
+          // New note - use UUID for Supabase compatibility
+          const newNoteId = crypto.randomUUID();
+          const newNote = {
+            id: newNoteId,
+            title,
+            content: gid('noteContent').value.trim(),
+            tags: tags,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+          AppState.notes.push(newNote);
+
+          // Save to Supabase with error handling
+          const result = await saveToSupabase('notes', newNote);
+          save(); // Always save to localStorage as fallback
+
+          if (!result.success && !result.offline) {
+            toast('⚠️ Not Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
+          } else {
+            toast('Note created! ✅', 'success');
+          }
         }
-      } else {
-        // New note
-        const newNote = {
-          id: genId(),
-          title,
-          content: gid('noteContent').value.trim(),
-          tags: gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t),
-          createdAt: Date.now()
-        };
-        AppState.notes.push(newNote);
 
-        await saveToSupabase('notes', newNote);
+        closeModal('newNoteModal');
+        renderAll();
+      } catch (error) {
+        console.error('Error saving note:', error);
+        toast('❌ Not kaydedilirken hata oluştu', 'error');
+        // Still save to localStorage
+        save();
+      }
+    }
+
+    // Delete note function
+    async function deleteNote(id) {
+      if (!confirm('Bu notu silmek istediğinize emin misiniz?')) return;
+
+      try {
+        // Find note to get Supabase-compatible ID
+        const note = AppState.notes.find(n => n.id === id);
+        if (!note) {
+          toast('Not bulunamadı', 'error');
+          return;
+        }
+
+        const noteIdForSupabase = note.id.length === 36 ? note.id : null;
+
+        // Delete from Supabase if ID is UUID format
+        if (noteIdForSupabase && AppState.currentUser) {
+          const result = await deleteFromSupabase('notes', noteIdForSupabase);
+          if (!result.success) {
+            console.warn('Note not deleted from Supabase, but will be removed from local storage');
+          } else {
+            console.log('✅ Note deleted from Supabase');
+          }
+        }
+
+        // Remove from local state regardless of Supabase result
+        AppState.notes = AppState.notes.filter(n => n.id !== id);
         save();
 
-        toast('Note created! ✅', 'success');
+        renderAll();
+        toast('Not silindi! 🗑️', 'success');
+      } catch (error) {
+        console.error('Error deleting note:', error);
+        toast('❌ Not silinirken hata oluştu', 'error');
+      }
+    }
+
+    // Subscribe to realtime notes updates from Supabase
+    let notesSubscription = null;
+
+    function subscribeToNotesRealtime() {
+      if (!AppState.currentUser) return;
+
+      // Unsubscribe from existing subscription if any
+      if (notesSubscription) {
+        notesSubscription.unsubscribe();
       }
 
-      closeModal('newNoteModal');
-      toast('Note saved! ✅', 'success');
-      renderAll();
+      notesSubscription = supabaseClient
+        .channel('notes-changes')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'notes',
+          filter: `user_id=eq.${AppState.currentUser.id}`
+        }, (payload) => {
+          console.log('Notes realtime update:', payload);
+
+          const { eventType, new: newRecord, old: oldRecord } = payload;
+
+          if (eventType === 'INSERT') {
+            // Add new note if not already in local state
+            const exists = AppState.notes.find(n => n.id === newRecord.id);
+            if (!exists) {
+              AppState.notes.unshift({
+                id: newRecord.id,
+                title: newRecord.title,
+                content: newRecord.content,
+                tags: newRecord.tags || [],
+                createdAt: new Date(newRecord.created_at).getTime(),
+                updatedAt: new Date(newRecord.updated_at).getTime()
+              });
+              save();
+              renderNotes();
+              toast('Yeni not eklendi! 📝', 'info');
+            }
+          } else if (eventType === 'UPDATE') {
+            // Update existing note
+            const index = AppState.notes.findIndex(n => n.id === newRecord.id);
+            if (index !== -1) {
+              AppState.notes[index] = {
+                ...AppState.notes[index],
+                title: newRecord.title,
+                content: newRecord.content,
+                tags: newRecord.tags || [],
+                updatedAt: new Date(newRecord.updated_at).getTime()
+              };
+              save();
+              renderNotes();
+            }
+          } else if (eventType === 'DELETE') {
+            // Remove deleted note
+            AppState.notes = AppState.notes.filter(n => n.id !== oldRecord.id);
+            save();
+            renderNotes();
+          }
+        })
+        .subscribe();
+
+      console.log('✅ Subscribed to realtime notes updates');
     }
 
     function saveResource() {
