@@ -1758,9 +1758,11 @@
     // ═══════════════════════════════════════════════════════════════
     // SUPABASE BACKEND
     // ═══════════════════════════════════════════════════════════════
-    const supabaseUrl = window.env?.SUPABASE_URL || 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
-    const supabaseKey = window.env?.SUPABASE_ANON_KEY || 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
+    // Direct hardcoded for reliable Vercel deployment
+    const supabaseUrl = 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
+    const supabaseKey = 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    console.log('✅ Supabase client initialized:', supabaseUrl);
 
     // ═══════════════════════════════════════════════════════════════
     // UTILITY FUNCTIONS
