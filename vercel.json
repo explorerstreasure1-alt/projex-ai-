@@ -3,7 +3,7 @@
   "name": "projex-ai",
   "framework": null,
   "buildCommand": null,
-  "installCommand": "npm install",
+  "installCommand": null,
   "outputDirectory": ".",
   "public": true,
   "env": {
