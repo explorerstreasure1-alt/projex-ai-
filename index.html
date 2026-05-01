@@ -1717,9 +1717,10 @@
     // ═══════════════════════════════════════════════════════════════
     // APP STATE
     // ═══════════════════════════════════════════════════════════════
-    const AppState = {
-      currentUser: null,
-      currentPage: 'dashboard',
+  const AppState = {
+    pendingVerificationEmail: null,
+    currentUser: null,
+    currentPage: 'dashboard',
       users: [],
       projects: [],
       tasks: [],
@@ -2497,6 +2498,8 @@
           trialEnd: Date.now() + (15 * 24 * 60 * 60 * 1000), // 15 days
           features: ['ai', 'images', 'video', 'analytics']
         };
+        // Track pending verification email for verify flow
+        AppState.pendingVerificationEmail = email;
         save();
 
         showMsg('Account created! 15-day free trial started. Check your email to verify.', 'success');
@@ -2531,6 +2534,26 @@
       } catch (error) {
         console.error('Password reset error:', error);
         showMsg(error.message || 'Failed to send reset email', 'error');
+        setLoading(false);
+      }
+    }
+
+    async function handleVerify() {
+      clearMsg();
+      const code = gid('verifyCode')?.value?.trim();
+      if (!code) { showMsg('Verification code required', 'error'); return; }
+      if (!AppState.pendingVerificationEmail) { showMsg('No pending verification', 'error'); return; }
+      setLoading(true);
+      try {
+        const result = await supabaseClient.auth.verifyOtp ? await supabaseClient.auth.verifyOtp({ email: AppState.pendingVerificationEmail, token: code, type: 'signup' }) : null;
+        if (result && result.error) throw result.error;
+        AppState.pendingVerificationEmail = null;
+        showMsg('Verification successful', 'success');
+        setLoading(false);
+        switchTab('login');
+      } catch (err) {
+        console.error('Verify error:', err);
+        showMsg(err?.message || 'Verification failed', 'error');
         setLoading(false);
       }
     }
