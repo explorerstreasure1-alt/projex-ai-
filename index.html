@@ -134,7 +134,36 @@
             <button class="tab-btn" id="registerTabBtn" onclick="switchTab('register')">Sign Up</button>
           </div>
           <div id="msg-area"></div>
-          <div id="form-area"></div>
+          <div id="form-area">
+            <div class="tab-panel active" id="loginForm">
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <div class="fg"><label class="flabel">Password</label><input class="finput" id="pw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+              <div class="forgot-row"><button class="forgot-btn" type="button" onclick="showForgotPassword()">Şifreyi unuttun mu?</button></div>
+              <button class="submit-btn" id="sub-btn" type="button" onclick="handleLogin()">Sign In</button>
+            </div>
+            <div class="tab-panel" id="registerForm" style="display:none;">
+              <div class="fg"><label class="flabel">Full Name</label><input class="finput" id="fn" type="text" placeholder="Your name" autocomplete="name"></div>
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <div class="fg"><label class="flabel">Password</label><input class="finput" id="pw-field" type="password" placeholder="min. 6 characters" autocomplete="new-password"></div>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="pw2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <button class="submit-btn" type="button" onclick="handleRegister()">Create Account</button>
+            </div>
+            <div class="tab-panel" id="forgotForm" style="display:none;">
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="resetEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <button class="submit-btn" type="button" onclick="handleForgot()">Send Reset Link</button>
+              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('login')">← Back to Login</button></div>
+            </div>
+            <div class="tab-panel" id="recoveryForm" style="display:none;">
+              <div style="text-align:center;margin-bottom:16px;">
+                <span style="font-size:2rem;">🔐</span>
+                <h3 style="margin:8px 0;color:var(--text);">Create New Password</h3>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Enter your new password below</p>
+              </div>
+              <div class="fg"><label class="flabel">New Password</label><input class="finput" id="newPw" type="password" placeholder="min. 6 characters" autocomplete="new-password"></div>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="newPw2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <button class="submit-btn" type="button" onclick="handleRecovery()">Update Password</button>
+            </div>
+          </div>
           <div class="trial-note">
             <strong>15-day free trial</strong> — No credit card required. Upgrade to Pro for AI features.
           </div>
@@ -2177,7 +2206,14 @@
       gid('loginTabBtn').classList.toggle('active', authTab === 'login');
       gid('registerTabBtn').classList.toggle('active', authTab === 'register');
       clearMsg();
-      renderAuthForm();
+      gid('loginForm').style.display = authTab === 'login' ? 'block' : 'none';
+      gid('registerForm').style.display = authTab === 'register' ? 'block' : 'none';
+      gid('forgotForm').style.display = authTab === 'forgot' ? 'block' : 'none';
+      gid('recoveryForm').style.display = authTab === 'recovery' ? 'block' : 'none';
+      
+      // Update tab buttons visibility
+      gid('loginTabBtn').style.display = (authTab === 'recovery') ? 'none' : 'inline-block';
+      gid('registerTabBtn').style.display = (authTab === 'recovery' || authTab === 'forgot') ? 'none' : 'inline-block';
     }
 
     function showMsg(txt, type) {
@@ -2187,7 +2223,12 @@
     function clearMsg() { gid('msg-area').innerHTML = ''; }
 
     function renderAuthForm() {
+      console.log('renderAuthForm called, authTab:', authTab);
       const area = gid('form-area');
+      if (!area) {
+        console.error('form-area element not found!');
+        return;
+      }
       if (authTab === 'login') {
         area.innerHTML = `
           <div class="tab-panel">
@@ -2395,6 +2436,51 @@
         showMsg(error.message || 'Failed to send reset email', 'error');
         setLoading(false);
       }
+    }
+
+    async function handleRecovery() {
+      clearMsg();
+      const newPw = gid('newPw')?.value;
+      const newPw2 = gid('newPw2')?.value;
+      
+      if (!newPw || !newPw2) { 
+        showMsg('Lütfen şifreyi girin', 'error'); 
+        return; 
+      }
+      
+      if (newPw.length < 6) { 
+        showMsg('Şifre en az 6 karakter olmalı', 'error'); 
+        return; 
+      }
+      
+      if (newPw !== newPw2) { 
+        showMsg('Şifreler eşleşmiyor', 'error'); 
+        return; 
+      }
+      
+      setLoading(true);
+      
+      try {
+        const { error } = await supabaseClient.auth.updateUser({
+          password: newPw
+        });
+        
+        if (error) throw error;
+        
+        showMsg('Şifreniz başarıyla güncellendi!', 'success');
+        
+        setTimeout(() => {
+          switchTab('login');
+          gid('newPw').value = '';
+          gid('newPw2').value = '';
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Password update error:', error);
+        showMsg(error.message || 'Şifre güncellenirken hata oluştu', 'error');
+      }
+      
+      setLoading(false);
     }
 
     // handleVerify and handleReset removed - using Supabase native password reset flow
