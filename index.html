@@ -5,12 +5,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROJEX AI — AI-Powered Project Management with Social Collaboration</title>
-  <meta name="description"
-    content="AI-powered project management platform with social features, real-time collaboration, and advanced AI tools">
+  <meta name="description" content="AI-powered project management platform with social features, real-time collaboration, and advanced AI tools">
+  <meta name="keywords" content="project management, AI, collaboration, task management, team collaboration, productivity, AI assistant, digital transformation">
+  <meta name="author" content="PROJEX AI Team">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="PROJEX AI - AI-Powered Project Management">
+  <meta property="og:description" content="Modern project management with AI, team collaboration, and productivity tools">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+  
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script>
+    // Environment Variables Configuration
+    // Vercel'den gelen environment variables'ı window objesine aktarır
+    (function() {
+      window.env = {
+        SUPABASE_URL: 'SUPABASE_URL' in window ? window.SUPABASE_URL : undefined,
+        SUPABASE_ANON_KEY: 'SUPABASE_ANON_KEY' in window ? window.SUPABASE_ANON_KEY : undefined,
+        GROQ_API_KEY: 'GROQ_API_KEY' in window ? window.GROQ_API_KEY : undefined,
+        GEMINI_API_KEY: 'GEMINI_API_KEY' in window ? window.GEMINI_API_KEY : undefined,
+        MISTRAL_API_KEY: 'MISTRAL_API_KEY' in window ? window.MISTRAL_API_KEY : undefined
+      };
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -18,6 +43,7 @@
 <body>
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
+  <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="handleImportFile(this)">
 
   <!-- ═══════════════════════════════════════════════════════════════
        AUTH VIEW - Login / Register
@@ -134,7 +160,62 @@
             <button class="tab-btn" id="registerTabBtn" onclick="switchTab('register')">Sign Up</button>
           </div>
           <div id="msg-area"></div>
-          <div id="form-area"></div>
+          <div id="form-area">
+            <div class="tab-panel active" id="loginForm">
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="loginEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <div class="fg"><label class="flabel">Password</label><input class="finput" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+              <div class="forgot-row"><button class="forgot-btn" type="button" onclick="showForgotPassword()">Şifreyi unuttun mu?</button></div>
+              <button class="submit-btn" id="loginBtn" type="button" onclick="handleLogin()">Sign In</button>
+            </div>
+            <div class="tab-panel" id="registerForm" style="display:none;">
+              <div class="fg"><label class="flabel">Full Name</label><input class="finput" id="regFullName" type="text" placeholder="Your name" autocomplete="name"></div>
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="regEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <div class="fg">
+                <label class="flabel">Password</label>
+                <input class="finput" id="regPassword" type="password" placeholder="min. 6 characters" autocomplete="new-password" oninput="updateStrength()">
+                <div class="pw-strength" id="pw-bar" style="width:0%;background:#ef4444"></div>
+                <div class="pw-label" id="pw-lbl" style="font-size:0.7rem;color:#8888a8"></div>
+              </div>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="regPasswordConfirm" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <button class="submit-btn" id="registerSubmitBtn" type="button" onclick="handleRegister()">Create Account</button>
+            </div>
+            <div class="tab-panel" id="forgotForm" style="display:none;">
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="resetEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <button class="submit-btn" id="forgotBtn" type="button" onclick="handleForgot()">Send Reset Link</button>
+              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('login')">← Back to Login</button></div>
+            </div>
+            <div class="tab-panel" id="verifyForm" style="display:none;">
+              <div style="text-align:center;margin-bottom:16px;">
+                <span style="font-size:2rem;">📧</span>
+                <h3 style="margin:8px 0;color:var(--text);">Verify Email</h3>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Enter the 6-digit code sent to your email</p>
+              </div>
+              <div class="fg"><label class="flabel">Verification Code</label><input class="finput" id="verifyCode" type="text" placeholder="000000" maxlength="6" style="letter-spacing:8px;font-size:1.4rem;text-align:center;font-family:'JetBrains Mono',monospace"></div>
+              <button class="submit-btn" id="verifyBtn" type="button" onclick="handleVerify()">Verify Code</button>
+              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('forgot')">← Back</button></div>
+            </div>
+            <div class="tab-panel" id="resetForm" style="display:none;">
+              <div style="text-align:center;margin-bottom:16px;">
+                <span style="font-size:2rem;">🔐</span>
+                <h3 style="margin:8px 0;color:var(--text);">Reset Password</h3>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Enter your new password</p>
+              </div>
+              <div class="fg"><label class="flabel">New Password</label><input class="finput" id="newPw" type="password" placeholder="min. 6 characters" autocomplete="new-password"></div>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="confirmNewPw" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <button class="submit-btn" id="resetBtn" type="button" onclick="handleReset()">Reset Password</button>
+              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('login')">← Back to Login</button></div>
+            </div>
+            <div class="tab-panel" id="recoveryForm" style="display:none;">
+              <div style="text-align:center;margin-bottom:16px;">
+                <span style="font-size:2rem;">🔐</span>
+                <h3 style="margin:8px 0;color:var(--text);">Create New Password</h3>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Enter your new password below</p>
+              </div>
+              <div class="fg"><label class="flabel">New Password</label><input class="finput" id="newPw" type="password" placeholder="min. 6 characters" autocomplete="new-password"></div>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="newPw2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <button class="submit-btn" id="recoveryBtn" type="button" onclick="handleRecovery()">Update Password</button>
+            </div>
+          </div>
           <div class="trial-note">
             <strong>15-day free trial</strong> — No credit card required. Upgrade to Pro for AI features.
           </div>
@@ -157,6 +238,11 @@
   <div class="view" id="appView">
     <!-- Header -->
     <header>
+      <div class="hamburger" onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
       <a class="logo" onclick="navigateTo('dashboard')">
         <div class="logo-wrap">
           <div class="logo-icon"></div>
@@ -359,6 +445,9 @@
       </div>
     </nav>
 
+    <!-- Sidebar Backdrop for Mobile -->
+    <div class="sidebar-backdrop" onclick="toggleMobileMenu()"></div>
+
     <!-- Main Content -->
     <main class="main">
       <!-- Trial Banner (Top) -->
@@ -406,6 +495,16 @@
             <div class="stat-card-value" id="dashTeamCount">0</div>
             <div class="stat-card-label">Team Members</div>
             <div class="stat-card-change up">+1 new</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashVisitorCount">0</div>
+            <div class="stat-card-label">Total Visitors</div>
+            <div class="stat-card-change up">This session</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashUserCount">0</div>
+            <div class="stat-card-label">Total Users</div>
+            <div class="stat-card-change">Registered</div>
           </div>
         </div>
 
@@ -813,7 +912,6 @@
               </div>
               <div style="display: flex; gap: 8px; margin-top: 8px;">
                 <button class="btn btn-sm btn-ghost" onclick="clearWhiteboard()">Temizle</button>
-                <button class="btn btn-sm btn-primary" onclick="saveWhiteboardToSupabase()">💾 Kaydet</button>
                 <input type="color" id="whiteboardColor" value="#000000" style="width: 40px; height: 32px;">
               </div>
             </div>
@@ -1488,9 +1586,6 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('newNoteModal')">Cancel</button>
-        <button class="btn btn-red" id="deleteNoteBtn"
-          onclick="if(window.editingNoteId){deleteNote(window.editingNoteId);closeModal('newNoteModal');}"
-          style="display: none;">🗑️ Delete</button>
         <button class="btn btn-primary" onclick="saveNote()">Save Note</button>
       </div>
     </div>
@@ -1622,9 +1717,10 @@
     // ═══════════════════════════════════════════════════════════════
     // APP STATE
     // ═══════════════════════════════════════════════════════════════
-    const AppState = {
-      currentUser: null,
-      currentPage: 'dashboard',
+  const AppState = {
+    pendingVerificationEmail: null,
+    currentUser: null,
+    currentPage: 'dashboard',
       users: [],
       projects: [],
       tasks: [],
@@ -1663,31 +1759,11 @@
     // ═══════════════════════════════════════════════════════════════
     // SUPABASE BACKEND
     // ═══════════════════════════════════════════════════════════════
-    // Get Supabase config from environment variables or window object
-    const supabaseUrl = window.ENV?.SUPABASE_URL || 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
-    const supabaseKey = window.ENV?.SUPABASE_ANON_KEY || 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
+    // Direct hardcoded for reliable Vercel deployment
+    const supabaseUrl = 'https://dbwhzmpfgfgemifiuhrp.supabase.co';
+    const supabaseKey = 'sb_publishable_aFj8bK_5bV-6CuDlpJDLMw_UmJPDXY1';
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-    // Track connection status
-    let supabaseConnected = false;
-    let supabaseConnectionRetries = 0;
-    const MAX_RETRIES = 3;
-
-    // Check Supabase connection
-    async function checkSupabaseConnection() {
-      try {
-        const { data, error } = await supabaseClient.from('projects').select('id').limit(1);
-        if (!error) {
-          supabaseConnected = true;
-          console.log('✅ Supabase connection successful');
-          return true;
-        }
-      } catch (err) {
-        console.error('❌ Supabase connection failed:', err);
-      }
-      supabaseConnected = false;
-      return false;
-    }
+    console.log('✅ Supabase client initialized:', supabaseUrl);
 
     // ═══════════════════════════════════════════════════════════════
     // UTILITY FUNCTIONS
@@ -1705,11 +1781,132 @@
     const esc = (str) => String(str || '').replace(/[<>&"']/g, (m) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', '\'': '&#39;' }[m]));
     const fmtDate = (ts) => ts ? new Date(ts).toLocaleDateString('en-US') : '-';
 
-    // Legacy save/load for backward compatibility - will be phased out
-    function save() {
-      localStorage.setItem('projex_data', JSON.stringify(AppState));
+    // KALICI HAFIZA SİSTEMİ - Supabase Tabalı (Vercel için)
+    // Tüm veriler Supabase'e kaydedilir, sayfa yenilendiğinde kaybolmaz
+    
+    // Bug Fix #1: Safe getter with null checking
+    function formatTimestamp(ts) {
+      if (!ts) return new Date().toISOString();
+      if (typeof ts === 'number') {
+        if (ts > 10000000000) return new Date(ts).toISOString();
+        return ts.toString();
+      }
+      if (typeof ts === 'string') {
+        if (!isNaN(ts) && ts.length > 10) return new Date(parseInt(ts)).toISOString();
+        return ts;
+      }
+      return new Date().toISOString();
     }
 
+    // Bug Fix #2: Get value safely from element
+    function getValue(id) {
+      const el = gid(id);
+      return el ? el.value : '';
+    }
+
+    // Bug Fix #3: Get value safely trimmed
+    function getValueTrim(id) {
+      const el = gid(id);
+      return el ? el.value.trim() : '';
+    }
+
+    // Bug Fix #4: Set element value safely
+    function setValue(id, value) {
+      const el = gid(id);
+      if (el) el.value = value || '';
+    }
+
+    // Bug Fix #5: Ensure array exists
+    function ensureArray(state, key) {
+      if (!state[key]) state[key] = [];
+      return state[key];
+    }
+
+    // Bug Fix #6: Ana kaydetme fonksiyonu - hem Supabase hem localStorage'a kaydeder
+    async function save() {
+      // Fix #7: Ensure all required arrays exist
+      AppState.projects = ensureArray(AppState, 'projects');
+      AppState.tasks = ensureArray(AppState, 'tasks');
+      AppState.meetings = ensureArray(AppState, 'meetings');
+      AppState.notes = ensureArray(AppState, 'notes');
+      AppState.team = ensureArray(AppState, 'team');
+      AppState.resources = ensureArray(AppState, 'resources');
+      AppState.budget = ensureArray(AppState, 'budget');
+      AppState.risks = ensureArray(AppState, 'risks');
+      AppState.posts = ensureArray(AppState, 'posts');
+      AppState.images = ensureArray(AppState, 'images');
+      AppState.activity = ensureArray(AppState, 'activity');
+
+      // Supabase'e kaydet (async)
+      if (AppState.currentUser && supabaseClient) {
+        try {
+          await saveAllToSupabase();
+        } catch (e) {
+          console.error('Supabase save error:', e);
+          // Fix #8: Notify user of save failure
+          toast('Backup saved locally. Cloud sync failed.', 'warn');
+        }
+      }
+      // LocalStorage yedek olarak kalır (offline durumlar için)
+      try {
+        localStorage.setItem('projex_data', JSON.stringify(AppState));
+      } catch (e) {
+        console.error('localStorage error:', e);
+        // Fix #9: Handle quota exceeded
+        toast('Storage almost full! Consider clearing old data.', 'warn');
+      }
+    }
+
+    // Bug Fix #10: Optimized batch save - parallel execution
+    async function saveAllToSupabase() {
+      if (!AppState.currentUser) return;
+      const userId = AppState.currentUser.id;
+
+      try {
+        // Parallel saves for better performance
+        const tables = [
+          { name: 'projects', data: AppState.projects },
+          { name: 'tasks', data: AppState.tasks },
+          { name: 'meetings', data: AppState.meetings },
+          { name: 'notes', data: AppState.notes },
+          { name: 'team', data: AppState.team },
+          { name: 'resources', data: AppState.resources },
+          { name: 'budget', data: AppState.budget },
+          { name: 'risks', data: AppState.risks },
+          { name: 'posts', data: AppState.posts },
+          { name: 'images', data: AppState.images }
+        ];
+
+        // Fix #11: Execute all saves in parallel
+        await Promise.all(tables.map(async ({ name, data }) => {
+          if (!data || !data.length) return;
+          for (const item of data) {
+            await supabaseClient.from(name).upsert({
+              ...item,
+              user_id: userId,
+              created_at: formatTimestamp(item.createdAt || item.created_at),
+              updated_at: formatTimestamp(item.updatedAt || item.updated_at)
+            }, { onConflict: 'id' });
+          }
+        }));
+
+        // Fix #12: Save user settings separately
+        if (AppState.userSettings) {
+          await supabaseClient.from('user_settings').upsert({
+            ...AppState.userSettings,
+            user_id: userId,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
+        }
+
+        console.log('✅ All data saved to Supabase');
+      } catch (error) {
+        console.error('Error saving all to Supabase:', error);
+        throw error;
+      }
+    }
+
+    // Legacy load - sadece localStorage fallback için
     function load() {
       const data = JSON.parse(localStorage.getItem('projex_data') || '{}');
       Object.assign(AppState, data);
@@ -1728,19 +1925,69 @@
       if (!AppState.subscription) AppState.subscription = { plan: 'trial', trialStart: Date.now(), trialDays: 15 };
     }
 
-    // Supabase data access functions
-    async function saveToSupabase(table, data, retryCount = 0) {
-      if (!AppState.currentUser) {
-        console.warn('Cannot save: No current user');
-        return { success: false, error: 'No current user' };
-      }
+    // Export/Import Functions
+    function exportData() {
+      const exportObj = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        user: AppState.currentUser?.email,
+        data: AppState
+      };
+      
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `projex-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast('Veriler başarıyla dışa aktarıldı!', 'success');
+    }
 
-      // If Supabase is not connected and we've exceeded retries, use localStorage only
-      if (!supabaseConnected && retryCount >= MAX_RETRIES) {
-        console.warn(`Supabase unavailable, saving to localStorage only: ${table}`);
-        save(); // Save to localStorage as fallback
-        return { success: false, offline: true };
+    async function importData(file) {
+      try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const importObj = JSON.parse(e.target.result);
+            
+            if (!importObj.data) {
+              toast('Geçersiz yedekleme dosyası', 'error');
+              return;
+            }
+            
+            // Merge imported data
+            const merged = {
+              ...AppState,
+              ...importObj.data,
+              currentUser: AppState.currentUser // Keep current user
+            };
+            
+            Object.assign(AppState, merged);
+            await save();
+            renderAll();
+            
+            toast('Veriler başarıyla içe aktarıldı!', 'success');
+            
+          } catch (err) {
+            console.error('Import parse error:', err);
+            toast('Dosya okunamadı', 'error');
+          }
+        };
+        reader.readAsText(file);
+        
+      } catch (error) {
+        console.error('Import error:', error);
+        toast('İçe aktarma başarısız', 'error');
       }
+    }
+
+    // Supabase data access functions
+    async function saveToSupabase(table, data) {
+      if (!AppState.currentUser) return;
 
       try {
         // Convert camelCase to snake_case for Supabase compatibility
@@ -1763,7 +2010,7 @@
         const formattedData = {
           ...data,
           created_at: formatTimestamp(data.createdAt || data.created_at),
-          updated_at: formatTimestamp(data.updatedAt || data.updated_at || Date.now())
+          updated_at: formatTimestamp(data.updatedAt || data.updated_at)
         };
         // Remove camelCase versions to avoid conflicts
         delete formattedData.createdAt;
@@ -1780,33 +2027,10 @@
 
         if (error) {
           console.error(`Error saving to ${table}:`, error.message, error.details);
-
-          // Retry on network errors
-          if (retryCount < MAX_RETRIES && (error.message?.includes('network') || error.code === 'NETWORK_ERROR')) {
-            console.log(`Retrying save to ${table}... (${retryCount + 1}/${MAX_RETRIES})`);
-            await new Promise(r => setTimeout(r, 1000 * (retryCount + 1)));
-            return saveToSupabase(table, data, retryCount + 1);
-          }
-
           throw error;
         }
-
-        console.log(`✅ Saved to ${table}:`, data.id);
-        supabaseConnected = true;
-        return { success: true };
-
       } catch (error) {
-        console.error(`❌ Error saving to ${table}:`, error);
-
-        // Save to localStorage as fallback
-        save();
-
-        // Show user notification on final retry
-        if (retryCount >= MAX_RETRIES) {
-          toast(`⚠️ Veri kaydedilemedi. Çevrimdışı mod aktif.`, 'warn');
-        }
-
-        return { success: false, error: error.message };
+        console.error(`Error saving to ${table}:`, error);
       }
     }
 
@@ -1820,6 +2044,7 @@
           .eq('user_id', AppState.currentUser.id);
 
         if (error) throw error;
+        AppState.pendingVerificationEmail = email;
         return data || [];
       } catch (error) {
         console.error(`Error loading from ${table}:`, error);
@@ -2097,7 +2322,17 @@
       gid('loginTabBtn').classList.toggle('active', authTab === 'login');
       gid('registerTabBtn').classList.toggle('active', authTab === 'register');
       clearMsg();
-      renderAuthForm();
+      gid('loginForm').style.display = authTab === 'login' ? 'block' : 'none';
+      gid('registerForm').style.display = authTab === 'register' ? 'block' : 'none';
+      gid('forgotForm').style.display = authTab === 'forgot' ? 'block' : 'none';
+      gid('verifyForm').style.display = authTab === 'verify' ? 'block' : 'none';
+      gid('resetForm').style.display = authTab === 'reset' ? 'block' : 'none';
+      gid('recoveryForm').style.display = authTab === 'recovery' ? 'block' : 'none';
+      
+      // Update tab buttons visibility
+      const showTabs = !['forgot', 'verify', 'reset', 'recovery'].includes(authTab);
+      gid('loginTabBtn').style.display = showTabs ? 'inline-block' : 'none';
+      gid('registerTabBtn').style.display = showTabs ? 'inline-block' : 'none';
     }
 
     function showMsg(txt, type) {
@@ -2106,70 +2341,12 @@
 
     function clearMsg() { gid('msg-area').innerHTML = ''; }
 
-    function renderAuthForm() {
-      const area = gid('form-area');
-      if (authTab === 'login') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
-            <div class="fg"><label class="flabel">Password</label><input class="finput" id="pw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
-            <div class="forgot-row"><button class="forgot-btn" onclick="showForgotPassword()">Şifreyi unuttun mu?</button></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleLogin()">Sign In</button>
-          </div>
-        `;
-      } else if (authTab === 'register') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Full Name</label><input class="finput" id="fn" type="text" placeholder="Your name" autocomplete="name"></div>
-            <div class="fg"><label class="flabel">Email</label><input class="finput" id="em" type="email" placeholder="you@company.com" autocomplete="email"></div>
-            <div class="fg">
-              <label class="flabel">Password</label>
-              <input class="finput" id="pw-field" type="password" placeholder="min. 6 characters" oninput="updateStrength()" autocomplete="new-password">
-              <div class="pw-strength" id="pw-bar" style="width:0%;background:#ef4444"></div>
-              <div class="pw-label" id="pw-lbl"></div>
-            </div>
-            <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="pw2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleRegister()">Create Account</button>
-          </div>
-        `;
-      } else if (authTab === 'forgot') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Email</label><input class="finput" id="resetEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleForgot()">Kod Gönder</button>
-            <div class="back-link"><button class="forgot-btn" onclick="switchTab('login')">← Girişe Dön</button></div>
-          </div>
-        `;
-      } else if (authTab === 'verify') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Doğrulama Kodu</label><input class="finput" id="verifyCode" type="text" placeholder="6 haneli kod girin" maxlength="6" style="letter-spacing: 4px; font-size: 1.2rem; text-align: center;"></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleVerify()">Kodu Doğrula</button>
-            <div class="back-link"><button class="forgot-btn" onclick="switchTab('forgot')">← Geri</button></div>
-          </div>
-        `;
-      } else if (authTab === 'reset') {
-        area.innerHTML = `
-          <div class="tab-panel">
-            <div class="fg"><label class="flabel">Yeni Şifre</label><input class="finput" id="newPw" type="password" placeholder="min. 6 karakter" autocomplete="new-password"></div>
-            <div class="fg"><label class="flabel">Yeni Şifre Onayla</label><input class="finput" id="confirmNewPw" type="password" placeholder="••••••••" autocomplete="new-password"></div>
-            <button class="submit-btn" id="sub-btn" onclick="handleReset()">Şifreyi Değiştir</button>
-            <div class="back-link"><button class="forgot-btn" onclick="switchTab('login')">← Girişe Dön</button></div>
-          </div>
-        `;
-      }
-    }
-
     function showForgotPassword() {
-      authTab = 'forgot';
-      gid('loginTabBtn').classList.remove('active');
-      gid('registerTabBtn').classList.remove('active');
-      clearMsg();
-      renderAuthForm();
+      switchTab('forgot');
     }
 
     function updateStrength() {
-      const pw = gid('pw-field')?.value || '';
+      const pw = gid('regPassword')?.value || '';
       const s = Math.min(Math.floor(pw.length / 3), 5);
       const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#7c6aff'];
       const bar = gid('pw-bar');
@@ -2180,34 +2357,76 @@
 
     function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
-    function setLoading(on) {
-      loading = on;
-      const btn = gid('sub-btn');
-      if (!btn) return;
-      btn.disabled = on;
-      const buttonText = {
-        'login': 'Sign In',
-        'register': 'Create Account',
-        'forgot': 'Send Reset Code',
-        'verify': 'Verify Code',
-        'reset': 'Reset Password'
-      };
-      btn.innerHTML = on ? `<span class="spinner"></span> Processing...` : buttonText[authTab];
+    async function handleVerify() {
+      clearMsg();
+      const code = gid('verifyCode')?.value.trim();
+      if (!code || code.length !== 6) { showMsg('Lütfen 6 haneli doğrulama kodunu girin', 'error'); return; }
+      
+      setLoading(true);
+      
+      try {
+        const { error } = await supabaseClient.auth.verifyOtp({
+          email: pendingVerificationEmail,
+          token: code,
+          type: 'email'
+        });
+        
+        if (error) throw error;
+        
+        showMsg('Email başarıyla doğrulandı!', 'success');
+        setTimeout(() => switchTab('login'), 1500);
+        
+      } catch (error) {
+        console.error('Verify error:', error);
+        showMsg(error.message || 'Doğrulama kodu hatalı', 'error');
+      }
+      
+      setLoading(false);
     }
 
-    async function hashPassword(password) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hash = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hash));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      return hashHex;
+    async function handleReset() {
+      clearMsg();
+      const newPw = gid('newPw')?.value;
+      const confirmPw = gid('confirmNewPw')?.value;
+      
+      if (!newPw || !confirmPw) { showMsg('Lütfen şifreyi girin', 'error'); return; }
+      if (newPw.length < 6) { showMsg('Şifre en az 6 karakter olmalı', 'error'); return; }
+      if (newPw !== confirmPw) { showMsg('Şifreler eşleşmiyor', 'error'); return; }
+      
+      setLoading(true);
+      
+      try {
+        const { error } = await supabaseClient.auth.updateUser({ password: newPw });
+        if (error) throw error;
+        
+        showMsg('Şifre başarıyla güncellendi!', 'success');
+        setTimeout(() => switchTab('login'), 1500);
+        
+      } catch (error) {
+        console.error('Reset error:', error);
+        showMsg(error.message || 'Şifre güncellenirken hata oluştu', 'error');
+      }
+      
+      setLoading(false);
+    }
+
+    function setLoading(on) {
+      loading = on;
+      const activeBtn = authTab === 'login' ? gid('loginBtn') : 
+                        authTab === 'register' ? gid('registerSubmitBtn') :
+                        authTab === 'forgot' ? gid('forgotBtn') :
+                        authTab === 'verify' ? gid('verifyBtn') :
+                        authTab === 'recovery' ? gid('recoveryBtn') : null;
+      
+      if (!activeBtn) return;
+      activeBtn.disabled = on;
+      activeBtn.textContent = on ? 'Processing...' : activeBtn.dataset.originalText || activeBtn.textContent;
     }
 
     async function handleLogin() {
       clearMsg();
-      const email = gid('em')?.value.trim();
-      const pw = gid('pw')?.value;
+      const email = gid('loginEmail')?.value.trim();
+      const pw = gid('loginPassword')?.value;
       if (!email || !pw) { showMsg('Please fill in all fields', 'error'); return; }
       if (!validateEmail(email)) { showMsg('Invalid email address', 'error'); return; }
 
@@ -2247,10 +2466,10 @@
 
     async function handleRegister() {
       clearMsg();
-      const fullName = gid('fn')?.value.trim();
-      const email = gid('em')?.value.trim();
-      const pw = gid('pw-field')?.value;
-      const pw2 = gid('pw2')?.value;
+      const fullName = gid('regFullName')?.value.trim();
+      const email = gid('regEmail')?.value.trim();
+      const pw = gid('regPassword')?.value;
+      const pw2 = gid('regPasswordConfirm')?.value;
 
       if (!fullName || !email || !pw || !pw2) { showMsg('Please fill in all fields', 'error'); return; }
       if (!validateEmail(email)) { showMsg('Invalid email address', 'error'); return; }
@@ -2279,6 +2498,8 @@
           trialEnd: Date.now() + (15 * 24 * 60 * 60 * 1000), // 15 days
           features: ['ai', 'images', 'video', 'analytics']
         };
+        // Track pending verification email for verify flow
+        AppState.pendingVerificationEmail = email;
         save();
 
         showMsg('Account created! 15-day free trial started. Check your email to verify.', 'success');
@@ -2317,6 +2538,121 @@
       }
     }
 
+    async function handleVerify() {
+      clearMsg();
+      const code = gid('verifyCode')?.value?.trim();
+      if (!code) { showMsg('Verification code required', 'error'); return; }
+      if (!AppState.pendingVerificationEmail) { showMsg('No pending verification', 'error'); return; }
+      setLoading(true);
+      try {
+        const result = await supabaseClient.auth.verifyOtp ? await supabaseClient.auth.verifyOtp({ email: AppState.pendingVerificationEmail, token: code, type: 'signup' }) : null;
+        if (result && result.error) throw result.error;
+        AppState.pendingVerificationEmail = null;
+        showMsg('Verification successful', 'success');
+        setLoading(false);
+        switchTab('login');
+      } catch (err) {
+        console.error('Verify error:', err);
+        showMsg(err?.message || 'Verification failed', 'error');
+        setLoading(false);
+      }
+    }
+
+    // Verify email after signup
+    async function handleVerify() {
+      clearMsg();
+      const code = gid('verifyCode')?.value?.trim();
+      if (!code) { showMsg('Lütfen doğrulama kodunu girin', 'error'); return; }
+      if (!AppState.pendingVerificationEmail) { showMsg('Bekleyen doğrulama yok', 'error'); return; }
+      if (!supabaseClient) { showMsg('Sunucu bağlantısı yok', 'error'); return; }
+      setLoading(true);
+      try {
+        // Supabase OTP doğrulama (örnek, API sürümüne göre uyarlanabilir)
+        const { error } = await supabaseClient.auth.verifyOtp({
+          email: AppState.pendingVerificationEmail,
+          token: code,
+          type: 'signup'
+        });
+        if (error) throw error;
+        showMsg('Doğrulama başarılı. Giriş yapabilirsiniz.', 'success');
+        AppState.pendingVerificationEmail = null;
+        setLoading(false);
+        switchTab('login');
+      } catch (err) {
+        console.error('Verify error:', err);
+        showMsg(err?.message || 'Doğrulama başarısız', 'error');
+        setLoading(false);
+      }
+    }
+
+    // Reset (password) flow - basit entegrasyon
+    async function handleReset() {
+      clearMsg();
+      const newPw = gid('newPw')?.value;
+      const confirmPw = gid('confirmNewPw')?.value;
+      if (!newPw || !confirmPw || newPw !== confirmPw) {
+        showMsg('Şifre eşleşmiyor veya eksik', 'error');
+        return;
+      }
+      setLoading(true);
+      try {
+        const { error } = await supabaseClient.auth.updateUser({ password: newPw });
+        if (error) throw error;
+        showMsg('Şifre başarıyla güncellendi', 'success');
+        setLoading(false);
+        switchTab('login');
+      } catch (e) {
+        console.error('Reset error:', e);
+        showMsg(e?.message || 'Şifre güncelleme hatası', 'error');
+        setLoading(false);
+      }
+    }
+
+    async function handleRecovery() {
+      clearMsg();
+      const newPw = gid('newPw')?.value;
+      const newPw2 = gid('newPw2')?.value;
+      
+      if (!newPw || !newPw2) { 
+        showMsg('Lütfen şifreyi girin', 'error'); 
+        return; 
+      }
+      
+      if (newPw.length < 6) { 
+        showMsg('Şifre en az 6 karakter olmalı', 'error'); 
+        return; 
+      }
+      
+      if (newPw !== newPw2) { 
+        showMsg('Şifreler eşleşmiyor', 'error'); 
+        return; 
+      }
+      
+      setLoading(true);
+      
+      try {
+        const { error } = await supabaseClient.auth.updateUser({
+          password: newPw
+        });
+        
+        if (error) throw error;
+        
+        showMsg('Şifreniz başarıyla güncellendi!', 'success');
+        
+        setTimeout(() => {
+          switchTab('login');
+          gid('newPw').value = '';
+          gid('newPw2').value = '';
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Password update error:', error);
+        showMsg(error.message || 'Şifre güncellenirken hata oluştu', 'error');
+      }
+      
+      setLoading(false);
+    }
+
     // handleVerify and handleReset removed - using Supabase native password reset flow
 
     // Listen for auth state changes and restore session on page load
@@ -2351,70 +2687,79 @@
 
       updateTrialDisplay();
 
-      // Check Supabase connection first
-      toast('🔄 Veriler yükleniyor...', 'info');
-      const isConnected = await checkSupabaseConnection();
-
-      // Load data from Supabase or fallback to localStorage
+      // PARALLEL LOAD - Supabase'ten tüm verileri aynı anda yükle
       try {
-        if (isConnected) {
-          console.log('📡 Loading from Supabase...');
-          AppState.projects = await loadFromSupabase('projects') || [];
-          AppState.tasks = await loadFromSupabase('tasks') || [];
-          AppState.meetings = await loadFromSupabase('meetings') || [];
-          AppState.team = await loadFromSupabase('team') || [];
-          AppState.notes = await loadFromSupabase('notes') || [];
-          AppState.resources = await loadFromSupabase('resources') || [];
-          AppState.posts = await loadFromSupabase('posts') || [];
-          AppState.images = await loadFromSupabase('images') || [];
-          AppState.budget = await loadFromSupabase('budget') || [];
-          AppState.risks = await loadFromSupabase('risks') || [];
+        const [projects, tasks, meetings, team, notes, resources, posts, images, budget, risks, userSettings, subscription] = await Promise.all([
+          loadFromSupabase('projects'),
+          loadFromSupabase('tasks'),
+          loadFromSupabase('meetings'),
+          loadFromSupabase('team'),
+          loadFromSupabase('notes'),
+          loadFromSupabase('resources'),
+          loadFromSupabase('posts'),
+          loadFromSupabase('images'),
+          loadFromSupabase('budget'),
+          loadFromSupabase('risks'),
+          loadFromSupabase('user_settings'),
+          loadFromSupabase('subscriptions')
+        ]);
 
-          console.log('✅ Data loaded from Supabase');
+        AppState.projects = projects;
+        AppState.tasks = tasks;
+        AppState.meetings = meetings;
+        AppState.team = team;
+        AppState.notes = notes;
+        AppState.resources = resources;
+        AppState.posts = posts;
+        AppState.images = images;
+        AppState.budget = budget;
+        AppState.risks = risks;
+        AppState.userSettings = userSettings[0] || null;
+        AppState.subscription = subscription[0] || null;
 
-          // Check if Supabase is empty and localStorage has data
-          const supabaseEmpty = !AppState.projects.length && !AppState.tasks.length && !AppState.meetings.length;
-          if (supabaseEmpty) {
-            load(); // Load localStorage data
-            const localDataExists = AppState.projects.length || AppState.tasks.length || AppState.meetings.length;
+        console.log('✅ Data loaded from Supabase (parallel)');
 
-            if (localDataExists) {
-              console.log('🔄 Migrating localStorage data to Supabase...');
-              toast('📤 Veriler senkronize ediliyor...', 'info');
-              // Auto-migrate localStorage data to Supabase
-              await migrateLocalStorageToSupabase();
-              // Reload from Supabase after migration
-              AppState.projects = await loadFromSupabase('projects') || [];
-              AppState.tasks = await loadFromSupabase('tasks') || [];
-              AppState.meetings = await loadFromSupabase('meetings') || [];
-              AppState.team = await loadFromSupabase('team') || [];
-              AppState.notes = await loadFromSupabase('notes') || [];
-              AppState.resources = await loadFromSupabase('resources') || [];
-              AppState.posts = await loadFromSupabase('posts') || [];
-              AppState.images = await loadFromSupabase('images') || [];
-              AppState.budget = await loadFromSupabase('budget') || [];
-              AppState.risks = await loadFromSupabase('risks') || [];
-              toast('✅ Veriler senkronize edildi!', 'success');
-            }
-          } else {
-            toast('✅ Veriler yüklendi!', 'success');
+        // Check if Supabase is empty and localStorage has data
+        const supabaseEmpty = !AppState.projects.length && !AppState.tasks.length && !AppState.meetings.length;
+        if (supabaseEmpty) {
+          load(); // Load localStorage data
+          const localDataExists = AppState.projects.length || AppState.tasks.length || AppState.meetings.length;
+
+          if (localDataExists) {
+            // Auto-migrate localStorage data to Supabase
+            await migrateLocalStorageToSupabase();
+            // Reload from Supabase after migration
+            const [mProjects, mTasks, mMeetings, mTeam, mNotes, mResources, mPosts, mImages, mBudget, mRisks] = await Promise.all([
+              loadFromSupabase('projects'),
+              loadFromSupabase('tasks'),
+              loadFromSupabase('meetings'),
+              loadFromSupabase('team'),
+              loadFromSupabase('notes'),
+              loadFromSupabase('resources'),
+              loadFromSupabase('posts'),
+              loadFromSupabase('images'),
+              loadFromSupabase('budget'),
+              loadFromSupabase('risks')
+            ]);
+            AppState.projects = mProjects;
+            AppState.tasks = mTasks;
+            AppState.meetings = mMeetings;
+            AppState.team = mTeam;
+            AppState.notes = mNotes;
+            AppState.resources = mResources;
+            AppState.posts = mPosts;
+            AppState.images = mImages;
+            AppState.budget = mBudget;
+            AppState.risks = mRisks;
           }
-        } else {
-          console.warn('⚠️ Supabase unavailable, using localStorage');
-          load(); // Fallback to localStorage
-          toast('⚠️ Çevrimdışı mod: Veriler yerel depodan yüklendi', 'warn');
         }
       } catch (error) {
-        console.error('❌ Error loading data:', error);
+        console.error('Error loading from Supabase, using localStorage fallback:', error);
         load(); // Fallback to localStorage
-        toast('⚠️ Veri yükleme hatası. Yerel depo kullanılıyor.', 'error');
       }
 
       initSampleData();
       renderAll();
-
-      // Subscribe to realtime notes updates
-      subscribeToNotesRealtime();
 
       updateClock();
       clockInterval = setInterval(updateClock, 1000);
@@ -2484,8 +2829,31 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // NAVIGATION
-    // ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+    // ═══════════════════════════════════════════════════════════════════
+    
+    // MOBİL MENÜ FONKSİYONU
+    function toggleMobileMenu() {
+      const hamburger = document.querySelector('.hamburger');
+      const sidebar = document.querySelector('.sidebar');
+      const backdrop = document.querySelector('.sidebar-backdrop');
+      
+      if (!sidebar) return;
+      
+      sidebar.classList.toggle('active');
+      hamburger?.classList.toggle('active');
+      
+      // Create backdrop if not exists
+      if (!backdrop) {
+        const newBackdrop = document.createElement('div');
+        newBackdrop.className = 'sidebar-backdrop';
+        newBackdrop.onclick = toggleMobileMenu;
+        document.body.appendChild(newBackdrop);
+      }
+      
+      document.querySelector('.sidebar-backdrop')?.classList.toggle('active');
+    }
+    
     function navigateTo(page) {
       // Check PRO features - allow trial users access
       if ((page === 'ai' || page === 'images') && !hasFeatureAccess()) {
@@ -2594,16 +2962,18 @@
           <!-- Note Grid -->
           <div id="notesContainer" class="notes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
             ${notes.map(n => `
-              <div class="dashboard-card note-card" style="cursor: pointer; transition: transform 0.2s; position: relative;">
-                <div onclick="editNote('${n.id}')" style="flex: 1;">
-                  <div class="note-title">${esc(n.title)}</div>
-                  <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
-                </div>
+              <div class="dashboard-card note-card" style="cursor: pointer; transition: transform 0.2s;">
+                <div class="note-title">${esc(n.title)}</div>
+                <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
                 <div class="note-meta" style="display: flex; justify-content: space-between; align-items: center;">
                   <span class="note-date" style="font-size: 0.75rem; color: var(--text-muted);">${fmtDate(n.createdAt)}</span>
-                  ${n.tags?.length ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag" style="background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${esc(t)}</span>`).join('')}</div>` : ''}
-                  <button class="btn btn-sm btn-red" onclick="event.stopPropagation(); deleteNote('${n.id}');" title="Sil" style="margin-left: 8px; padding: 4px 8px; font-size: 0.7rem;">🗑️</button>
+                  <div style="display: flex; gap: 4px;">
+                    <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); copyNote('${n.id}')" title="Copy">📋</button>
+                    <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); editNote('${n.id}')" title="Edit">✏️</button>
+                    <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); deleteItem('notes', '${n.id}')" title="Delete">🗑️</button>
+                  </div>
                 </div>
+                ${n.tags?.length ? `<div class="note-tags" style="margin-top: 8px;">${n.tags.map(t => `<span class="note-tag" style="background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${esc(t)}</span>`).join('')}</div>` : ''}
               </div>
             `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">📝</div><div class="empty-state-title">No notes yet</div></div>'}
           </div>
@@ -2627,15 +2997,12 @@
 
       const container = gid('notesContainer');
       container.innerHTML = filtered.map(n => `
-        <div class="dashboard-card note-card" style="cursor: pointer; position: relative;">
-          <div onclick="editNote('${n.id}')" style="flex: 1;">
-            <div class="note-title">${esc(n.title)}</div>
-            <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
-          </div>
+        <div class="dashboard-card note-card" onclick="editNote('${n.id}')" style="cursor: pointer;">
+          <div class="note-title">${esc(n.title)}</div>
+          <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
           <div class="note-meta" style="display: flex; justify-content: space-between; align-items: center;">
             <span class="note-date" style="font-size: 0.75rem; color: var(--text-muted);">${fmtDate(n.createdAt)}</span>
             ${n.tags?.length ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag" style="background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${esc(t)}</span>`).join('')}</div>` : ''}
-            <button class="btn btn-sm btn-red" onclick="event.stopPropagation(); deleteNote('${n.id}');" title="Sil" style="margin-left: 8px; padding: 4px 8px; font-size: 0.7rem;">🗑️</button>
           </div>
         </div>
       `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">📝</div><div class="empty-state-title">No notes found</div></div>';
@@ -2644,15 +3011,17 @@
     function editNote(id) {
       const note = AppState.notes.find(n => n.id === id);
       if (note) {
-        gid('noteTitle').value = note.title;
-        gid('noteContent').value = note.content || '';
-        gid('noteTags').value = (note.tags || []).join(', ');
+        // Bug Fix: Reset before setting new values
+        setValue('noteTitle', '');
+        setValue('noteContent', '');
+        setValue('noteTags', '');
+        
+        // Use safe setters
+        setValue('noteTitle', note.title);
+        setValue('noteContent', note.content || '');
+        setValue('noteTags', (note.tags || []).join(', '));
+        
         window.editingNoteId = id;
-
-        // Show delete button in edit mode
-        const deleteBtn = gid('deleteNoteBtn');
-        if (deleteBtn) deleteBtn.style.display = 'inline-block';
-
         openModal('newNoteModal');
       }
     }
@@ -2723,8 +3092,11 @@
                     <td>${esc(r.description || '-')}</td>
                     <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" style="color: var(--teal);">🔗 Link</a>` : '-'}</td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editResource('${r.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('resources', '${r.id}')">🗑️</button>
+                      <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyResource('${r.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editResource('${r.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('resources', '${r.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `).join('') || '<tr><td colspan="5" class="empty-state">No resources yet</td></tr>'}
@@ -2854,8 +3226,11 @@
                       <span style="font-size: 0.7rem; color: var(--text-muted);">${progress.toFixed(0)}%</span>
                     </td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')">🗑️</button>
+                      <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyBudget('${b.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `}).join('') || '<tr><td colspan="6" class="empty-state">No budget items yet</td></tr>'}
@@ -2895,8 +3270,11 @@
               <span style="font-size: 0.7rem; color: var(--text-muted);">${progress.toFixed(0)}%</span>
             </td>
             <td>
-              <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')">✏️</button>
-              <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')">🗑️</button>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn btn-sm btn-ghost" onclick="copyBudget('${b.id}')" title="Copy">📋</button>
+                <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')" title="Edit">✏️</button>
+                <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')" title="Delete">🗑️</button>
+              </div>
             </td>
           </tr>
         `;
@@ -2981,14 +3359,17 @@
               <tbody id="risksTable">
                 ${risks.map(r => `
                   <tr>
-                    <td><strong>${esc(r.name)}</strong></td>
+                    <td><strong>${esc(r.title || r.name)}</strong></td>
                     <td><span class="badge badge-${r.category?.toLowerCase() || 'default'}">${esc(r.category || 'General')}</span></td>
-                    <td><span class="severity severity-${r.severity || 'medium'}">${esc(r.severity || 'Medium')}</span></td>
-                    <td>${r.probability || '-'}%</td>
+                    <td><span class="severity severity-${r.severity || r.impact || 'medium'}">${esc(r.severity || r.impact || 'Medium')}</span></td>
+                    <td>${r.probability || '-'}</td>
                     <td>${esc(r.mitigation || 'None')}</td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')">🗑️</button>
+                      <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyRisk('${r.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `).join('') || '<tr><td colspan="6" class="empty-state">No risks identified yet</td></tr>'}
@@ -3016,14 +3397,17 @@
       const tbody = gid('risksTable');
       tbody.innerHTML = filtered.map(r => `
         <tr>
-          <td><strong>${esc(r.name)}</strong></td>
+          <td><strong>${esc(r.title || r.name)}</strong></td>
           <td><span class="badge badge-${r.category?.toLowerCase() || 'default'}">${esc(r.category || 'General')}</span></td>
-          <td><span class="severity severity-${r.severity || 'medium'}">${esc(r.severity || 'Medium')}</span></td>
-          <td>${r.probability || '-'}%</td>
+          <td><span class="severity severity-${r.severity || r.impact || 'medium'}">${esc(r.severity || r.impact || 'Medium')}</span></td>
+          <td>${r.probability || '-'}</td>
           <td>${esc(r.mitigation || 'None')}</td>
           <td>
-            <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')">✏️</button>
-            <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')">🗑️</button>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-ghost" onclick="copyRisk('${r.id}')" title="Copy">📋</button>
+              <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')" title="Edit">✏️</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')" title="Delete">🗑️</button>
+            </div>
           </td>
         </tr>
       `).join('') || '<tr><td colspan="6" class="empty-state">No risks found</td></tr>';
@@ -3413,16 +3797,13 @@
           participant: hostParticipant.name,
           timestamp: new Date().toISOString()
         });
-
-        // Save participant to Supabase
-        await saveMeetingParticipant(hostParticipant);
       }
 
       // Initialize Category 3 features
       initMeetingFeatures();
 
-      // Initialize PeerJS for WebRTC with retry
-      await initPeerJSWithRetry();
+      // Initialize PeerJS for WebRTC
+      initPeerJS();
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -3440,12 +3821,6 @@
         // Send join signal
         await sendSignalingMessage('join', { peer_id: myPeerId });
 
-        // Update meeting as active in Supabase
-        await updateMeetingStatus(currentMeetingId, { is_active: true, peer_id: myPeerId });
-
-        // Subscribe to meeting messages
-        subscribeToMeetingMessages(currentMeetingId);
-
         renderParticipants();
         renderActivityLog();
         toast(`Video meeting started! 📹 (ID: ${currentMeetingId})`, 'success');
@@ -3455,143 +3830,7 @@
       }
     }
 
-    // Save meeting participant to Supabase
-    async function saveMeetingParticipant(participant) {
-      if (!AppState.currentUser || !currentMeetingId) return;
-
-      try {
-        // Find meeting in Supabase by meeting code
-        const { data: meetingData, error: meetingError } = await supabaseClient
-          .from('meetings')
-          .select('id')
-          .eq('id', currentMeetingId)
-          .single();
-
-        if (meetingError || !meetingData) {
-          console.warn('Meeting not found in Supabase, skipping participant save');
-          return;
-        }
-
-        const participantData = {
-          meeting_id: meetingData.id,
-          user_id: participant.id,
-          name: participant.name,
-          email: participant.email,
-          peer_id: myPeerId,
-          is_host: participant.isHost,
-          is_muted: participant.isMuted,
-          is_video_off: participant.isVideoOff,
-          joined_at: participant.joinedAt
-        };
-
-        const { error } = await supabaseClient
-          .from('meeting_participants')
-          .upsert(participantData);
-
-        if (error) {
-          console.error('Error saving meeting participant:', error);
-        } else {
-          console.log('✅ Meeting participant saved to Supabase');
-        }
-      } catch (error) {
-        console.error('Error saving meeting participant:', error);
-      }
-    }
-
-    // Update meeting status in Supabase
-    async function updateMeetingStatus(meetingId, updates) {
-      try {
-        const { error } = await supabaseClient
-          .from('meetings')
-          .update(updates)
-          .eq('id', meetingId);
-
-        if (error) {
-          console.error('Error updating meeting status:', error);
-        }
-      } catch (error) {
-        console.error('Error updating meeting status:', error);
-      }
-    }
-
-    // Initialize PeerJS with retry mechanism
-    async function initPeerJSWithRetry(maxRetries = 3) {
-      let retries = 0;
-
-      while (retries < maxRetries) {
-        try {
-          if (peer && !peer.destroyed) {
-            return; // Already initialized
-          }
-
-          peer = new Peer(null, {
-            debug: 2,
-            config: {
-              iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-              ]
-            }
-          });
-
-          await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-              reject(new Error('PeerJS connection timeout'));
-            }, 10000);
-
-            peer.on('open', (id) => {
-              myPeerId = id;
-              clearTimeout(timeout);
-              console.log('✅ PeerJS connected with ID:', id);
-              subscribeToMeetingChannel();
-              resolve();
-            });
-
-            peer.on('error', (err) => {
-              clearTimeout(timeout);
-              reject(err);
-            });
-          });
-
-          return; // Success
-        } catch (error) {
-          retries++;
-          console.warn(`PeerJS connection attempt ${retries}/${maxRetries} failed:`, error);
-
-          if (retries >= maxRetries) {
-            toast('⚠️ Video bağlantısı kurulamadı. Lütfen tekrar deneyin.', 'warn');
-            console.error('PeerJS connection failed after all retries');
-            return;
-          }
-
-          await new Promise(r => setTimeout(r, 2000 * retries)); // Exponential backoff
-        }
-      }
-    }
-
-    async function endVideoMeeting() {
-      // Update meeting status in Supabase before closing
-      if (currentMeetingId) {
-        try {
-          // Update meeting as inactive
-          await updateMeetingStatus(currentMeetingId, { is_active: false });
-
-          // Update participant left time
-          await supabaseClient
-            .from('meeting_participants')
-            .update({ left_at: new Date().toISOString() })
-            .eq('meeting_id', currentMeetingId)
-            .eq('user_id', AppState.currentUser?.id);
-
-          // Unsubscribe from meeting messages
-          unsubscribeFromMeetingMessages();
-
-          console.log('✅ Meeting ended and status updated in Supabase');
-        } catch (error) {
-          console.error('Error updating meeting end status:', error);
-        }
-      }
-
+    function endVideoMeeting() {
       // Send leave signal
       sendSignalingMessage('leave', { peer_id: myPeerId });
 
@@ -3810,58 +4049,33 @@
         return;
       }
 
-      // Save to local state
       if (!AppState.meetingNotes) {
         AppState.meetingNotes = [];
       }
 
-      AppState.meetingNotes.unshift({
+      const newNote = {
         id: Date.now().toString(),
         content: notes,
         date: new Date().toISOString(),
-        meetingId: currentMeetingId || 'general'
-      });
+        meetingId: AppState.currentMeetingId || 'general'
+      };
 
-      save();
+      AppState.meetingNotes.unshift(newNote);
+      
+      // Save meeting notes to Supabase if in a meeting
+      if (AppState.currentMeetingId) {
+        const meeting = AppState.meetings.find(m => m.id === AppState.currentMeetingId);
+        if (meeting) {
+          meeting.meeting_notes = notes;
+          meeting.updatedAt = Date.now();
+          await saveToSupabase('meetings', meeting);
+        }
+      }
+      
+      await save();
+      
       gid('meetingNotes').value = '';
       toast('Toplantı notları kaydedildi! 💾', 'success');
-
-      // Save to Supabase if in an active meeting
-      if (currentMeetingId && AppState.currentUser) {
-        await saveMeetingNotesToSupabase(notes);
-      }
-    }
-
-    // Save meeting notes to Supabase
-    async function saveMeetingNotesToSupabase(notes) {
-      try {
-        const { data: meetingData, error: meetingError } = await supabaseClient
-          .from('meetings')
-          .select('id')
-          .eq('id', currentMeetingId)
-          .single();
-
-        if (meetingError || !meetingData) {
-          console.warn('Meeting not found in Supabase, notes not saved');
-          return;
-        }
-
-        const { error } = await supabaseClient
-          .from('meetings')
-          .update({
-            meeting_notes: notes,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', meetingData.id);
-
-        if (error) {
-          console.error('Error saving meeting notes to Supabase:', error);
-        } else {
-          console.log('✅ Meeting notes saved to Supabase');
-        }
-      } catch (error) {
-        console.error('Error saving meeting notes:', error);
-      }
     }
 
     async function transcribeMeetingAudio() {
@@ -3908,90 +4122,8 @@
     // MEETING CHAT
     // ═══════════════════════════════════════════════════════════════
     let meetingChatMessages = [];
-    let meetingSubscription = null;
-    let meetingMessagesSubscription = null;
 
-    // Subscribe to meeting messages from Supabase
-    function subscribeToMeetingMessages(meetingId) {
-      if (!meetingId || !AppState.currentUser) return;
-
-      // First load existing messages
-      loadMeetingMessages(meetingId);
-
-      // Subscribe to new messages
-      meetingMessagesSubscription = supabaseClient
-        .channel(`meeting-messages-${meetingId}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'meeting_messages',
-          filter: `meeting_id=eq.${meetingId}`
-        }, (payload) => {
-          const newMessage = payload.new;
-          // Don't add if it's from current user (already added locally)
-          if (newMessage.sender_id !== AppState.currentUser.id) {
-            const chatMessage = {
-              id: newMessage.id,
-              user: newMessage.sender_name,
-              message: newMessage.message,
-              time: new Date(newMessage.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
-              isLocal: false
-            };
-            meetingChatMessages.push(chatMessage);
-            renderMeetingChat();
-            // Scroll to bottom
-            const chatContainer = gid('meetingChatMessages');
-            if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
-          }
-        })
-        .subscribe();
-
-      console.log('✅ Subscribed to meeting messages:', meetingId);
-    }
-
-    // Unsubscribe from meeting messages
-    function unsubscribeFromMeetingMessages() {
-      if (meetingMessagesSubscription) {
-        meetingMessagesSubscription.unsubscribe();
-        meetingMessagesSubscription = null;
-        console.log('✅ Unsubscribed from meeting messages');
-      }
-    }
-
-    // Load existing meeting messages from Supabase
-    async function loadMeetingMessages(meetingId) {
-      try {
-        const { data: messages, error } = await supabaseClient
-          .from('meeting_messages')
-          .select('*')
-          .eq('meeting_id', meetingId)
-          .order('created_at', { ascending: true });
-
-        if (error) {
-          console.error('Error loading meeting messages:', error);
-          return;
-        }
-
-        if (messages && messages.length > 0) {
-          meetingChatMessages = messages.map(msg => ({
-            id: msg.id,
-            user: msg.sender_name,
-            message: msg.message,
-            time: new Date(msg.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
-            isLocal: msg.sender_id === AppState.currentUser?.id
-          }));
-          renderMeetingChat();
-          // Scroll to bottom
-          const chatContainer = gid('meetingChatMessages');
-          if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-      } catch (error) {
-        console.error('Error loading meeting messages:', error);
-      }
-    }
-
-    // Send chat message to Supabase
-    async function sendMeetingChatMessage() {
+    function sendMeetingChatMessage() {
       const input = gid('meetingChatInput');
       const message = input.value.trim();
       if (!message) return;
@@ -4014,46 +4146,6 @@
       // Scroll to bottom
       const chatContainer = gid('meetingChatMessages');
       chatContainer.scrollTop = chatContainer.scrollHeight;
-
-      // Save to Supabase
-      await saveMeetingMessage(message, userName);
-    }
-
-    // Save message to Supabase
-    async function saveMeetingMessage(message, senderName) {
-      if (!currentMeetingId || !AppState.currentUser) return;
-
-      try {
-        // Find the actual meeting UUID from Supabase
-        const { data: meetingData, error: meetingError } = await supabaseClient
-          .from('meetings')
-          .select('id').eq('id', currentMeetingId).single();
-
-        if (meetingError || !meetingData) {
-          console.warn('Meeting not found in Supabase, message not saved');
-          return;
-        }
-
-        const messageData = {
-          meeting_id: meetingData.id,
-          sender_id: AppState.currentUser.id,
-          sender_name: senderName,
-          message: message,
-          message_type: 'text'
-        };
-
-        const { error } = await supabaseClient
-          .from('meeting_messages')
-          .insert(messageData);
-
-        if (error) {
-          console.error('Error saving meeting message:', error);
-        } else {
-          console.log('✅ Meeting message saved to Supabase');
-        }
-      } catch (error) {
-        console.error('Error saving meeting message:', error);
-      }
     }
 
     function renderMeetingChat() {
@@ -4115,7 +4207,7 @@
 
     // Category 3: Polls
     let meetingPolls = [];
-    async function createPoll() {
+    function createPoll() {
       const question = gid('pollQuestion').value.trim();
       const options = gid('pollOptions').value.split(',').map(o => o.trim()).filter(o => o);
 
@@ -4124,9 +4216,8 @@
         return;
       }
 
-      const pollId = Date.now().toString();
       const poll = {
-        id: pollId,
+        id: Date.now(),
         question,
         options: options.map(opt => ({ text: opt, votes: 0 })),
         createdAt: new Date().toISOString()
@@ -4137,49 +4228,6 @@
       gid('pollQuestion').value = '';
       gid('pollOptions').value = '';
       toast('Anket oluşturuldu! 📊', 'success');
-
-      // Save poll to Supabase
-      await saveMeetingPoll(pollId, question, options);
-    }
-
-    // Save poll to Supabase
-    async function saveMeetingPoll(pollId, question, options) {
-      if (!currentMeetingId || !AppState.currentUser) return;
-
-      try {
-        // Find the actual meeting UUID from Supabase
-        const { data: meetingData, error: meetingError } = await supabaseClient
-          .from('meetings')
-          .select('id')
-          .eq('id', currentMeetingId)
-          .single();
-
-        if (meetingError || !meetingData) {
-          console.warn('Meeting not found in Supabase, poll not saved');
-          return;
-        }
-
-        const pollData = {
-          meeting_id: meetingData.id,
-          question: question,
-          options: JSON.stringify(options),
-          results: JSON.stringify(options.reduce((acc, opt) => ({ ...acc, [opt]: 0 }), {})),
-          created_by: AppState.currentUser.id,
-          is_active: true
-        };
-
-        const { error } = await supabaseClient
-          .from('meeting_polls')
-          .insert(pollData);
-
-        if (error) {
-          console.error('Error saving meeting poll:', error);
-        } else {
-          console.log('✅ Meeting poll saved to Supabase');
-        }
-      } catch (error) {
-        console.error('Error saving meeting poll:', error);
-      }
     }
 
     function renderPolls() {
@@ -4206,7 +4254,7 @@
       `).join('');
     }
 
-    async function votePoll(pollId, optionText) {
+    function votePoll(pollId, optionText) {
       const poll = meetingPolls.find(p => p.id === pollId);
       if (poll) {
         const option = poll.options.find(o => o.text === optionText);
@@ -4214,49 +4262,7 @@
           option.votes++;
           renderPolls();
           toast('Oyunuz kaydedildi! 🗳️', 'success');
-
-          // Save vote to Supabase
-          await saveMeetingVote(pollId, optionText);
         }
-      }
-    }
-
-    // Save vote to Supabase
-    async function saveMeetingVote(pollId, optionText) {
-      if (!AppState.currentUser) return;
-
-      try {
-        // Find the poll in Supabase (pollId is timestamp, need to find by question)
-        const poll = meetingPolls.find(p => p.id === pollId);
-        if (!poll) return;
-
-        const { data: pollData, error: pollError } = await supabaseClient
-          .from('meeting_polls')
-          .select('id, results')
-          .eq('question', poll.question)
-          .single();
-
-        if (pollError || !pollData) {
-          console.warn('Poll not found in Supabase');
-          return;
-        }
-
-        // Update results
-        const results = JSON.parse(pollData.results || '{}');
-        results[optionText] = (results[optionText] || 0) + 1;
-
-        const { error: updateError } = await supabaseClient
-          .from('meeting_polls')
-          .update({ results: JSON.stringify(results) })
-          .eq('id', pollData.id);
-
-        if (updateError) {
-          console.error('Error updating poll results:', updateError);
-        } else {
-          console.log('✅ Poll vote saved to Supabase');
-        }
-      } catch (error) {
-        console.error('Error saving poll vote:', error);
       }
     }
 
@@ -4300,50 +4306,6 @@
       const canvas = gid('whiteboardCanvas');
       if (canvas && whiteboardCtx) {
         whiteboardCtx.clearRect(0, 0, canvas.width, canvas.height);
-        toast('Beyaz tahta temizlendi', 'info');
-      }
-    }
-
-    // Save whiteboard to Supabase
-    async function saveWhiteboardToSupabase() {
-      if (!currentMeetingId || !AppState.currentUser) return;
-
-      const canvas = gid('whiteboardCanvas');
-      if (!canvas) return;
-
-      try {
-        // Convert canvas to base64
-        const canvasData = canvas.toDataURL('image/png');
-
-        const { data: meetingData, error: meetingError } = await supabaseClient
-          .from('meetings')
-          .select('id')
-          .eq('id', currentMeetingId)
-          .single();
-
-        if (meetingError || !meetingData) {
-          console.warn('Meeting not found in Supabase, whiteboard not saved');
-          return;
-        }
-
-        const whiteboardData = {
-          meeting_id: meetingData.id,
-          canvas_data: canvasData,
-          created_by: AppState.currentUser.id
-        };
-
-        const { error } = await supabaseClient
-          .from('meeting_whiteboards')
-          .insert(whiteboardData);
-
-        if (error) {
-          console.error('Error saving whiteboard:', error);
-        } else {
-          console.log('✅ Whiteboard snapshot saved to Supabase');
-          toast('Beyaz tahta kaydedildi! 🎨', 'success');
-        }
-      } catch (error) {
-        console.error('Error saving whiteboard:', error);
       }
     }
 
@@ -4496,7 +4458,10 @@
             } else if (event.error === 'no-speech') {
               console.warn('Ses algılanamadı, lütfen tekrar konuşun');
             } else if (event.error === 'network') {
-              toast('Ses tanıma servisi hatası (internet bağlantısı gerekli)', 'error');
+              // Network error: don't stop recording, just warn and continue
+              console.warn('Ses tanıma servisi geçici olarak kullanılamıyor. Ses kaydı devam ediyor, ancak transkript yapılamayacak.');
+              toast('Ses tanıma servisi geçici olarak kullanılamıyor. Ses kaydı devam ediyor.', 'warn');
+              // Don't stop recording - MediaRecorder will still capture audio
             } else if (event.error === 'aborted') {
               console.warn('Ses tanıma durduruldu');
               if (mainVoiceRecording) {
@@ -4733,8 +4698,6 @@
 
       // Upload audio blob to Supabase Storage
       let audioUrl = null;
-      let uploadSuccess = false;
-
       if (mainVoiceAudioBlob && AppState.currentUser) {
         try {
           const fileName = `voice-notes/${AppState.currentUser.id}/${note.id}.webm`;
@@ -4751,15 +4714,9 @@
               .from('voice-recordings')
               .getPublicUrl(fileName);
             audioUrl = publicUrl;
-            uploadSuccess = true;
-            console.log('✅ Audio uploaded to Supabase Storage:', publicUrl);
-          } else {
-            console.error('❌ Error uploading audio:', uploadError);
-            toast('⚠️ Ses dosyası yüklenemedi, sadece transkript kaydedildi', 'warn');
           }
         } catch (error) {
           console.error('Error uploading audio to Supabase Storage:', error);
-          toast('⚠️ Ses dosyası yüklenemedi, sadece transkript kaydedildi', 'warn');
         }
       }
 
@@ -4774,36 +4731,23 @@
         createdAt: note.createdAt
       };
 
-      try {
-        const result = await saveToSupabase('voice_notes', noteForStorage);
+      await saveToSupabase('voice_notes', noteForStorage);
 
-        // Keep localStorage as fallback (without audio blob)
-        const noteForLocal = {
-          id: note.id,
-          transcript: note.transcript,
-          analysis: note.analysis,
-          provider: note.provider,
-          duration: note.duration,
-          audio_url: audioUrl,
-          createdAt: note.createdAt
-        };
+      // Keep localStorage as fallback (without audio blob)
+      const noteForLocal = {
+        id: note.id,
+        transcript: note.transcript,
+        analysis: note.analysis,
+        provider: note.provider,
+        duration: note.duration,
+        audio_url: audioUrl,
+        createdAt: note.createdAt
+      };
 
-        AppState.voiceNotes.unshift(noteForLocal);
-        save();
+      AppState.voiceNotes.unshift(noteForLocal);
+      save();
 
-        if (result.success || uploadSuccess) {
-          toast('✅ Sesli not kaydedildi!', 'success');
-        } else {
-          toast('⚠️ Sesli not yerel depoda saklandı', 'warn');
-        }
-
-        renderSavedVoiceNotes();
-      } catch (error) {
-        console.error('Error saving voice note:', error);
-        toast('❌ Sesli not kaydedilirken hata oluştu', 'error');
-        // Still save to localStorage
-        save();
-      }
+      renderSavedVoiceNotes();
     }
 
     function renderSavedVoiceNotes() {
@@ -5111,8 +5055,22 @@
             <div class="dashboard-card">
               <div class="stat-value">${Math.round((AppState.tasks.filter(t => t.status === 'done').length / (AppState.tasks.length || 1)) * 100)}%</div>
               <div class="stat-label">Completion Rate</div>
+</div>
             </div>
-      </div>
+            <div class="dashboard-card">
+              <div class="card-title">💾 Yedekleme</div>
+              <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-primary" onclick="exportData()">
+                  📤 Verileri Dışa Aktar
+                </button>
+                <button class="btn btn-teal" onclick="triggerImport()">
+                  📥 Verileri İçe Aktar
+                </button>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+                  Yedekleme dosyası JSON formatındadır. İçe aktarma mevcut verilerin üzerine yazar.
+                </p>
+              </div>
+            </div>
         `;
       }
     }
@@ -5274,10 +5232,21 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `projex-backup-${Date.now()}.json`;
+      a.download = `projex-ai-backup-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       toast('Data exported successfully!', 'success');
+    }
+
+    function handleImportFile(input) {
+      if (input.files && input.files[0]) {
+        importData(input.files[0]);
+        input.value = ''; // Reset for next import
+      }
+    }
+
+    function triggerImport() {
+      gid('importFileInput').click();
     }
 
     function clearData() {
@@ -5291,24 +5260,33 @@
     // MODALS
     // ═══════════════════════════════════════════════════════════════
     function openModal(id) {
-      gid(id).classList.add('active');
+      // Bug Fix: Safe element access
+      const modal = gid(id);
+      if (!modal) {
+        console.error(`Modal not found: ${id}`);
+        return;
+      }
+      modal.classList.add('active');
 
       if (id === 'newTaskModal') {
-        gid('taskAssignee').innerHTML = AppState.team.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+        // Bug Fix: Ensure team array exists
+        const team = ensureArray(AppState, 'team');
+        const assigneeEl = gid('taskAssignee');
+        if (assigneeEl) {
+          assigneeEl.innerHTML = team.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join('');
+        }
       }
       if (id === 'newMeetingModal') {
-        gid('meetingDate').value = todayStr();
+        setValue('meetingDate', todayStr());
         toggleRecurrenceEndDate();
       }
       if (id === 'pomodoroModal') {
-        gid('pomoTaskSelect').innerHTML = '<option value="">— Select task —</option>' +
-          AppState.tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('');
-      }
-      if (id === 'newNoteModal') {
-        // If not in edit mode (no editingNoteId), hide delete button
-        if (!window.editingNoteId) {
-          const deleteBtn = gid('deleteNoteBtn');
-          if (deleteBtn) deleteBtn.style.display = 'none';
+        // Bug Fix: Ensure tasks array exists
+        const tasks = ensureArray(AppState, 'tasks');
+        const pomoTaskSelect = gid('pomoTaskSelect');
+        if (pomoTaskSelect) {
+          pomoTaskSelect.innerHTML = '<option value="">— Select task —</option>' +
+            tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('');
         }
       }
     }
@@ -5625,7 +5603,7 @@
     // ═══════════════════════════════════════════════════════════════
     // SOCIAL FEED
     // ═══════════════════════════════════════════════════════════════
-    function renderSocialFeed() {
+function renderSocialFeed() {
       const feed = gid('socialFeed');
 
       if (AppState.posts.length === 0) {
@@ -5636,9 +5614,54 @@
             <div class="empty-state-desc">Be the first to share with your team!</div>
             <button class="btn btn-primary" style="margin-top: 16px;" onclick="openModal('newPostModal')">Create Post</button>
           </div>
-      `;
+        `;
         return;
       }
+
+      feed.innerHTML = AppState.posts.map(post => `
+        <div class="social-post">
+          <div class="social-post-header">
+            <div class="social-post-avatar">${post.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</div>
+            <div class="social-post-meta">
+              <div class="social-post-author">${esc(post.author)}</div>
+              <div class="social-post-time">${fmtDate(post.createdAt)}</div>
+            </div>
+            <div style="margin-left: auto; display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-ghost" onclick="copyPost('${post.id}')" title="Copy">📋</button>
+              <button class="btn btn-sm btn-ghost" onclick="sharePost('${post.id}')" title="Share">🔗</button>
+            </div>
+          </div>
+          <div class="social-post-content">${esc(post.content)}</div>
+          ${post.image ? `<img src="${post.image}" style="max-width: 100%; border-radius: var(--r); margin-top: 8px;" />` : ''}
+          <div class="social-post-actions">
+            <div class="social-post-action" onclick="likePost('${post.id}')">
+              ❤️ ${post.likes} Likes
+            </div>
+            <div class="social-post-action" onclick="toggleComments('${post.id}')">
+              💬 ${post.comments} Comments
+            </div>
+            <div class="social-post-action" onclick="sharePost('${post.id}')">
+              🔗 Share
+            </div>
+          </div>
+          <div id="comments-${post.id}" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            ${post.commentsList && post.commentsList.length ? post.commentsList.map(c => `
+              <div style="display: flex; gap: 8px; margin-bottom: 8px; padding: 8px; background: var(--surface); border-radius: var(--r-sm);">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0;">
+                  ${c.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div style="font-size: 0.75rem; font-weight: 600;">${esc(c.author)}</div>
+                  <div style="font-size: 0.8rem; color: var(--text);">${esc(c.content)}</div>
+                  <div style="font-size: 0.65rem; color: var(--text-muted);">${fmtDate(c.createdAt)}</div>
+                </div>
+              </div>
+            `).join('') : '<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No comments yet. Be the first!</div>'}
+            <button class="btn btn-sm btn-ghost" style="width: 100%; margin-top: 8px;" onclick="commentPost('${post.id}')">+ Add Comment</button>
+          </div>
+        </div>
+      `).join('');
+    }
 
       feed.innerHTML = AppState.posts.map(post => `
         <div class="social-post">
@@ -5677,7 +5700,7 @@
             `).join('') : '<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No comments yet. Be the first!</div>'}
             <button class="btn btn-sm btn-ghost" style="width: 100%; margin-top: 8px;" onclick="commentPost('${post.id}')">+ Add Comment</button>
           </div>
-        </div >
+        </div>
       `).join('');
     }
 
@@ -5689,7 +5712,7 @@
       }
     }
 
-    function createPost() {
+    async function createPost() {
       const content = gid('postContent').value.trim();
       if (!content) {
         toast('Please write something to post', 'error');
@@ -5707,23 +5730,60 @@
       };
 
       AppState.posts.unshift(post);
-      save();
+      
+      // Save to Supabase for permanent storage
+      await saveToSupabase('posts', post);
+      await save();
+      
       closeModal('newPostModal');
       gid('postContent').value = '';
       renderSocialFeed();
       toast('Post created successfully! 🎉', 'success');
+      addActivity(`New post: ${content.substring(0, 30)}...`, '📝');
     }
 
-    function likePost(id) {
+    async function likePost(id) {
       const post = AppState.posts.find(p => p.id === id);
       if (post) {
         post.likes++;
-        save();
+        await saveToSupabase('posts', post);
+        await save();
         renderSocialFeed();
       }
     }
 
-    function commentPost(id) {
+    async function editPost(id) {
+      const post = AppState.posts.find(p => p.id === id);
+      if (!post) return;
+      
+      const newContent = prompt('Gönderiyi düzenle:', post.content);
+      if (!newContent || newContent.trim() === post.content) return;
+      
+      post.content = newContent.trim();
+      post.updatedAt = Date.now();
+      
+      await saveToSupabase('posts', post);
+      await save();
+      renderSocialFeed();
+      toast('Gönderi güncellendi', 'success');
+    }
+
+    async function deletePost(id) {
+      if (!confirm('Bu gönderiyi silmek istediğinize emin misiniz?')) return;
+      
+      try {
+        await deleteFromSupabase('posts', id);
+        AppState.posts = AppState.posts.filter(p => p.id !== id);
+        await save();
+        renderSocialFeed();
+        toast('Gönderi silindi', 'success');
+      } catch (error) {
+        console.error('Delete post error:', error);
+        toast('Gönderi silinemedi', 'error');
+      }
+    }
+
+    async function commentPost(id) {
       const post = AppState.posts.find(p => p.id === id);
       if (!post) return;
 
@@ -5739,12 +5799,15 @@
         createdAt: Date.now()
       });
       post.comments++;
-      save();
+      
+      await saveToSupabase('posts', post);
+      await save();
+      
       renderSocialFeed();
       toast('Comment added! 💬', 'success');
     }
 
-    function sharePost(id) {
+    async function sharePost(id) {
       const post = AppState.posts.find(p => p.id === id);
       if (!post) return;
 
@@ -5773,18 +5836,114 @@
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        toast('Copied to clipboard! �', 'success');
+        toast('Copied to clipboard! 📋', 'success');
       });
     }
 
-    // ═══════════════════════════════════════════════════════════════
+    // COPY FONKSİYONLARI - Tüm öğeleri panoya kopyala
+    function copyNote(id) {
+      const note = AppState.notes.find(n => n.id === id);
+      if (!note) return;
+      const text = `📝 ${note.title}\n\n${note.content}\n\nTags: ${(note.tags || []).join(', ')}`;
+      copyToClipboard(text);
+      addActivity(`Copied note: ${note.title}`, '📋');
+    }
+
+    function copyPost(id) {
+      const post = AppState.posts.find(p => p.id === id);
+      if (!post) return;
+      const text = `@${post.author}: ${post.content}`;
+      copyToClipboard(text);
+      addActivity(`Copied post by ${post.author}`, '📋');
+    }
+
+    function copyTask(id) {
+      const task = AppState.tasks.find(t => t.id === id);
+      if (!task) return;
+      const text = `✅ ${task.title}\n\nPriority: ${task.priority}\nStatus: ${task.status}\n${task.description || ''}`;
+      copyToClipboard(text);
+      addActivity(`Copied task: ${task.title}`, '📋');
+    }
+
+    function copyProject(id) {
+      const project = AppState.projects.find(p => p.id === id);
+      if (!project) return;
+      const text = `📊 ${project.title}\n\nStatus: ${project.status}\n${project.description || ''}`;
+      copyToClipboard(text);
+      addActivity(`Copied project: ${project.title}`, '📋');
+    }
+
+    function copyMeeting(id) {
+      const meeting = AppState.meetings.find(m => m.id === id);
+      if (!meeting) return;
+      const text = `📅 ${meeting.title}\nDate: ${meeting.date} ${meeting.time}\n${meeting.description || ''}`;
+      copyToClipboard(text);
+      addActivity(`Copied meeting: ${meeting.title}`, '📋');
+    }
+
+    function copyTeamMember(id) {
+      const member = AppState.team.find(t => t.id === id);
+      if (!member) return;
+      const text = `👥 ${member.name}\nRole: ${member.role}\nDept: ${member.dept}\nEmail: ${member.email}`;
+      copyToClipboard(text);
+      addActivity(`Copied team member: ${member.name}`, '📋');
+    }
+
+    function copyResource(id) {
+      const resource = AppState.resources.find(r => r.id === id);
+      if (!resource) return;
+      const text = `⚡ ${resource.name}\nType: ${resource.type}\nURL: ${resource.url}\n${resource.description || ''}`;
+      copyToClipboard(text);
+      addActivity(`Copied resource: ${resource.name}`, '📋');
+    }
+
+    function copyBudget(id) {
+      const budget = AppState.budget.find(b => b.id === id);
+      if (!budget) return;
+      const text = `💰 ${budget.item}\nCategory: ${budget.category}\nBudget: $${budget.amount}\nSpent: $${budget.spent}`;
+      copyToClipboard(text);
+      addActivity(`Copied budget: ${budget.item}`, '📋');
+    }
+
+    function copyRisk(id) {
+      const risk = AppState.risks.find(r => r.id === id);
+      if (!risk) return;
+      const text = `⚠️ ${risk.title}\nProbability: ${risk.probability}\nImpact: ${risk.impact}\nMitigation: ${risk.mitigation || 'N/A'}`;
+      copyToClipboard(text);
+      addActivity(`Copied risk: ${risk.title}`, '📋');
+    }
+
+    // ════════════════════════════���══════════════════════════════════
     // DASHBOARD RENDER
     // ═══════════════════════════════════════════════════════════════
+    async function fetchUserCount() {
+      try {
+        const { count, error } = await supabaseClient
+          .from('user_profiles')
+          .select('*', { count: 'exact', head: true });
+
+        if (error) throw error;
+        gid('dashUserCount').textContent = count ? count.toLocaleString() : '0';
+      } catch (error) {
+        console.error('Failed to fetch user count:', error);
+        gid('dashUserCount').textContent = '-';
+      }
+    }
+
     function renderDashboard() {
       gid('dashProjectCount').textContent = AppState.projects.filter(p => p.status === 'active').length;
       gid('dashTaskCount').textContent = AppState.tasks.filter(t => t.status === 'done').length;
       gid('dashMeetingCount').textContent = AppState.meetings.filter(m => m.date >= todayStr()).length;
       gid('dashTeamCount').textContent = AppState.team.length;
+
+      // Update visitor count (stored in localStorage)
+      let visitorCount = parseInt(localStorage.getItem('visitorCount') || '0');
+      visitorCount++;
+      localStorage.setItem('visitorCount', visitorCount);
+      gid('dashVisitorCount').textContent = visitorCount.toLocaleString();
+
+      // Update total users count from Supabase
+      fetchUserCount();
 
       // Priority tasks
       const priorityTasks = AppState.tasks
@@ -5849,245 +6008,200 @@
       const title = gid('taskTitle').value.trim();
       if (!title) { toast('Task title is required', 'error'); return; }
 
-      try {
-        // Check if editing existing task
-        if (window.editingTaskId) {
-          const t = AppState.tasks.find(task => task.id === window.editingTaskId);
-          if (t) {
-            t.title = title;
-            t.description = gid('taskDesc').value.trim();
-            t.priority = gid('taskPriority').value;
-            t.status = gid('taskStatus').value;
-            t.assignee = gid('taskAssignee').value;
-            t.date = gid('taskDueDate').value;
-            t.updatedAt = Date.now();
+      // Check if editing existing task
+      if (window.editingTaskId) {
+        const t = AppState.tasks.find(task => task.id === window.editingTaskId);
+        if (t) {
+          t.title = title;
+          t.description = gid('taskDesc').value.trim();
+          t.priority = gid('taskPriority').value;
+          t.status = gid('taskStatus').value;
+          t.assignee = gid('taskAssignee').value;
+          t.date = gid('taskDueDate').value;
+          t.updatedAt = Date.now();
 
-            // Save to Supabase with error handling
-            const result = await saveToSupabase('tasks', t);
-            save(); // Keep localStorage as fallback
-
-            if (!result.success && !result.offline) {
-              toast('⚠️ Görev Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
-            } else {
-              toast('Task updated! ✅', 'success');
-              addActivity(`Updated task: ${title}`, '✅');
-            }
-          }
-          window.editingTaskId = null;
-        } else {
-          // Create new task
-          const newTask = {
-            id: genId(),
-            title,
-            description: gid('taskDesc').value.trim(),
-            priority: gid('taskPriority').value,
-            status: gid('taskStatus').value,
-            assignee: gid('taskAssignee').value,
-            date: gid('taskDueDate').value,
-            createdAt: Date.now(),
-            updatedAt: Date.now()
-          };
-          AppState.tasks.push(newTask);
-
-          // Save to Supabase with error handling
-          const result = await saveToSupabase('tasks', newTask);
+          // Save to Supabase
+          await saveToSupabase('tasks', t);
           save(); // Keep localStorage as fallback
 
-          if (!result.success && !result.offline) {
-            toast('⚠️ Görev Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
-          } else {
-            toast('Task created! ✅', 'success');
-            addActivity(`Created task: ${title}`, '✅');
-          }
+          toast('Task updated! ✅', 'success');
+          addActivity(`Updated task: ${title}`, '✅');
         }
+        window.editingTaskId = null;
+      } else {
+        // Create new task
+        const newTask = {
+          id: genId(),
+          title,
+          description: gid('taskDesc').value.trim(),
+          priority: gid('taskPriority').value,
+          status: gid('taskStatus').value,
+          assignee: gid('taskAssignee').value,
+          date: gid('taskDueDate').value,
+          createdAt: Date.now()
+        };
+        AppState.tasks.push(newTask);
 
-        closeModal('newTaskModal');
-        renderAll();
-      } catch (error) {
-        console.error('Error saving task:', error);
-        toast('❌ Görev kaydedilirken hata oluştu', 'error');
-        save(); // Still save to localStorage
+        // Save to Supabase
+        await saveToSupabase('tasks', newTask);
+        save(); // Keep localStorage as fallback
+
+        toast('Task created! ✅', 'success');
+        addActivity(`Created task: ${title}`, '✅');
       }
+
+      closeModal('newTaskModal');
+      renderAll();
     }
 
     async function saveMeeting() {
-      try {
-        const title = gid('meetingTitle').value.trim();
-        if (!title) { toast('Meeting title is required', 'error'); return; }
+      const title = gid('meetingTitle').value.trim();
+      if (!title) { toast('Meeting title is required', 'error'); return; }
 
-        const duration = parseInt(gid('meetingDuration').value) || 60;
-        const recurrence = gid('meetingRecurrence').value;
-        const attendees = gid('meetingAttendees').value.split(',').map(e => e.trim()).filter(e => e);
-        const guestEmail = gid('meetingGuestEmail').value.trim();
-        const role = gid('meetingRole').value;
-        const reminderMinutes = parseInt(gid('meetingReminder').value) || 15;
-        const password = gid('meetingPassword').value.trim();
-        const waitingRoom = gid('meetingWaitingRoom').value === 'true';
-        const encrypted = gid('meetingEncrypted').value === 'true';
-        const joinPermissions = gid('meetingJoinPermissions').value;
-        const templateId = gid('meetingTemplate').value || null;
-        const aiAssistantEnabled = gid('meetingAIAssistant').value === 'true';
-        const virtualBackground = gid('meetingVirtualBackground').value.trim() || null;
+      const duration = parseInt(gid('meetingDuration').value) || 60;
+      const recurrence = gid('meetingRecurrence').value;
+      const attendees = gid('meetingAttendees').value.split(',').map(e => e.trim()).filter(e => e);
+      const guestEmail = gid('meetingGuestEmail').value.trim();
+      const role = gid('meetingRole').value;
+      const reminderMinutes = parseInt(gid('meetingReminder').value) || 15;
+      const password = gid('meetingPassword').value.trim();
+      const waitingRoom = gid('meetingWaitingRoom').value === 'true';
+      const encrypted = gid('meetingEncrypted').value === 'true';
+      const joinPermissions = gid('meetingJoinPermissions').value;
+      const templateId = gid('meetingTemplate').value || null;
+      const aiAssistantEnabled = gid('meetingAIAssistant').value === 'true';
+      const virtualBackground = gid('meetingVirtualBackground').value.trim() || null;
 
-        // Add guest to attendees if provided
-        if (guestEmail && !attendees.includes(guestEmail)) {
-          attendees.push(guestEmail);
-        }
-
-        if (window.editingMeetingId) {
-          // Edit mode
-          const m = AppState.meetings.find(meeting => meeting.id === window.editingMeetingId);
-          if (m) {
-            m.title = title;
-            m.date = gid('meetingDate').value;
-            m.time = gid('meetingTime').value;
-            m.duration = duration;
-            m.duration_preset = duration.toString();
-            m.timezone = gid('meetingTimezone').value;
-            m.recurrence = recurrence;
-            m.recurrence_end_date = gid('meetingRecurrenceEndDate').value || null;
-            m.location = gid('meetingLocation').value;
-            m.meeting_link = gid('meetingLink').value;
-            m.description = gid('meetingDescription').value;
-            m.attendees = attendees;
-            m.role = role;
-            m.reminder_minutes = reminderMinutes;
-            m.password = password || null;
-            m.waiting_room = waitingRoom;
-            m.encrypted = encrypted;
-            m.join_permissions = joinPermissions;
-            m.template_id = templateId;
-            m.ai_assistant_enabled = aiAssistantEnabled;
-            m.virtual_background = virtualBackground;
-            m.updatedAt = Date.now();
-
-            const result = await saveToSupabase('meetings', m);
-            save(); // Always save to localStorage
-
-            if (!result.success && !result.offline) {
-              toast('⚠️ Toplantı Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
-            } else {
-              toast('Meeting updated! ✅', 'success');
-            }
-          }
-          window.editingMeetingId = null;
-        } else {
-          // New meeting
-          const newMeeting = {
-            id: genId(),
-            title,
-            date: gid('meetingDate').value,
-            time: gid('meetingTime').value,
-            duration,
-            duration_preset: duration.toString(),
-            timezone: gid('meetingTimezone').value,
-            recurrence,
-            recurrence_end_date: gid('meetingRecurrenceEndDate').value || null,
-            location: gid('meetingLocation').value,
-            meeting_link: gid('meetingLink').value,
-            description: gid('meetingDescription').value,
-            attendees,
-            role,
-            reminder_minutes: reminderMinutes,
-            password: password || null,
-            waiting_room: waitingRoom,
-            encrypted: encrypted,
-            join_permissions: joinPermissions,
-            template_id: templateId,
-            ai_assistant_enabled: aiAssistantEnabled,
-            virtual_background: virtualBackground,
-            notification_sent: false,
-            late_warning_sent: false,
-            createdAt: Date.now(),
-            updatedAt: Date.now()
-          };
-          AppState.meetings.push(newMeeting);
-
-          const result = await saveToSupabase('meetings', newMeeting);
-          save(); // Always save to localStorage
-
-          if (!result.success && !result.offline) {
-            toast('⚠️ Toplantı Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
-          } else {
-            toast('Meeting scheduled! ✅', 'success');
-            addActivity(`Scheduled meeting: ${title}`, '📅');
-
-            // Simulate invite notification (in production, would send actual emails)
-            if (attendees.length > 0) {
-              toast(`Invites sent to ${attendees.length} participant(s) 📧`, 'info');
-            }
-
-            // Schedule reminder notification
-            if (reminderMinutes > 0) {
-              scheduleMeetingReminder(newMeeting);
-            }
-          }
-        }
-
-        closeModal('newMeetingModal');
-        renderAll();
-      } catch (error) {
-        console.error('Error saving meeting:', error);
-        toast('❌ Toplantı kaydedilirken hata oluştu', 'error');
-        save(); // Still save to localStorage
+      // Add guest to attendees if provided
+      if (guestEmail && !attendees.includes(guestEmail)) {
+        attendees.push(guestEmail);
       }
+
+      if (window.editingMeetingId) {
+        // Edit mode
+        const m = AppState.meetings.find(meeting => meeting.id === window.editingMeetingId);
+        if (m) {
+          m.title = title;
+          m.date = gid('meetingDate').value;
+          m.time = gid('meetingTime').value;
+          m.duration = duration;
+          m.duration_preset = duration.toString();
+          m.timezone = gid('meetingTimezone').value;
+          m.recurrence = recurrence;
+          m.recurrence_end_date = gid('meetingRecurrenceEndDate').value || null;
+          m.location = gid('meetingLocation').value;
+          m.meeting_link = gid('meetingLink').value;
+          m.description = gid('meetingDescription').value;
+          m.attendees = attendees;
+          m.role = role;
+          m.reminder_minutes = reminderMinutes;
+          m.password = password || null;
+          m.waiting_room = waitingRoom;
+          m.encrypted = encrypted;
+          m.join_permissions = joinPermissions;
+          m.template_id = templateId;
+          m.ai_assistant_enabled = aiAssistantEnabled;
+          m.virtual_background = virtualBackground;
+          m.updatedAt = Date.now();
+
+          await saveToSupabase('meetings', m);
+          save();
+
+          toast('Meeting updated! ✅', 'success');
+        }
+        window.editingMeetingId = null;
+      } else {
+        // New meeting
+        const newMeeting = {
+          id: genId(),
+          title,
+          date: gid('meetingDate').value,
+          time: gid('meetingTime').value,
+          duration,
+          duration_preset: duration.toString(),
+          timezone: gid('meetingTimezone').value,
+          recurrence,
+          recurrence_end_date: gid('meetingRecurrenceEndDate').value || null,
+          location: gid('meetingLocation').value,
+          meeting_link: gid('meetingLink').value,
+          description: gid('meetingDescription').value,
+          attendees,
+          role,
+          reminder_minutes: reminderMinutes,
+          password: password || null,
+          waiting_room: waitingRoom,
+          encrypted: encrypted,
+          join_permissions: joinPermissions,
+          template_id: templateId,
+          ai_assistant_enabled: aiAssistantEnabled,
+          virtual_background: virtualBackground,
+          notification_sent: false,
+          late_warning_sent: false,
+          createdAt: Date.now()
+        };
+        AppState.meetings.push(newMeeting);
+
+        await saveToSupabase('meetings', newMeeting);
+        save();
+
+        toast('Meeting scheduled! ✅', 'success');
+        addActivity(`Scheduled meeting: ${title}`, '📅');
+
+        // Simulate invite notification (in production, would send actual emails)
+        if (attendees.length > 0) {
+          toast(`Invites sent to ${attendees.length} participant(s) 📧`, 'info');
+        }
+
+        // Schedule reminder notification
+        if (reminderMinutes > 0) {
+          scheduleMeetingReminder(newMeeting);
+        }
+      }
+
+      closeModal('newMeetingModal');
+      renderAll();
     }
 
     async function saveProject() {
       const title = gid('projectTitle').value.trim();
       if (!title) { toast('Project name is required', 'error'); return; }
 
-      try {
-        // Check if editing existing project
-        if (window.editingProjectId) {
-          const p = AppState.projects.find(project => project.id === window.editingProjectId);
-          if (p) {
-            p.title = title;
-            p.description = gid('projectDesc').value.trim();
-            p.status = gid('projectStatus').value;
-            p.updatedAt = Date.now();
+      // Check if editing existing project
+      if (window.editingProjectId) {
+        const p = AppState.projects.find(project => project.id === window.editingProjectId);
+        if (p) {
+          p.title = title;
+          p.description = gid('projectDesc').value.trim();
+          p.status = gid('projectStatus').value;
+          p.updatedAt = Date.now();
 
-            const result = await saveToSupabase('projects', p);
-            save(); // Always save to localStorage
+          await saveToSupabase('projects', p);
+          save();
 
-            if (!result.success && !result.offline) {
-              toast('⚠️ Proje Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
-            } else {
-              toast('Project updated! ✅', 'success');
-              addActivity(`Updated project: ${title}`, '📊');
-            }
-          }
-          window.editingProjectId = null;
-        } else {
-          const newProject = {
-            id: genId(),
-            title,
-            description: gid('projectDesc').value.trim(),
-            status: gid('projectStatus').value,
-            progress: 0,
-            createdAt: Date.now(),
-            updatedAt: Date.now()
-          };
-          AppState.projects.push(newProject);
-
-          const result = await saveToSupabase('projects', newProject);
-          save(); // Always save to localStorage
-
-          if (!result.success && !result.offline) {
-            toast('⚠️ Proje Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
-          } else {
-            toast('Project created! ✅', 'success');
-            addActivity(`Created project: ${title}`, '📊');
-          }
+          toast('Project updated! ✅', 'success');
+          addActivity(`Updated project: ${title}`, '📊');
         }
+        window.editingProjectId = null;
+      } else {
+        const newProject = {
+          id: genId(),
+          title,
+          description: gid('projectDesc').value.trim(),
+          status: gid('projectStatus').value,
+          progress: 0,
+          createdAt: Date.now()
+        };
+        AppState.projects.push(newProject);
 
-        closeModal('newProjectModal');
-        renderAll();
-      } catch (error) {
-        console.error('Error saving project:', error);
-        toast('❌ Proje kaydedilirken hata oluştu', 'error');
-        save(); // Still save to localStorage
+        await saveToSupabase('projects', newProject);
+        save();
+
+        toast('Project created! ✅', 'success');
+        addActivity(`Created project: ${title}`, '📊');
       }
+
+      closeModal('newProjectModal');
+      renderAll();
     }
 
     function saveTeamMember() {
@@ -6104,12 +6218,17 @@
           member.email = gid('teamEmail').value.trim();
           member.initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
           member.updatedAt = Date.now();
+          
+          saveToSupabase('team', member);
+          save();
+          
+          addActivity(`Updated team member: ${name}`, '👥');
         }
         window.editingTeamMemberId = null;
-        toast('Team member updated!', 'success');
+        toast('Team member updated! ✅', 'success');
       } else {
         // New team member
-        AppState.team.push({
+        const newMember = {
           id: genId(),
           name,
           role: gid('teamRole').value.trim(),
@@ -6117,188 +6236,65 @@
           email: gid('teamEmail').value.trim(),
           initials: name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
           createdAt: Date.now()
-        });
-        toast('Team member added!', 'success');
+        };
+        AppState.team.push(newMember);
+        
+        saveToSupabase('team', newMember);
+        save();
+        
+        toast('Team member added! ✅', 'success');
+        addActivity(`Added team member: ${name}`, '👥');
       }
 
-      save();
       closeModal('newTeamModal');
       renderAll();
     }
 
     async function saveNote() {
-      const title = gid('noteTitle').value.trim();
+      // Bug Fix: Use safe value getter
+      const title = getValueTrim('noteTitle');
       if (!title) { toast('Title is required', 'error'); return; }
 
-      try {
-        const tags = gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t);
+      if (window.editingNoteId) {
+        // Edit mode
+        const note = AppState.notes.find(n => n.id === window.editingNoteId);
+        if (note) {
+          note.title = title;
+          note.content = getValueTrim('noteContent');
+          // Bug Fix: Safe split with null check
+          const tagsValue = getValue('noteTags') || '';
+          note.tags = tagsValue.split(',').map(t => t.trim()).filter(t => t);
+          note.updatedAt = Date.now();
 
-        if (window.editingNoteId) {
-          // Edit mode
-          const note = AppState.notes.find(n => n.id === window.editingNoteId);
-          if (note) {
-            note.title = title;
-            note.content = gid('noteContent').value.trim();
-            note.tags = tags;
-            note.updatedAt = Date.now();
+          await saveToSupabase('notes', note);
+          await save();
 
-            // Ensure note has UUID format ID for Supabase
-            const noteForSupabase = {
-              ...note,
-              id: note.id.length === 36 ? note.id : crypto.randomUUID(),
-              tags: tags // Ensure tags is an array
-            };
-
-            // Save to Supabase with error handling
-            const result = await saveToSupabase('notes', noteForSupabase);
-
-            // Update local note ID if it was converted to UUID
-            if (result.success && note.id !== noteForSupabase.id) {
-              note.id = noteForSupabase.id;
-            }
-
-            save(); // Always save to localStorage as fallback
-
-            if (!result.success && !result.offline) {
-              toast('⚠️ Not Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
-            } else {
-              toast('Note updated! ✅', 'success');
-            }
-            window.editingNoteId = null;
-          }
-        } else {
-          // New note - use UUID for Supabase compatibility
-          const newNoteId = crypto.randomUUID();
-          const newNote = {
-            id: newNoteId,
-            title,
-            content: gid('noteContent').value.trim(),
-            tags: tags,
-            createdAt: Date.now(),
-            updatedAt: Date.now()
-          };
-          AppState.notes.push(newNote);
-
-          // Save to Supabase with error handling
-          const result = await saveToSupabase('notes', newNote);
-          save(); // Always save to localStorage as fallback
-
-          if (!result.success && !result.offline) {
-            toast('⚠️ Not Supabase\'e kaydedilemedi, yerel depoda saklandı', 'warn');
-          } else {
-            toast('Note created! ✅', 'success');
-          }
+          window.editingNoteId = null;
+          toast('Note updated! ✅', 'success');
         }
+      } else {
+        // New note
+        const newNote = {
+          id: genId(),
+          title,
+          content: getValueTrim('noteContent'),
+          tags: (getValue('noteTags') || '').split(',').map(t => t.trim()).filter(t => t),
+          createdAt: Date.now()
+        };
+        
+        // Bug Fix: Ensure array exists before push
+        AppState.notes = ensureArray(AppState, 'notes');
+        AppState.notes.push(newNote);
 
-        closeModal('newNoteModal');
-        renderAll();
-      } catch (error) {
-        console.error('Error saving note:', error);
-        toast('❌ Not kaydedilirken hata oluştu', 'error');
-        // Still save to localStorage
-        save();
-      }
-    }
+        await saveToSupabase('notes', newNote);
+        await save();
 
-    // Delete note function
-    async function deleteNote(id) {
-      if (!confirm('Bu notu silmek istediğinize emin misiniz?')) return;
-
-      try {
-        // Find note to get Supabase-compatible ID
-        const note = AppState.notes.find(n => n.id === id);
-        if (!note) {
-          toast('Not bulunamadı', 'error');
-          return;
-        }
-
-        const noteIdForSupabase = note.id.length === 36 ? note.id : null;
-
-        // Delete from Supabase if ID is UUID format
-        if (noteIdForSupabase && AppState.currentUser) {
-          const result = await deleteFromSupabase('notes', noteIdForSupabase);
-          if (!result.success) {
-            console.warn('Note not deleted from Supabase, but will be removed from local storage');
-          } else {
-            console.log('✅ Note deleted from Supabase');
-          }
-        }
-
-        // Remove from local state regardless of Supabase result
-        AppState.notes = AppState.notes.filter(n => n.id !== id);
-        save();
-
-        renderAll();
-        toast('Not silindi! 🗑️', 'success');
-      } catch (error) {
-        console.error('Error deleting note:', error);
-        toast('❌ Not silinirken hata oluştu', 'error');
-      }
-    }
-
-    // Subscribe to realtime notes updates from Supabase
-    let notesSubscription = null;
-
-    function subscribeToNotesRealtime() {
-      if (!AppState.currentUser) return;
-
-      // Unsubscribe from existing subscription if any
-      if (notesSubscription) {
-        notesSubscription.unsubscribe();
+        toast('Note created! ✅', 'success');
       }
 
-      notesSubscription = supabaseClient
-        .channel('notes-changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'notes',
-          filter: `user_id=eq.${AppState.currentUser.id}`
-        }, (payload) => {
-          console.log('Notes realtime update:', payload);
-
-          const { eventType, new: newRecord, old: oldRecord } = payload;
-
-          if (eventType === 'INSERT') {
-            // Add new note if not already in local state
-            const exists = AppState.notes.find(n => n.id === newRecord.id);
-            if (!exists) {
-              AppState.notes.unshift({
-                id: newRecord.id,
-                title: newRecord.title,
-                content: newRecord.content,
-                tags: newRecord.tags || [],
-                createdAt: new Date(newRecord.created_at).getTime(),
-                updatedAt: new Date(newRecord.updated_at).getTime()
-              });
-              save();
-              renderNotes();
-              toast('Yeni not eklendi! 📝', 'info');
-            }
-          } else if (eventType === 'UPDATE') {
-            // Update existing note
-            const index = AppState.notes.findIndex(n => n.id === newRecord.id);
-            if (index !== -1) {
-              AppState.notes[index] = {
-                ...AppState.notes[index],
-                title: newRecord.title,
-                content: newRecord.content,
-                tags: newRecord.tags || [],
-                updatedAt: new Date(newRecord.updated_at).getTime()
-              };
-              save();
-              renderNotes();
-            }
-          } else if (eventType === 'DELETE') {
-            // Remove deleted note
-            AppState.notes = AppState.notes.filter(n => n.id !== oldRecord.id);
-            save();
-            renderNotes();
-          }
-        })
-        .subscribe();
-
-      console.log('✅ Subscribed to realtime notes updates');
+      closeModal('newNoteModal');
+      toast('Note saved! ✅', 'success');
+      renderAll();
     }
 
     function saveResource() {
@@ -6306,30 +6302,46 @@
       if (!name) { toast('Resource name is required', 'error'); return; }
 
       AppState.resources = AppState.resources || [];
-      const resourceData = {
-        name,
-        type: gid('resourceType').value,
-        url: gid('resourceUrl').value.trim(),
-        description: gid('resourceDesc').value.trim()
-      };
-
+      
       if (window.editingResourceId) {
         const index = AppState.resources.findIndex(r => r.id === window.editingResourceId);
         if (index !== -1) {
-          AppState.resources[index] = { ...AppState.resources[index], ...resourceData };
-          window.editingResourceId = null;
+          const updatedResource = {
+            ...AppState.resources[index],
+            name,
+            type: gid('resourceType').value,
+            url: gid('resourceUrl').value.trim(),
+            description: gid('resourceDesc').value.trim(),
+            updatedAt: Date.now()
+          };
+          AppState.resources[index] = updatedResource;
+          
+          saveToSupabase('resources', updatedResource);
+          save();
+          
+          addActivity(`Updated resource: ${name}`, '⚡');
         }
+        window.editingResourceId = null;
+        toast('Resource updated! ✅', 'success');
       } else {
-        AppState.resources.push({
+        const newResource = {
           id: genId(),
-          ...resourceData,
+          name,
+          type: gid('resourceType').value,
+          url: gid('resourceUrl').value.trim(),
+          description: gid('resourceDesc').value.trim(),
           createdAt: Date.now()
-        });
+        };
+        AppState.resources.push(newResource);
+        
+        saveToSupabase('resources', newResource);
+        save();
+        
+        toast('Resource saved! ✅', 'success');
+        addActivity(`Added resource: ${name}`, '⚡');
       }
 
-      save();
       closeModal('newResourceModal');
-      toast('Resource saved!', 'success');
       renderAll();
     }
 
@@ -6338,30 +6350,46 @@
       if (!item) { toast('Item name is required', 'error'); return; }
 
       AppState.budget = AppState.budget || [];
-      const budgetData = {
-        item,
-        category: gid('budgetCategory').value,
-        amount: parseFloat(gid('budgetAmount').value) || 0,
-        spent: parseFloat(gid('budgetSpent').value) || 0
-      };
-
+      
       if (window.editingBudgetId) {
         const index = AppState.budget.findIndex(b => b.id === window.editingBudgetId);
         if (index !== -1) {
-          AppState.budget[index] = { ...AppState.budget[index], ...budgetData };
-          window.editingBudgetId = null;
+          const updatedBudget = {
+            ...AppState.budget[index],
+            item,
+            category: gid('budgetCategory').value,
+            amount: parseFloat(gid('budgetAmount').value) || 0,
+            spent: parseFloat(gid('budgetSpent').value) || 0,
+            updatedAt: Date.now()
+          };
+          AppState.budget[index] = updatedBudget;
+          
+          saveToSupabase('budget', updatedBudget);
+          save();
+          
+          addActivity(`Updated budget: ${item}`, '💰');
         }
+        window.editingBudgetId = null;
+        toast('Budget updated! ✅', 'success');
       } else {
-        AppState.budget.push({
+        const newBudget = {
           id: genId(),
-          ...budgetData,
+          item,
+          category: gid('budgetCategory').value,
+          amount: parseFloat(gid('budgetAmount').value) || 0,
+          spent: parseFloat(gid('budgetSpent').value) || 0,
           createdAt: Date.now()
-        });
+        };
+        AppState.budget.push(newBudget);
+        
+        saveToSupabase('budget', newBudget);
+        save();
+        
+        toast('Budget item saved! ✅', 'success');
+        addActivity(`Added budget: ${item}`, '💰');
       }
 
-      save();
       closeModal('newBudgetModal');
-      toast('Budget item saved!', 'success');
       renderAll();
     }
 
@@ -6370,7 +6398,52 @@
       if (!name) { toast('Risk name is required', 'error'); return; }
 
       AppState.risks = AppState.risks || [];
-      const riskData = {
+      
+      if (window.editingRiskId) {
+        const index = AppState.risks.findIndex(r => r.id === window.editingRiskId);
+        if (index !== -1) {
+          const updatedRisk = {
+            ...AppState.risks[index],
+            title: name,
+            description: gid('riskDesc').value.trim(),
+            probability: gid('riskProbability').value,
+            impact: gid('riskImpact').value,
+            mitigation: gid('riskMitigation').value.trim(),
+            status: gid('riskStatus').value,
+            updatedAt: Date.now()
+          };
+          AppState.risks[index] = updatedRisk;
+          
+          saveToSupabase('risks', updatedRisk);
+          save();
+          
+          addActivity(`Updated risk: ${name}`, '⚠️');
+        }
+        window.editingRiskId = null;
+        toast('Risk updated! ✅', 'success');
+      } else {
+        const newRisk = {
+          id: genId(),
+          title: name,
+          description: gid('riskDesc').value.trim(),
+          probability: gid('riskProbability').value,
+          impact: gid('riskImpact').value,
+          mitigation: gid('riskMitigation').value.trim(),
+          status: gid('riskStatus').value,
+          createdAt: Date.now()
+        };
+        AppState.risks.push(newRisk);
+        
+        saveToSupabase('risks', newRisk);
+        save();
+        
+        toast('Risk saved! ✅', 'success');
+        addActivity(`Added risk: ${name}`, '⚠️');
+      }
+
+      closeModal('newRiskModal');
+      renderAll();
+    }
         name,
         category: gid('riskCategory').value,
         severity: gid('riskSeverity').value,
@@ -6398,12 +6471,59 @@
       renderAll();
     }
 
-    function deleteItem(type, id) {
-      if (!confirm('Are you sure you want to delete this?')) return;
-      AppState[type] = AppState[type].filter(item => item.id !== id);
-      save();
-      renderAll();
-      toast('Deleted successfully', 'success');
+    async function deleteItem(type, id) {
+      // Her modül için özel onay mesajları
+      const confirmMessages = {
+        project: 'Bu projeyi silmek istediğinize emin misiniz? Tüm görevler de silinecek.',
+        task: 'Bu görevi silmek istediğinize emin misiniz?',
+        meeting: 'Bu tolantıyı silmek istediğinize emin misiniz?',
+        note: 'Bu notu silmek istediğinize emin misiniz?',
+        team: 'Bu ekip üyesini silmek istediğinize emin misiniz?',
+        resource: 'Bu kaynağı silmek istediğinize emin misiniz?',
+        budget: 'Bu bütçe kalemini silmek istediğinize emin misiniz?',
+        risk: 'Bu riski silmek istediğinize emin misiniz?',
+        post: 'Bu gönderiyi silmek istediğinize emin misiniz?',
+        image: 'Bu görseli silmek istediğinize emin misiniz?'
+      };
+      
+      const typeLabels = {
+        project: 'Proje',
+        task: 'Görev',
+        meeting: 'Toplantı',
+        note: 'Not',
+        team: 'Ekip Üyesi',
+        resource: 'Kaynak',
+        risk: 'Risk',
+        post: 'Gönderi',
+        image: 'Görsel'
+      };
+      
+      const message = confirmMessages[type] || `${typeLabels[type] || 'Bu öğeyi'} silmek istediğinize emin misiniz?`;
+      
+      if (!confirm(message)) return;
+      
+      try {
+        // Delete from Supabase
+        await deleteFromSupabase(type, id);
+        
+        // Delete from local state
+        if (AppState[type]) {
+          AppState[type] = AppState[type].filter(item => item.id !== id);
+        } else if (type === 'post') {
+          AppState.posts = AppState.posts.filter(p => p.id !== id);
+        } else if (type === 'image') {
+          AppState.images = AppState.images.filter(i => i.id !== id);
+        }
+        
+        await save();
+        renderAll();
+        
+        toast(`${typeLabels[type] || 'Öğe'} başarıyla silindi`, 'success');
+        
+      } catch (error) {
+        console.error('Delete error:', error);
+        toast('Silme işlemi başarısız', 'error');
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -6441,7 +6561,13 @@
           <td>${p.startDate || '-'}</td>
           <td>${p.endDate || '-'}</td>
           <td>$${(p.budget || 0).toLocaleString()}</td>
-          <td><button class="btn btn-sm btn-ghost" onclick="deleteItem('projects', '${p.id}')">🗑️</button></td>
+          <td>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-ghost" onclick="copyProject('${p.id}')" title="Copy">📋</button>
+              <button class="btn btn-sm btn-ghost" onclick="editProject('${p.id}')" title="Edit">✏️</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteItem('projects', '${p.id}')" title="Delete">🗑️</button>
+            </div>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="7" class="empty-state">No projects yet</td></tr>';
     }
@@ -6455,7 +6581,13 @@
           <td><span class="status-badge status-${t.status}">${t.status}</span></td>
           <td>${t.assignee || 'Unassigned'}</td>
           <td>${fmtDate(t.createdAt)}</td>
-          <td><button class="btn btn-sm btn-ghost" onclick="deleteItem('tasks', '${t.id}')">🗑️</button></td>
+          <td>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-ghost" onclick="copyTask('${t.id}')" title="Copy">📋</button>
+              <button class="btn btn-sm btn-ghost" onclick="editTask('${t.id}')" title="Edit">✏️</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteItem('tasks', '${t.id}')" title="Delete">🗑️</button>
+            </div>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="6" class="empty-state">No tasks yet</td></tr>';
     }
@@ -6548,12 +6680,15 @@
                     <td>${m.location || m.meeting_link ? (m.location ? `<small>📍 ${esc(m.location)}</small>` : `<small>🔗 Virtual</small>`) : '-'}</td>
                     <td>${Array.isArray(m.attendees) ? m.attendees.length : 0} 👤</td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="showMeetingSummary('${m.id}')" title="AI Summary">🤖</button>
-                      <button class="btn btn-sm btn-ghost" onclick="showMeetingActionItems('${m.id}')" title="Action Items">✅</button>
-                      <button class="btn btn-sm btn-ghost" onclick="showAttendanceReport('${m.id}')" title="Attendance">📊</button>
-                      <button class="btn btn-sm btn-ghost" onclick="exportMeeting('${m.id}')" title="Export">📥</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')">🗑️</button>
+                      <div style="display: flex; gap: 2px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyMeeting('${m.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="showMeetingSummary('${m.id}')" title="AI Summary">🤖</button>
+                        <button class="btn btn-sm btn-ghost" onclick="showMeetingActionItems('${m.id}')" title="Action Items">✅</button>
+                        <button class="btn btn-sm btn-ghost" onclick="showAttendanceReport('${m.id}')" title="Attendance">📊</button>
+                        <button class="btn btn-sm btn-ghost" onclick="exportMeeting('${m.id}')" title="Export">📥</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `).join('') || '<tr><td colspan="7" class="empty-state">No meetings yet</td></tr>'}
@@ -6836,8 +6971,11 @@
                     <td>${t.email}</td>
                     <td><span class="tag tag-${t.online !== false ? 'green' : 'gray'}">${t.online !== false ? 'Online' : 'Offline'}</span></td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editTeamMember('${t.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('team', '${t.id}')">🗑️</button>
+                      <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyTeamMember('${t.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editTeamMember('${t.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('team', '${t.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `).join('') || '<tr><td colspan="6" class="empty-state">No team members yet</td></tr>'}

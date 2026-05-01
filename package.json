@@ -2,27 +2,19 @@
   "name": "projex-ai",
   "version": "1.0.0",
   "description": "AI-Powered Project Management System with Social Features",
-  "main": "server.js",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "deploy": "vercel --prod"
+    "dev": "vercel dev",
+    "build": "echo 'No build required for static site'",
+    "start": "npx serve ."
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
     "@supabase/supabase-js": "^2.38.4"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/explorerstreasure1-alt/Projex-Ai"
   },
   "keywords": [
     "project-management",
     "ai",
     "collaboration",
-    "kanban",
     "productivity"
   ],
   "author": "PROJEX AI Team",
