@@ -10,7 +10,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://projex-ai-red.vercel.app/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -157,6 +157,11 @@
   <div class="view" id="appView">
     <!-- Header -->
     <header>
+      <div class="hamburger" onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
       <a class="logo" onclick="navigateTo('dashboard')">
         <div class="logo-wrap">
           <div class="logo-icon"></div>
@@ -359,6 +364,9 @@
       </div>
     </nav>
 
+    <!-- Sidebar Backdrop for Mobile -->
+    <div class="sidebar-backdrop" onclick="toggleMobileMenu()"></div>
+
     <!-- Main Content -->
     <main class="main">
       <!-- Trial Banner (Top) -->
@@ -406,6 +414,16 @@
             <div class="stat-card-value" id="dashTeamCount">0</div>
             <div class="stat-card-label">Team Members</div>
             <div class="stat-card-change up">+1 new</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashVisitorCount">0</div>
+            <div class="stat-card-label">Total Visitors</div>
+            <div class="stat-card-change up">This session</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-value" id="dashUserCount">0</div>
+            <div class="stat-card-label">Total Users</div>
+            <div class="stat-card-change">Registered</div>
           </div>
         </div>
 
@@ -1679,11 +1697,132 @@
     const esc = (str) => String(str || '').replace(/[<>&"']/g, (m) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', '\'': '&#39;' }[m]));
     const fmtDate = (ts) => ts ? new Date(ts).toLocaleDateString('en-US') : '-';
 
-    // Legacy save/load for backward compatibility - will be phased out
-    function save() {
-      localStorage.setItem('projex_data', JSON.stringify(AppState));
+    // KALICI HAFIZA SİSTEMİ - Supabase Tabalı (Vercel için)
+    // Tüm veriler Supabase'e kaydedilir, sayfa yenilendiğinde kaybolmaz
+    
+    // Bug Fix #1: Safe getter with null checking
+    function formatTimestamp(ts) {
+      if (!ts) return new Date().toISOString();
+      if (typeof ts === 'number') {
+        if (ts > 10000000000) return new Date(ts).toISOString();
+        return ts.toString();
+      }
+      if (typeof ts === 'string') {
+        if (!isNaN(ts) && ts.length > 10) return new Date(parseInt(ts)).toISOString();
+        return ts;
+      }
+      return new Date().toISOString();
     }
 
+    // Bug Fix #2: Get value safely from element
+    function getValue(id) {
+      const el = gid(id);
+      return el ? el.value : '';
+    }
+
+    // Bug Fix #3: Get value safely trimmed
+    function getValueTrim(id) {
+      const el = gid(id);
+      return el ? el.value.trim() : '';
+    }
+
+    // Bug Fix #4: Set element value safely
+    function setValue(id, value) {
+      const el = gid(id);
+      if (el) el.value = value || '';
+    }
+
+    // Bug Fix #5: Ensure array exists
+    function ensureArray(state, key) {
+      if (!state[key]) state[key] = [];
+      return state[key];
+    }
+
+    // Bug Fix #6: Ana kaydetme fonksiyonu - hem Supabase hem localStorage'a kaydeder
+    async function save() {
+      // Fix #7: Ensure all required arrays exist
+      AppState.projects = ensureArray(AppState, 'projects');
+      AppState.tasks = ensureArray(AppState, 'tasks');
+      AppState.meetings = ensureArray(AppState, 'meetings');
+      AppState.notes = ensureArray(AppState, 'notes');
+      AppState.team = ensureArray(AppState, 'team');
+      AppState.resources = ensureArray(AppState, 'resources');
+      AppState.budget = ensureArray(AppState, 'budget');
+      AppState.risks = ensureArray(AppState, 'risks');
+      AppState.posts = ensureArray(AppState, 'posts');
+      AppState.images = ensureArray(AppState, 'images');
+      AppState.activity = ensureArray(AppState, 'activity');
+
+      // Supabase'e kaydet (async)
+      if (AppState.currentUser && supabaseClient) {
+        try {
+          await saveAllToSupabase();
+        } catch (e) {
+          console.error('Supabase save error:', e);
+          // Fix #8: Notify user of save failure
+          toast('Backup saved locally. Cloud sync failed.', 'warn');
+        }
+      }
+      // LocalStorage yedek olarak kalır (offline durumlar için)
+      try {
+        localStorage.setItem('projex_data', JSON.stringify(AppState));
+      } catch (e) {
+        console.error('localStorage error:', e);
+        // Fix #9: Handle quota exceeded
+        toast('Storage almost full! Consider clearing old data.', 'warn');
+      }
+    }
+
+    // Bug Fix #10: Optimized batch save - parallel execution
+    async function saveAllToSupabase() {
+      if (!AppState.currentUser) return;
+      const userId = AppState.currentUser.id;
+
+      try {
+        // Parallel saves for better performance
+        const tables = [
+          { name: 'projects', data: AppState.projects },
+          { name: 'tasks', data: AppState.tasks },
+          { name: 'meetings', data: AppState.meetings },
+          { name: 'notes', data: AppState.notes },
+          { name: 'team', data: AppState.team },
+          { name: 'resources', data: AppState.resources },
+          { name: 'budget', data: AppState.budget },
+          { name: 'risks', data: AppState.risks },
+          { name: 'posts', data: AppState.posts },
+          { name: 'images', data: AppState.images }
+        ];
+
+        // Fix #11: Execute all saves in parallel
+        await Promise.all(tables.map(async ({ name, data }) => {
+          if (!data || !data.length) return;
+          for (const item of data) {
+            await supabaseClient.from(name).upsert({
+              ...item,
+              user_id: userId,
+              created_at: formatTimestamp(item.createdAt || item.created_at),
+              updated_at: formatTimestamp(item.updatedAt || item.updated_at)
+            }, { onConflict: 'id' });
+          }
+        }));
+
+        // Fix #12: Save user settings separately
+        if (AppState.userSettings) {
+          await supabaseClient.from('user_settings').upsert({
+            ...AppState.userSettings,
+            user_id: userId,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
+        }
+
+        console.log('✅ All data saved to Supabase');
+      } catch (error) {
+        console.error('Error saving all to Supabase:', error);
+        throw error;
+      }
+    }
+
+    // Legacy load - sadece localStorage fallback için
     function load() {
       const data = JSON.parse(localStorage.getItem('projex_data') || '{}');
       Object.assign(AppState, data);
@@ -2292,20 +2431,37 @@
 
       updateTrialDisplay();
 
-      // Load data from Supabase
+      // PARALLEL LOAD - Supabase'ten tüm verileri aynı anda yükle
       try {
-        AppState.projects = await loadFromSupabase('projects');
-        AppState.tasks = await loadFromSupabase('tasks');
-        AppState.meetings = await loadFromSupabase('meetings');
-        AppState.team = await loadFromSupabase('team');
-        AppState.notes = await loadFromSupabase('notes');
-        AppState.resources = await loadFromSupabase('resources');
-        AppState.posts = await loadFromSupabase('posts');
-        AppState.images = await loadFromSupabase('images');
-        AppState.budget = await loadFromSupabase('budget');
-        AppState.risks = await loadFromSupabase('risks');
+        const [projects, tasks, meetings, team, notes, resources, posts, images, budget, risks, userSettings, subscription] = await Promise.all([
+          loadFromSupabase('projects'),
+          loadFromSupabase('tasks'),
+          loadFromSupabase('meetings'),
+          loadFromSupabase('team'),
+          loadFromSupabase('notes'),
+          loadFromSupabase('resources'),
+          loadFromSupabase('posts'),
+          loadFromSupabase('images'),
+          loadFromSupabase('budget'),
+          loadFromSupabase('risks'),
+          loadFromSupabase('user_settings'),
+          loadFromSupabase('subscriptions')
+        ]);
 
-        console.log('Data loaded from Supabase');
+        AppState.projects = projects;
+        AppState.tasks = tasks;
+        AppState.meetings = meetings;
+        AppState.team = team;
+        AppState.notes = notes;
+        AppState.resources = resources;
+        AppState.posts = posts;
+        AppState.images = images;
+        AppState.budget = budget;
+        AppState.risks = risks;
+        AppState.userSettings = userSettings[0] || null;
+        AppState.subscription = subscription[0] || null;
+
+        console.log('✅ Data loaded from Supabase (parallel)');
 
         // Check if Supabase is empty and localStorage has data
         const supabaseEmpty = !AppState.projects.length && !AppState.tasks.length && !AppState.meetings.length;
@@ -2317,16 +2473,28 @@
             // Auto-migrate localStorage data to Supabase
             await migrateLocalStorageToSupabase();
             // Reload from Supabase after migration
-            AppState.projects = await loadFromSupabase('projects');
-            AppState.tasks = await loadFromSupabase('tasks');
-            AppState.meetings = await loadFromSupabase('meetings');
-            AppState.team = await loadFromSupabase('team');
-            AppState.notes = await loadFromSupabase('notes');
-            AppState.resources = await loadFromSupabase('resources');
-            AppState.posts = await loadFromSupabase('posts');
-            AppState.images = await loadFromSupabase('images');
-            AppState.budget = await loadFromSupabase('budget');
-            AppState.risks = await loadFromSupabase('risks');
+            const [mProjects, mTasks, mMeetings, mTeam, mNotes, mResources, mPosts, mImages, mBudget, mRisks] = await Promise.all([
+              loadFromSupabase('projects'),
+              loadFromSupabase('tasks'),
+              loadFromSupabase('meetings'),
+              loadFromSupabase('team'),
+              loadFromSupabase('notes'),
+              loadFromSupabase('resources'),
+              loadFromSupabase('posts'),
+              loadFromSupabase('images'),
+              loadFromSupabase('budget'),
+              loadFromSupabase('risks')
+            ]);
+            AppState.projects = mProjects;
+            AppState.tasks = mTasks;
+            AppState.meetings = mMeetings;
+            AppState.team = mTeam;
+            AppState.notes = mNotes;
+            AppState.resources = mResources;
+            AppState.posts = mPosts;
+            AppState.images = mImages;
+            AppState.budget = mBudget;
+            AppState.risks = mRisks;
           }
         }
       } catch (error) {
@@ -2405,8 +2573,31 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // NAVIGATION
-    // ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+    // ═══════════════════════════════════════════════════════════════════
+    
+    // MOBİL MENÜ FONKSİYONU
+    function toggleMobileMenu() {
+      const hamburger = document.querySelector('.hamburger');
+      const sidebar = document.querySelector('.sidebar');
+      const backdrop = document.querySelector('.sidebar-backdrop');
+      
+      if (!sidebar) return;
+      
+      sidebar.classList.toggle('active');
+      hamburger?.classList.toggle('active');
+      
+      // Create backdrop if not exists
+      if (!backdrop) {
+        const newBackdrop = document.createElement('div');
+        newBackdrop.className = 'sidebar-backdrop';
+        newBackdrop.onclick = toggleMobileMenu;
+        document.body.appendChild(newBackdrop);
+      }
+      
+      document.querySelector('.sidebar-backdrop')?.classList.toggle('active');
+    }
+    
     function navigateTo(page) {
       // Check PRO features - allow trial users access
       if ((page === 'ai' || page === 'images') && !hasFeatureAccess()) {
@@ -2515,13 +2706,18 @@
           <!-- Note Grid -->
           <div id="notesContainer" class="notes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
             ${notes.map(n => `
-              <div class="dashboard-card note-card" onclick="editNote('${n.id}')" style="cursor: pointer; transition: transform 0.2s;">
+              <div class="dashboard-card note-card" style="cursor: pointer; transition: transform 0.2s;">
                 <div class="note-title">${esc(n.title)}</div>
                 <div class="note-preview" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">${esc(n.content?.substring(0, 100) || '')}...</div>
                 <div class="note-meta" style="display: flex; justify-content: space-between; align-items: center;">
                   <span class="note-date" style="font-size: 0.75rem; color: var(--text-muted);">${fmtDate(n.createdAt)}</span>
-                  ${n.tags?.length ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag" style="background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${esc(t)}</span>`).join('')}</div>` : ''}
+                  <div style="display: flex; gap: 4px;">
+                    <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); copyNote('${n.id}')" title="Copy">📋</button>
+                    <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); editNote('${n.id}')" title="Edit">✏️</button>
+                    <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); deleteItem('notes', '${n.id}')" title="Delete">🗑️</button>
+                  </div>
                 </div>
+                ${n.tags?.length ? `<div class="note-tags" style="margin-top: 8px;">${n.tags.map(t => `<span class="note-tag" style="background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">${esc(t)}</span>`).join('')}</div>` : ''}
               </div>
             `).join('') || '<div class="empty-state" style="grid-column: 1 / -1; padding: 60px 20px;"><div class="empty-state-icon">📝</div><div class="empty-state-title">No notes yet</div></div>'}
           </div>
@@ -2559,9 +2755,16 @@
     function editNote(id) {
       const note = AppState.notes.find(n => n.id === id);
       if (note) {
-        gid('noteTitle').value = note.title;
-        gid('noteContent').value = note.content || '';
-        gid('noteTags').value = (note.tags || []).join(', ');
+        // Bug Fix: Reset before setting new values
+        setValue('noteTitle', '');
+        setValue('noteContent', '');
+        setValue('noteTags', '');
+        
+        // Use safe setters
+        setValue('noteTitle', note.title);
+        setValue('noteContent', note.content || '');
+        setValue('noteTags', (note.tags || []).join(', '));
+        
         window.editingNoteId = id;
         openModal('newNoteModal');
       }
@@ -2633,8 +2836,11 @@
                     <td>${esc(r.description || '-')}</td>
                     <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" style="color: var(--teal);">🔗 Link</a>` : '-'}</td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editResource('${r.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('resources', '${r.id}')">🗑️</button>
+                      <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyResource('${r.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editResource('${r.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('resources', '${r.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `).join('') || '<tr><td colspan="5" class="empty-state">No resources yet</td></tr>'}
@@ -2764,8 +2970,11 @@
                       <span style="font-size: 0.7rem; color: var(--text-muted);">${progress.toFixed(0)}%</span>
                     </td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')">🗑️</button>
+                      <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyBudget('${b.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `}).join('') || '<tr><td colspan="6" class="empty-state">No budget items yet</td></tr>'}
@@ -2805,8 +3014,11 @@
               <span style="font-size: 0.7rem; color: var(--text-muted);">${progress.toFixed(0)}%</span>
             </td>
             <td>
-              <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')">✏️</button>
-              <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')">🗑️</button>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn btn-sm btn-ghost" onclick="copyBudget('${b.id}')" title="Copy">📋</button>
+                <button class="btn btn-sm btn-ghost" onclick="editBudget('${b.id}')" title="Edit">✏️</button>
+                <button class="btn btn-sm btn-ghost" onclick="deleteItem('budget', '${b.id}')" title="Delete">🗑️</button>
+              </div>
             </td>
           </tr>
         `;
@@ -2891,14 +3103,17 @@
               <tbody id="risksTable">
                 ${risks.map(r => `
                   <tr>
-                    <td><strong>${esc(r.name)}</strong></td>
+                    <td><strong>${esc(r.title || r.name)}</strong></td>
                     <td><span class="badge badge-${r.category?.toLowerCase() || 'default'}">${esc(r.category || 'General')}</span></td>
-                    <td><span class="severity severity-${r.severity || 'medium'}">${esc(r.severity || 'Medium')}</span></td>
-                    <td>${r.probability || '-'}%</td>
+                    <td><span class="severity severity-${r.severity || r.impact || 'medium'}">${esc(r.severity || r.impact || 'Medium')}</span></td>
+                    <td>${r.probability || '-'}</td>
                     <td>${esc(r.mitigation || 'None')}</td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')">🗑️</button>
+                      <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyRisk('${r.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `).join('') || '<tr><td colspan="6" class="empty-state">No risks identified yet</td></tr>'}
@@ -2926,14 +3141,17 @@
       const tbody = gid('risksTable');
       tbody.innerHTML = filtered.map(r => `
         <tr>
-          <td><strong>${esc(r.name)}</strong></td>
+          <td><strong>${esc(r.title || r.name)}</strong></td>
           <td><span class="badge badge-${r.category?.toLowerCase() || 'default'}">${esc(r.category || 'General')}</span></td>
-          <td><span class="severity severity-${r.severity || 'medium'}">${esc(r.severity || 'Medium')}</span></td>
-          <td>${r.probability || '-'}%</td>
+          <td><span class="severity severity-${r.severity || r.impact || 'medium'}">${esc(r.severity || r.impact || 'Medium')}</span></td>
+          <td>${r.probability || '-'}</td>
           <td>${esc(r.mitigation || 'None')}</td>
           <td>
-            <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')">✏️</button>
-            <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')">🗑️</button>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-ghost" onclick="copyRisk('${r.id}')" title="Copy">📋</button>
+              <button class="btn btn-sm btn-ghost" onclick="editRisk('${r.id}')" title="Edit">✏️</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteItem('risks', '${r.id}')" title="Delete">🗑️</button>
+            </div>
           </td>
         </tr>
       `).join('') || '<tr><td colspan="6" class="empty-state">No risks found</td></tr>';
@@ -3568,7 +3786,7 @@
       toast('Toplantı ses kaydı durduruldu', 'info');
     }
 
-    function saveMeetingNotes() {
+    async function saveMeetingNotes() {
       const notes = gid('meetingNotes').value;
       if (!notes.trim()) {
         toast('Kaydedilecek not yok', 'warn');
@@ -3579,14 +3797,27 @@
         AppState.meetingNotes = [];
       }
 
-      AppState.meetingNotes.unshift({
+      const newNote = {
         id: Date.now().toString(),
         content: notes,
         date: new Date().toISOString(),
         meetingId: AppState.currentMeetingId || 'general'
-      });
+      };
 
-      save();
+      AppState.meetingNotes.unshift(newNote);
+      
+      // Save meeting notes to Supabase if in a meeting
+      if (AppState.currentMeetingId) {
+        const meeting = AppState.meetings.find(m => m.id === AppState.currentMeetingId);
+        if (meeting) {
+          meeting.meeting_notes = notes;
+          meeting.updatedAt = Date.now();
+          await saveToSupabase('meetings', meeting);
+        }
+      }
+      
+      await save();
+      
       gid('meetingNotes').value = '';
       toast('Toplantı notları kaydedildi! 💾', 'success');
     }
@@ -3971,7 +4202,10 @@
             } else if (event.error === 'no-speech') {
               console.warn('Ses algılanamadı, lütfen tekrar konuşun');
             } else if (event.error === 'network') {
-              toast('Ses tanıma servisi hatası (internet bağlantısı gerekli)', 'error');
+              // Network error: don't stop recording, just warn and continue
+              console.warn('Ses tanıma servisi geçici olarak kullanılamıyor. Ses kaydı devam ediyor, ancak transkript yapılamayacak.');
+              toast('Ses tanıma servisi geçici olarak kullanılamıyor. Ses kaydı devam ediyor.', 'warn');
+              // Don't stop recording - MediaRecorder will still capture audio
             } else if (event.error === 'aborted') {
               console.warn('Ses tanıma durduruldu');
               if (mainVoiceRecording) {
@@ -4745,18 +4979,34 @@
     // MODALS
     // ═══════════════════════════════════════════════════════════════
     function openModal(id) {
-      gid(id).classList.add('active');
+      // Bug Fix: Safe element access
+      const modal = gid(id);
+      if (!modal) {
+        console.error(`Modal not found: ${id}`);
+        return;
+      }
+      modal.classList.add('active');
 
       if (id === 'newTaskModal') {
-        gid('taskAssignee').innerHTML = AppState.team.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+        // Bug Fix: Ensure team array exists
+        const team = ensureArray(AppState, 'team');
+        const assigneeEl = gid('taskAssignee');
+        if (assigneeEl) {
+          assigneeEl.innerHTML = team.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join('');
+        }
       }
       if (id === 'newMeetingModal') {
-        gid('meetingDate').value = todayStr();
+        setValue('meetingDate', todayStr());
         toggleRecurrenceEndDate();
       }
       if (id === 'pomodoroModal') {
-        gid('pomoTaskSelect').innerHTML = '<option value="">— Select task —</option>' +
-          AppState.tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('');
+        // Bug Fix: Ensure tasks array exists
+        const tasks = ensureArray(AppState, 'tasks');
+        const pomoTaskSelect = gid('pomoTaskSelect');
+        if (pomoTaskSelect) {
+          pomoTaskSelect.innerHTML = '<option value="">— Select task —</option>' +
+            tasks.filter(t => t.status !== 'done').map(t => `<option value="${t.id}">${esc(t.title)}</option>`).join('');
+        }
       }
     }
 
@@ -5072,7 +5322,7 @@
     // ═══════════════════════════════════════════════════════════════
     // SOCIAL FEED
     // ═══════════════════════════════════════════════════════════════
-    function renderSocialFeed() {
+function renderSocialFeed() {
       const feed = gid('socialFeed');
 
       if (AppState.posts.length === 0) {
@@ -5083,9 +5333,54 @@
             <div class="empty-state-desc">Be the first to share with your team!</div>
             <button class="btn btn-primary" style="margin-top: 16px;" onclick="openModal('newPostModal')">Create Post</button>
           </div>
-      `;
+        `;
         return;
       }
+
+      feed.innerHTML = AppState.posts.map(post => `
+        <div class="social-post">
+          <div class="social-post-header">
+            <div class="social-post-avatar">${post.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</div>
+            <div class="social-post-meta">
+              <div class="social-post-author">${esc(post.author)}</div>
+              <div class="social-post-time">${fmtDate(post.createdAt)}</div>
+            </div>
+            <div style="margin-left: auto; display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-ghost" onclick="copyPost('${post.id}')" title="Copy">📋</button>
+              <button class="btn btn-sm btn-ghost" onclick="sharePost('${post.id}')" title="Share">🔗</button>
+            </div>
+          </div>
+          <div class="social-post-content">${esc(post.content)}</div>
+          ${post.image ? `<img src="${post.image}" style="max-width: 100%; border-radius: var(--r); margin-top: 8px;" />` : ''}
+          <div class="social-post-actions">
+            <div class="social-post-action" onclick="likePost('${post.id}')">
+              ❤️ ${post.likes} Likes
+            </div>
+            <div class="social-post-action" onclick="toggleComments('${post.id}')">
+              💬 ${post.comments} Comments
+            </div>
+            <div class="social-post-action" onclick="sharePost('${post.id}')">
+              🔗 Share
+            </div>
+          </div>
+          <div id="comments-${post.id}" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+            ${post.commentsList && post.commentsList.length ? post.commentsList.map(c => `
+              <div style="display: flex; gap: 8px; margin-bottom: 8px; padding: 8px; background: var(--surface); border-radius: var(--r-sm);">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0;">
+                  ${c.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div style="font-size: 0.75rem; font-weight: 600;">${esc(c.author)}</div>
+                  <div style="font-size: 0.8rem; color: var(--text);">${esc(c.content)}</div>
+                  <div style="font-size: 0.65rem; color: var(--text-muted);">${fmtDate(c.createdAt)}</div>
+                </div>
+              </div>
+            `).join('') : '<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No comments yet. Be the first!</div>'}
+            <button class="btn btn-sm btn-ghost" style="width: 100%; margin-top: 8px;" onclick="commentPost('${post.id}')">+ Add Comment</button>
+          </div>
+        </div>
+      `).join('');
+    }
 
       feed.innerHTML = AppState.posts.map(post => `
         <div class="social-post">
@@ -5124,7 +5419,7 @@
             `).join('') : '<div style="font-size: 0.8rem; color: var(--text-muted); padding: 8px;">No comments yet. Be the first!</div>'}
             <button class="btn btn-sm btn-ghost" style="width: 100%; margin-top: 8px;" onclick="commentPost('${post.id}')">+ Add Comment</button>
           </div>
-        </div >
+        </div>
       `).join('');
     }
 
@@ -5136,7 +5431,7 @@
       }
     }
 
-    function createPost() {
+    async function createPost() {
       const content = gid('postContent').value.trim();
       if (!content) {
         toast('Please write something to post', 'error');
@@ -5154,23 +5449,29 @@
       };
 
       AppState.posts.unshift(post);
-      save();
+      
+      // Save to Supabase for permanent storage
+      await saveToSupabase('posts', post);
+      await save();
+      
       closeModal('newPostModal');
       gid('postContent').value = '';
       renderSocialFeed();
       toast('Post created successfully! 🎉', 'success');
+      addActivity(`New post: ${content.substring(0, 30)}...`, '📝');
     }
 
-    function likePost(id) {
+    async function likePost(id) {
       const post = AppState.posts.find(p => p.id === id);
       if (post) {
         post.likes++;
-        save();
+        await saveToSupabase('posts', post);
+        await save();
         renderSocialFeed();
       }
     }
 
-    function commentPost(id) {
+    async function commentPost(id) {
       const post = AppState.posts.find(p => p.id === id);
       if (!post) return;
 
@@ -5186,12 +5487,15 @@
         createdAt: Date.now()
       });
       post.comments++;
-      save();
+      
+      await saveToSupabase('posts', post);
+      await save();
+      
       renderSocialFeed();
       toast('Comment added! 💬', 'success');
     }
 
-    function sharePost(id) {
+    async function sharePost(id) {
       const post = AppState.posts.find(p => p.id === id);
       if (!post) return;
 
@@ -5220,18 +5524,114 @@
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        toast('Copied to clipboard! �', 'success');
+        toast('Copied to clipboard! 📋', 'success');
       });
     }
 
-    // ═══════════════════════════════════════════════════════════════
+    // COPY FONKSİYONLARI - Tüm öğeleri panoya kopyala
+    function copyNote(id) {
+      const note = AppState.notes.find(n => n.id === id);
+      if (!note) return;
+      const text = `📝 ${note.title}\n\n${note.content}\n\nTags: ${(note.tags || []).join(', ')}`;
+      copyToClipboard(text);
+      addActivity(`Copied note: ${note.title}`, '📋');
+    }
+
+    function copyPost(id) {
+      const post = AppState.posts.find(p => p.id === id);
+      if (!post) return;
+      const text = `@${post.author}: ${post.content}`;
+      copyToClipboard(text);
+      addActivity(`Copied post by ${post.author}`, '📋');
+    }
+
+    function copyTask(id) {
+      const task = AppState.tasks.find(t => t.id === id);
+      if (!task) return;
+      const text = `✅ ${task.title}\n\nPriority: ${task.priority}\nStatus: ${task.status}\n${task.description || ''}`;
+      copyToClipboard(text);
+      addActivity(`Copied task: ${task.title}`, '📋');
+    }
+
+    function copyProject(id) {
+      const project = AppState.projects.find(p => p.id === id);
+      if (!project) return;
+      const text = `📊 ${project.title}\n\nStatus: ${project.status}\n${project.description || ''}`;
+      copyToClipboard(text);
+      addActivity(`Copied project: ${project.title}`, '📋');
+    }
+
+    function copyMeeting(id) {
+      const meeting = AppState.meetings.find(m => m.id === id);
+      if (!meeting) return;
+      const text = `📅 ${meeting.title}\nDate: ${meeting.date} ${meeting.time}\n${meeting.description || ''}`;
+      copyToClipboard(text);
+      addActivity(`Copied meeting: ${meeting.title}`, '📋');
+    }
+
+    function copyTeamMember(id) {
+      const member = AppState.team.find(t => t.id === id);
+      if (!member) return;
+      const text = `👥 ${member.name}\nRole: ${member.role}\nDept: ${member.dept}\nEmail: ${member.email}`;
+      copyToClipboard(text);
+      addActivity(`Copied team member: ${member.name}`, '📋');
+    }
+
+    function copyResource(id) {
+      const resource = AppState.resources.find(r => r.id === id);
+      if (!resource) return;
+      const text = `⚡ ${resource.name}\nType: ${resource.type}\nURL: ${resource.url}\n${resource.description || ''}`;
+      copyToClipboard(text);
+      addActivity(`Copied resource: ${resource.name}`, '📋');
+    }
+
+    function copyBudget(id) {
+      const budget = AppState.budget.find(b => b.id === id);
+      if (!budget) return;
+      const text = `💰 ${budget.item}\nCategory: ${budget.category}\nBudget: $${budget.amount}\nSpent: $${budget.spent}`;
+      copyToClipboard(text);
+      addActivity(`Copied budget: ${budget.item}`, '📋');
+    }
+
+    function copyRisk(id) {
+      const risk = AppState.risks.find(r => r.id === id);
+      if (!risk) return;
+      const text = `⚠️ ${risk.title}\nProbability: ${risk.probability}\nImpact: ${risk.impact}\nMitigation: ${risk.mitigation || 'N/A'}`;
+      copyToClipboard(text);
+      addActivity(`Copied risk: ${risk.title}`, '📋');
+    }
+
+    // ════════════════════════════���══════════════════════════════════
     // DASHBOARD RENDER
     // ═══════════════════════════════════════════════════════════════
+    async function fetchUserCount() {
+      try {
+        const { count, error } = await supabaseClient
+          .from('user_profiles')
+          .select('*', { count: 'exact', head: true });
+
+        if (error) throw error;
+        gid('dashUserCount').textContent = count ? count.toLocaleString() : '0';
+      } catch (error) {
+        console.error('Failed to fetch user count:', error);
+        gid('dashUserCount').textContent = '-';
+      }
+    }
+
     function renderDashboard() {
       gid('dashProjectCount').textContent = AppState.projects.filter(p => p.status === 'active').length;
       gid('dashTaskCount').textContent = AppState.tasks.filter(t => t.status === 'done').length;
       gid('dashMeetingCount').textContent = AppState.meetings.filter(m => m.date >= todayStr()).length;
       gid('dashTeamCount').textContent = AppState.team.length;
+
+      // Update visitor count (stored in localStorage)
+      let visitorCount = parseInt(localStorage.getItem('visitorCount') || '0');
+      visitorCount++;
+      localStorage.setItem('visitorCount', visitorCount);
+      gid('dashVisitorCount').textContent = visitorCount.toLocaleString();
+
+      // Update total users count from Supabase
+      fetchUserCount();
 
       // Priority tasks
       const priorityTasks = AppState.tasks
@@ -5506,12 +5906,17 @@
           member.email = gid('teamEmail').value.trim();
           member.initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
           member.updatedAt = Date.now();
+          
+          saveToSupabase('team', member);
+          save();
+          
+          addActivity(`Updated team member: ${name}`, '👥');
         }
         window.editingTeamMemberId = null;
-        toast('Team member updated!', 'success');
+        toast('Team member updated! ✅', 'success');
       } else {
         // New team member
-        AppState.team.push({
+        const newMember = {
           id: genId(),
           name,
           role: gid('teamRole').value.trim(),
@@ -5519,17 +5924,23 @@
           email: gid('teamEmail').value.trim(),
           initials: name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
           createdAt: Date.now()
-        });
-        toast('Team member added!', 'success');
+        };
+        AppState.team.push(newMember);
+        
+        saveToSupabase('team', newMember);
+        save();
+        
+        toast('Team member added! ✅', 'success');
+        addActivity(`Added team member: ${name}`, '👥');
       }
 
-      save();
       closeModal('newTeamModal');
       renderAll();
     }
 
     async function saveNote() {
-      const title = gid('noteTitle').value.trim();
+      // Bug Fix: Use safe value getter
+      const title = getValueTrim('noteTitle');
       if (!title) { toast('Title is required', 'error'); return; }
 
       if (window.editingNoteId) {
@@ -5537,12 +5948,14 @@
         const note = AppState.notes.find(n => n.id === window.editingNoteId);
         if (note) {
           note.title = title;
-          note.content = gid('noteContent').value.trim();
-          note.tags = gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t);
+          note.content = getValueTrim('noteContent');
+          // Bug Fix: Safe split with null check
+          const tagsValue = getValue('noteTags') || '';
+          note.tags = tagsValue.split(',').map(t => t.trim()).filter(t => t);
           note.updatedAt = Date.now();
 
           await saveToSupabase('notes', note);
-          save();
+          await save();
 
           window.editingNoteId = null;
           toast('Note updated! ✅', 'success');
@@ -5552,14 +5965,17 @@
         const newNote = {
           id: genId(),
           title,
-          content: gid('noteContent').value.trim(),
-          tags: gid('noteTags').value.split(',').map(t => t.trim()).filter(t => t),
+          content: getValueTrim('noteContent'),
+          tags: (getValue('noteTags') || '').split(',').map(t => t.trim()).filter(t => t),
           createdAt: Date.now()
         };
+        
+        // Bug Fix: Ensure array exists before push
+        AppState.notes = ensureArray(AppState, 'notes');
         AppState.notes.push(newNote);
 
         await saveToSupabase('notes', newNote);
-        save();
+        await save();
 
         toast('Note created! ✅', 'success');
       }
@@ -5574,30 +5990,46 @@
       if (!name) { toast('Resource name is required', 'error'); return; }
 
       AppState.resources = AppState.resources || [];
-      const resourceData = {
-        name,
-        type: gid('resourceType').value,
-        url: gid('resourceUrl').value.trim(),
-        description: gid('resourceDesc').value.trim()
-      };
-
+      
       if (window.editingResourceId) {
         const index = AppState.resources.findIndex(r => r.id === window.editingResourceId);
         if (index !== -1) {
-          AppState.resources[index] = { ...AppState.resources[index], ...resourceData };
-          window.editingResourceId = null;
+          const updatedResource = {
+            ...AppState.resources[index],
+            name,
+            type: gid('resourceType').value,
+            url: gid('resourceUrl').value.trim(),
+            description: gid('resourceDesc').value.trim(),
+            updatedAt: Date.now()
+          };
+          AppState.resources[index] = updatedResource;
+          
+          saveToSupabase('resources', updatedResource);
+          save();
+          
+          addActivity(`Updated resource: ${name}`, '⚡');
         }
+        window.editingResourceId = null;
+        toast('Resource updated! ✅', 'success');
       } else {
-        AppState.resources.push({
+        const newResource = {
           id: genId(),
-          ...resourceData,
+          name,
+          type: gid('resourceType').value,
+          url: gid('resourceUrl').value.trim(),
+          description: gid('resourceDesc').value.trim(),
           createdAt: Date.now()
-        });
+        };
+        AppState.resources.push(newResource);
+        
+        saveToSupabase('resources', newResource);
+        save();
+        
+        toast('Resource saved! ✅', 'success');
+        addActivity(`Added resource: ${name}`, '⚡');
       }
 
-      save();
       closeModal('newResourceModal');
-      toast('Resource saved!', 'success');
       renderAll();
     }
 
@@ -5606,30 +6038,46 @@
       if (!item) { toast('Item name is required', 'error'); return; }
 
       AppState.budget = AppState.budget || [];
-      const budgetData = {
-        item,
-        category: gid('budgetCategory').value,
-        amount: parseFloat(gid('budgetAmount').value) || 0,
-        spent: parseFloat(gid('budgetSpent').value) || 0
-      };
-
+      
       if (window.editingBudgetId) {
         const index = AppState.budget.findIndex(b => b.id === window.editingBudgetId);
         if (index !== -1) {
-          AppState.budget[index] = { ...AppState.budget[index], ...budgetData };
-          window.editingBudgetId = null;
+          const updatedBudget = {
+            ...AppState.budget[index],
+            item,
+            category: gid('budgetCategory').value,
+            amount: parseFloat(gid('budgetAmount').value) || 0,
+            spent: parseFloat(gid('budgetSpent').value) || 0,
+            updatedAt: Date.now()
+          };
+          AppState.budget[index] = updatedBudget;
+          
+          saveToSupabase('budget', updatedBudget);
+          save();
+          
+          addActivity(`Updated budget: ${item}`, '💰');
         }
+        window.editingBudgetId = null;
+        toast('Budget updated! ✅', 'success');
       } else {
-        AppState.budget.push({
+        const newBudget = {
           id: genId(),
-          ...budgetData,
+          item,
+          category: gid('budgetCategory').value,
+          amount: parseFloat(gid('budgetAmount').value) || 0,
+          spent: parseFloat(gid('budgetSpent').value) || 0,
           createdAt: Date.now()
-        });
+        };
+        AppState.budget.push(newBudget);
+        
+        saveToSupabase('budget', newBudget);
+        save();
+        
+        toast('Budget item saved! ✅', 'success');
+        addActivity(`Added budget: ${item}`, '💰');
       }
 
-      save();
       closeModal('newBudgetModal');
-      toast('Budget item saved!', 'success');
       renderAll();
     }
 
@@ -5638,7 +6086,52 @@
       if (!name) { toast('Risk name is required', 'error'); return; }
 
       AppState.risks = AppState.risks || [];
-      const riskData = {
+      
+      if (window.editingRiskId) {
+        const index = AppState.risks.findIndex(r => r.id === window.editingRiskId);
+        if (index !== -1) {
+          const updatedRisk = {
+            ...AppState.risks[index],
+            title: name,
+            description: gid('riskDesc').value.trim(),
+            probability: gid('riskProbability').value,
+            impact: gid('riskImpact').value,
+            mitigation: gid('riskMitigation').value.trim(),
+            status: gid('riskStatus').value,
+            updatedAt: Date.now()
+          };
+          AppState.risks[index] = updatedRisk;
+          
+          saveToSupabase('risks', updatedRisk);
+          save();
+          
+          addActivity(`Updated risk: ${name}`, '⚠️');
+        }
+        window.editingRiskId = null;
+        toast('Risk updated! ✅', 'success');
+      } else {
+        const newRisk = {
+          id: genId(),
+          title: name,
+          description: gid('riskDesc').value.trim(),
+          probability: gid('riskProbability').value,
+          impact: gid('riskImpact').value,
+          mitigation: gid('riskMitigation').value.trim(),
+          status: gid('riskStatus').value,
+          createdAt: Date.now()
+        };
+        AppState.risks.push(newRisk);
+        
+        saveToSupabase('risks', newRisk);
+        save();
+        
+        toast('Risk saved! ✅', 'success');
+        addActivity(`Added risk: ${name}`, '⚠️');
+      }
+
+      closeModal('newRiskModal');
+      renderAll();
+    }
         name,
         category: gid('riskCategory').value,
         severity: gid('riskSeverity').value,
@@ -5666,12 +6159,18 @@
       renderAll();
     }
 
-    function deleteItem(type, id) {
+    async function deleteItem(type, id) {
       if (!confirm('Are you sure you want to delete this?')) return;
+      
+      // Delete from Supabase
+      await deleteFromSupabase(type, id);
+      
+      // Delete from local state
       AppState[type] = AppState[type].filter(item => item.id !== id);
-      save();
+      await save();
+      
       renderAll();
-      toast('Deleted successfully', 'success');
+      toast('Deleted successfully ✅', 'success');
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -5709,7 +6208,13 @@
           <td>${p.startDate || '-'}</td>
           <td>${p.endDate || '-'}</td>
           <td>$${(p.budget || 0).toLocaleString()}</td>
-          <td><button class="btn btn-sm btn-ghost" onclick="deleteItem('projects', '${p.id}')">🗑️</button></td>
+          <td>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-ghost" onclick="copyProject('${p.id}')" title="Copy">📋</button>
+              <button class="btn btn-sm btn-ghost" onclick="editProject('${p.id}')" title="Edit">✏️</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteItem('projects', '${p.id}')" title="Delete">🗑️</button>
+            </div>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="7" class="empty-state">No projects yet</td></tr>';
     }
@@ -5723,7 +6228,13 @@
           <td><span class="status-badge status-${t.status}">${t.status}</span></td>
           <td>${t.assignee || 'Unassigned'}</td>
           <td>${fmtDate(t.createdAt)}</td>
-          <td><button class="btn btn-sm btn-ghost" onclick="deleteItem('tasks', '${t.id}')">🗑️</button></td>
+          <td>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-ghost" onclick="copyTask('${t.id}')" title="Copy">📋</button>
+              <button class="btn btn-sm btn-ghost" onclick="editTask('${t.id}')" title="Edit">✏️</button>
+              <button class="btn btn-sm btn-ghost" onclick="deleteItem('tasks', '${t.id}')" title="Delete">🗑️</button>
+            </div>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="6" class="empty-state">No tasks yet</td></tr>';
     }
@@ -5816,12 +6327,15 @@
                     <td>${m.location || m.meeting_link ? (m.location ? `<small>📍 ${esc(m.location)}</small>` : `<small>🔗 Virtual</small>`) : '-'}</td>
                     <td>${Array.isArray(m.attendees) ? m.attendees.length : 0} 👤</td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="showMeetingSummary('${m.id}')" title="AI Summary">🤖</button>
-                      <button class="btn btn-sm btn-ghost" onclick="showMeetingActionItems('${m.id}')" title="Action Items">✅</button>
-                      <button class="btn btn-sm btn-ghost" onclick="showAttendanceReport('${m.id}')" title="Attendance">📊</button>
-                      <button class="btn btn-sm btn-ghost" onclick="exportMeeting('${m.id}')" title="Export">📥</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')">🗑️</button>
+                      <div style="display: flex; gap: 2px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyMeeting('${m.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editMeeting('${m.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="showMeetingSummary('${m.id}')" title="AI Summary">🤖</button>
+                        <button class="btn btn-sm btn-ghost" onclick="showMeetingActionItems('${m.id}')" title="Action Items">✅</button>
+                        <button class="btn btn-sm btn-ghost" onclick="showAttendanceReport('${m.id}')" title="Attendance">📊</button>
+                        <button class="btn btn-sm btn-ghost" onclick="exportMeeting('${m.id}')" title="Export">📥</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('meetings', '${m.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `).join('') || '<tr><td colspan="7" class="empty-state">No meetings yet</td></tr>'}
@@ -6104,8 +6618,11 @@
                     <td>${t.email}</td>
                     <td><span class="tag tag-${t.online !== false ? 'green' : 'gray'}">${t.online !== false ? 'Online' : 'Offline'}</span></td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" onclick="editTeamMember('${t.id}')">✏️</button>
-                      <button class="btn btn-sm btn-ghost" onclick="deleteItem('team', '${t.id}')">🗑️</button>
+                      <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-sm btn-ghost" onclick="copyTeamMember('${t.id}')" title="Copy">📋</button>
+                        <button class="btn btn-sm btn-ghost" onclick="editTeamMember('${t.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-sm btn-ghost" onclick="deleteItem('team', '${t.id}')" title="Delete">🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 `).join('') || '<tr><td colspan="6" class="empty-state">No team members yet</td></tr>'}
