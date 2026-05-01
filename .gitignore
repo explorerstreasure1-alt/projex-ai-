@@ -37,3 +37,5 @@ coverage/
 
 # Local data (demo only)
 *.local
+
+.vercel
