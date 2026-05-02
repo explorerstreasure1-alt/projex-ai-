@@ -5,20 +5,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROJEX AI — AI-Powered Project Management with Social Collaboration</title>
-  <meta name="description" content="AI-powered project management platform with social features, real-time collaboration, and advanced AI tools">
-  <meta name="keywords" content="project management, AI, collaboration, task management, team collaboration, productivity, AI assistant, digital transformation">
+  <meta name="description"
+    content="AI-powered project management platform with social features, real-time collaboration, and advanced AI tools">
+  <meta name="keywords"
+    content="project management, AI, collaboration, task management, team collaboration, productivity, AI assistant, digital transformation">
   <meta name="author" content="PROJEX AI Team">
   <meta name="robots" content="index, follow">
-  
+
   <!-- Open Graph -->
   <meta property="og:title" content="PROJEX AI - AI-Powered Project Management">
-  <meta property="og:description" content="Modern project management with AI, team collaboration, and productivity tools">
+  <meta property="og:description"
+    content="Modern project management with AI, team collaboration, and productivity tools">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="en_US">
-  
+
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
-  
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
@@ -26,7 +30,7 @@
   <script>
     // Environment Variables Configuration
     // Vercel'den gelen environment variables'ı window objesine aktarır
-    (function() {
+    (function () {
       window.env = {
         SUPABASE_URL: 'SUPABASE_URL' in window ? window.SUPABASE_URL : undefined,
         SUPABASE_ANON_KEY: 'SUPABASE_ANON_KEY' in window ? window.SUPABASE_ANON_KEY : undefined,
@@ -162,27 +166,37 @@
           <div id="msg-area"></div>
           <div id="form-area">
             <div class="tab-panel active" id="loginForm">
-              <div class="fg"><label class="flabel">Email</label><input class="finput" id="loginEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
-              <div class="fg"><label class="flabel">Password</label><input class="finput" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"></div>
-              <div class="forgot-row"><button class="forgot-btn" type="button" onclick="showForgotPassword()">Şifreyi unuttun mu?</button></div>
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="loginEmail" type="email"
+                  placeholder="you@company.com" autocomplete="email"></div>
+              <div class="fg"><label class="flabel">Password</label><input class="finput" id="loginPassword"
+                  type="password" placeholder="••••••••" autocomplete="current-password"></div>
+              <div class="forgot-row"><button class="forgot-btn" type="button" onclick="showForgotPassword()">Şifreyi
+                  unuttun mu?</button></div>
               <button class="submit-btn" id="loginBtn" type="button" onclick="handleLogin()">Sign In</button>
             </div>
             <div class="tab-panel" id="registerForm" style="display:none;">
-              <div class="fg"><label class="flabel">Full Name</label><input class="finput" id="regFullName" type="text" placeholder="Your name" autocomplete="name"></div>
-              <div class="fg"><label class="flabel">Email</label><input class="finput" id="regEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <div class="fg"><label class="flabel">Full Name</label><input class="finput" id="regFullName" type="text"
+                  placeholder="Your name" autocomplete="name"></div>
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="regEmail" type="email"
+                  placeholder="you@company.com" autocomplete="email"></div>
               <div class="fg">
                 <label class="flabel">Password</label>
-                <input class="finput" id="regPassword" type="password" placeholder="min. 6 characters" autocomplete="new-password" oninput="updateStrength()">
+                <input class="finput" id="regPassword" type="password" placeholder="min. 6 characters"
+                  autocomplete="new-password" oninput="updateStrength()">
                 <div class="pw-strength" id="pw-bar" style="width:0%;background:#ef4444"></div>
                 <div class="pw-label" id="pw-lbl" style="font-size:0.7rem;color:#8888a8"></div>
               </div>
-              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="regPasswordConfirm" type="password" placeholder="••••••••" autocomplete="new-password"></div>
-              <button class="submit-btn" id="registerSubmitBtn" type="button" onclick="handleRegister()">Create Account</button>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput"
+                  id="regPasswordConfirm" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <button class="submit-btn" id="registerSubmitBtn" type="button" onclick="handleRegister()">Create
+                Account</button>
             </div>
             <div class="tab-panel" id="forgotForm" style="display:none;">
-              <div class="fg"><label class="flabel">Email</label><input class="finput" id="resetEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <div class="fg"><label class="flabel">Email</label><input class="finput" id="resetEmail" type="email"
+                  placeholder="you@company.com" autocomplete="email"></div>
               <button class="submit-btn" id="forgotBtn" type="button" onclick="handleForgot()">Send Reset Link</button>
-              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('login')">← Back to Login</button></div>
+              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('login')">← Back to
+                  Login</button></div>
             </div>
             <div class="tab-panel" id="verifyForm" style="display:none;">
               <div style="text-align:center;margin-bottom:16px;">
@@ -190,9 +204,13 @@
                 <h3 style="margin:8px 0;color:var(--text);">Verify Email</h3>
                 <p style="font-size:0.8rem;color:var(--text-muted);">Enter the 6-digit code sent to your email</p>
               </div>
-              <div class="fg"><label class="flabel">Verification Code</label><input class="finput" id="verifyCode" type="text" placeholder="000000" maxlength="6" style="letter-spacing:8px;font-size:1.4rem;text-align:center;font-family:'JetBrains Mono',monospace"></div>
+              <div class="fg"><label class="flabel">Verification Code</label><input class="finput" id="verifyCode"
+                  type="text" placeholder="000000" maxlength="6"
+                  style="letter-spacing:8px;font-size:1.4rem;text-align:center;font-family:'JetBrains Mono',monospace">
+              </div>
               <button class="submit-btn" id="verifyBtn" type="button" onclick="handleVerify()">Verify Code</button>
-              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('forgot')">← Back</button></div>
+              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('forgot')">←
+                  Back</button></div>
             </div>
             <div class="tab-panel" id="resetForm" style="display:none;">
               <div style="text-align:center;margin-bottom:16px;">
@@ -200,10 +218,13 @@
                 <h3 style="margin:8px 0;color:var(--text);">Reset Password</h3>
                 <p style="font-size:0.8rem;color:var(--text-muted);">Enter your new password</p>
               </div>
-              <div class="fg"><label class="flabel">New Password</label><input class="finput" id="newPw" type="password" placeholder="min. 6 characters" autocomplete="new-password"></div>
-              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="confirmNewPw" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <div class="fg"><label class="flabel">New Password</label><input class="finput" id="newPw" type="password"
+                  placeholder="min. 6 characters" autocomplete="new-password"></div>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="confirmNewPw"
+                  type="password" placeholder="••••••••" autocomplete="new-password"></div>
               <button class="submit-btn" id="resetBtn" type="button" onclick="handleReset()">Reset Password</button>
-              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('login')">← Back to Login</button></div>
+              <div class="back-link"><button class="forgot-btn" type="button" onclick="switchTab('login')">← Back to
+                  Login</button></div>
             </div>
             <div class="tab-panel" id="recoveryForm" style="display:none;">
               <div style="text-align:center;margin-bottom:16px;">
@@ -211,9 +232,12 @@
                 <h3 style="margin:8px 0;color:var(--text);">Create New Password</h3>
                 <p style="font-size:0.8rem;color:var(--text-muted);">Enter your new password below</p>
               </div>
-              <div class="fg"><label class="flabel">New Password</label><input class="finput" id="newPw" type="password" placeholder="min. 6 characters" autocomplete="new-password"></div>
-              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="newPw2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
-              <button class="submit-btn" id="recoveryBtn" type="button" onclick="handleRecovery()">Update Password</button>
+              <div class="fg"><label class="flabel">New Password</label><input class="finput" id="newPw" type="password"
+                  placeholder="min. 6 characters" autocomplete="new-password"></div>
+              <div class="fg"><label class="flabel">Confirm Password</label><input class="finput" id="newPw2"
+                  type="password" placeholder="••••••••" autocomplete="new-password"></div>
+              <button class="submit-btn" id="recoveryBtn" type="button" onclick="handleRecovery()">Update
+                Password</button>
             </div>
           </div>
           <div class="trial-note">
@@ -1717,10 +1741,10 @@
     // ═══════════════════════════════════════════════════════════════
     // APP STATE
     // ═══════════════════════════════════════════════════════════════
-  const AppState = {
-    pendingVerificationEmail: null,
-    currentUser: null,
-    currentPage: 'dashboard',
+    const AppState = {
+      pendingVerificationEmail: null,
+      currentUser: null,
+      currentPage: 'dashboard',
       users: [],
       projects: [],
       tasks: [],
@@ -1778,12 +1802,62 @@
     };
     const genId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
     const todayStr = () => new Date().toISOString().slice(0, 10);
-    const esc = (str) => String(str || '').replace(/[<>&"']/g, (m) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', '\'': '&#39;' }[m]));
+
+    // Security: Enhanced XSS sanitization (replaces esc)
+    const esc = (str) => {
+      if (!str) return '';
+      str = String(str);
+      return str
+        .replace(/[<>&"']/g, (m) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', '\'': '&#39;' }[m]))
+        .replace(/javascript:/gi, '')
+        .replace(/on\w+=/gi, '');
+    };
+
     const fmtDate = (ts) => ts ? new Date(ts).toLocaleDateString('en-US') : '-';
+
+    // Security: Password hashing using Web Crypto API (SHA-256)
+    async function hashPassword(password) {
+      if (!password) return null;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+
+    // Error Tracking Placeholder (for Sentry/LogRocket integration)
+    const ErrorTracker = {
+      enabled: false, // Set to true and configure Sentry in production
+      init: function () {
+        if (!this.enabled) return;
+        // Example: Sentry.init({ dsn: 'YOUR_SENTRY_DSN' });
+        console.log('Error tracking initialized (placeholder)');
+      },
+      captureException: function (error, context = {}) {
+        if (!this.enabled) {
+          console.error('Error:', error, context);
+          return;
+        }
+        // Example: Sentry.captureException(error, { extra: context });
+        console.error('Error tracked:', error, context);
+      },
+      captureMessage: function (message, level = 'info') {
+        if (!this.enabled) {
+          console.log(`[${level}] ${message}`);
+          return;
+        }
+        // Example: Sentry.captureMessage(message, level);
+        console.log(`[${level}] ${message}`);
+      }
+    };
+
+    // Initialize error tracking on load
+    ErrorTracker.init();
 
     // KALICI HAFIZA SİSTEMİ - Supabase Tabalı (Vercel için)
     // Tüm veriler Supabase'e kaydedilir, sayfa yenilendiğinde kaybolmaz
-    
+
     // Bug Fix #1: Safe getter with null checking
     function formatTimestamp(ts) {
       if (!ts) return new Date().toISOString();
@@ -1933,7 +2007,7 @@
         user: AppState.currentUser?.email,
         data: AppState
       };
-      
+
       const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1943,7 +2017,7 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast('Veriler başarıyla dışa aktarıldı!', 'success');
     }
 
@@ -1953,32 +2027,32 @@
         reader.onload = async (e) => {
           try {
             const importObj = JSON.parse(e.target.result);
-            
+
             if (!importObj.data) {
               toast('Geçersiz yedekleme dosyası', 'error');
               return;
             }
-            
+
             // Merge imported data
             const merged = {
               ...AppState,
               ...importObj.data,
               currentUser: AppState.currentUser // Keep current user
             };
-            
+
             Object.assign(AppState, merged);
             await save();
             renderAll();
-            
+
             toast('Veriler başarıyla içe aktarıldı!', 'success');
-            
+
           } catch (err) {
             console.error('Import parse error:', err);
             toast('Dosya okunamadı', 'error');
           }
         };
         reader.readAsText(file);
-        
+
       } catch (error) {
         console.error('Import error:', error);
         toast('İçe aktarma başarısız', 'error');
@@ -2328,7 +2402,7 @@
       gid('verifyForm').style.display = authTab === 'verify' ? 'block' : 'none';
       gid('resetForm').style.display = authTab === 'reset' ? 'block' : 'none';
       gid('recoveryForm').style.display = authTab === 'recovery' ? 'block' : 'none';
-      
+
       // Update tab buttons visibility
       const showTabs = !['forgot', 'verify', 'reset', 'recovery'].includes(authTab);
       gid('loginTabBtn').style.display = showTabs ? 'inline-block' : 'none';
@@ -2361,26 +2435,26 @@
       clearMsg();
       const code = gid('verifyCode')?.value.trim();
       if (!code || code.length !== 6) { showMsg('Lütfen 6 haneli doğrulama kodunu girin', 'error'); return; }
-      
+
       setLoading(true);
-      
+
       try {
         const { error } = await supabaseClient.auth.verifyOtp({
           email: pendingVerificationEmail,
           token: code,
           type: 'email'
         });
-        
+
         if (error) throw error;
-        
+
         showMsg('Email başarıyla doğrulandı!', 'success');
         setTimeout(() => switchTab('login'), 1500);
-        
+
       } catch (error) {
         console.error('Verify error:', error);
         showMsg(error.message || 'Doğrulama kodu hatalı', 'error');
       }
-      
+
       setLoading(false);
     }
 
@@ -2388,36 +2462,36 @@
       clearMsg();
       const newPw = gid('newPw')?.value;
       const confirmPw = gid('confirmNewPw')?.value;
-      
+
       if (!newPw || !confirmPw) { showMsg('Lütfen şifreyi girin', 'error'); return; }
       if (newPw.length < 6) { showMsg('Şifre en az 6 karakter olmalı', 'error'); return; }
       if (newPw !== confirmPw) { showMsg('Şifreler eşleşmiyor', 'error'); return; }
-      
+
       setLoading(true);
-      
+
       try {
         const { error } = await supabaseClient.auth.updateUser({ password: newPw });
         if (error) throw error;
-        
+
         showMsg('Şifre başarıyla güncellendi!', 'success');
         setTimeout(() => switchTab('login'), 1500);
-        
+
       } catch (error) {
         console.error('Reset error:', error);
         showMsg(error.message || 'Şifre güncellenirken hata oluştu', 'error');
       }
-      
+
       setLoading(false);
     }
 
     function setLoading(on) {
       loading = on;
-      const activeBtn = authTab === 'login' ? gid('loginBtn') : 
-                        authTab === 'register' ? gid('registerSubmitBtn') :
-                        authTab === 'forgot' ? gid('forgotBtn') :
-                        authTab === 'verify' ? gid('verifyBtn') :
-                        authTab === 'recovery' ? gid('recoveryBtn') : null;
-      
+      const activeBtn = authTab === 'login' ? gid('loginBtn') :
+        authTab === 'register' ? gid('registerSubmitBtn') :
+          authTab === 'forgot' ? gid('forgotBtn') :
+            authTab === 'verify' ? gid('verifyBtn') :
+              authTab === 'recovery' ? gid('recoveryBtn') : null;
+
       if (!activeBtn) return;
       activeBtn.disabled = on;
       activeBtn.textContent = on ? 'Processing...' : activeBtn.dataset.originalText || activeBtn.textContent;
@@ -2612,44 +2686,44 @@
       clearMsg();
       const newPw = gid('newPw')?.value;
       const newPw2 = gid('newPw2')?.value;
-      
-      if (!newPw || !newPw2) { 
-        showMsg('Lütfen şifreyi girin', 'error'); 
-        return; 
+
+      if (!newPw || !newPw2) {
+        showMsg('Lütfen şifreyi girin', 'error');
+        return;
       }
-      
-      if (newPw.length < 6) { 
-        showMsg('Şifre en az 6 karakter olmalı', 'error'); 
-        return; 
+
+      if (newPw.length < 6) {
+        showMsg('Şifre en az 6 karakter olmalı', 'error');
+        return;
       }
-      
-      if (newPw !== newPw2) { 
-        showMsg('Şifreler eşleşmiyor', 'error'); 
-        return; 
+
+      if (newPw !== newPw2) {
+        showMsg('Şifreler eşleşmiyor', 'error');
+        return;
       }
-      
+
       setLoading(true);
-      
+
       try {
         const { error } = await supabaseClient.auth.updateUser({
           password: newPw
         });
-        
+
         if (error) throw error;
-        
+
         showMsg('Şifreniz başarıyla güncellendi!', 'success');
-        
+
         setTimeout(() => {
           switchTab('login');
           gid('newPw').value = '';
           gid('newPw2').value = '';
         }, 1500);
-        
+
       } catch (error) {
         console.error('Password update error:', error);
         showMsg(error.message || 'Şifre güncellenirken hata oluştu', 'error');
       }
-      
+
       setLoading(false);
     }
 
@@ -2829,20 +2903,20 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-// NAVIGATION
+    // NAVIGATION
     // ═══════════════════════════════════════════════════════════════════
-    
+
     // MOBİL MENÜ FONKSİYONU
     function toggleMobileMenu() {
       const hamburger = document.querySelector('.hamburger');
       const sidebar = document.querySelector('.sidebar');
       const backdrop = document.querySelector('.sidebar-backdrop');
-      
+
       if (!sidebar) return;
-      
+
       sidebar.classList.toggle('active');
       hamburger?.classList.toggle('active');
-      
+
       // Create backdrop if not exists
       if (!backdrop) {
         const newBackdrop = document.createElement('div');
@@ -2850,10 +2924,10 @@
         newBackdrop.onclick = toggleMobileMenu;
         document.body.appendChild(newBackdrop);
       }
-      
+
       document.querySelector('.sidebar-backdrop')?.classList.toggle('active');
     }
-    
+
     function navigateTo(page) {
       // Check PRO features - allow trial users access
       if ((page === 'ai' || page === 'images') && !hasFeatureAccess()) {
@@ -3015,12 +3089,12 @@
         setValue('noteTitle', '');
         setValue('noteContent', '');
         setValue('noteTags', '');
-        
+
         // Use safe setters
         setValue('noteTitle', note.title);
         setValue('noteContent', note.content || '');
         setValue('noteTags', (note.tags || []).join(', '));
-        
+
         window.editingNoteId = id;
         openModal('newNoteModal');
       }
@@ -4061,7 +4135,7 @@
       };
 
       AppState.meetingNotes.unshift(newNote);
-      
+
       // Save meeting notes to Supabase if in a meeting
       if (AppState.currentMeetingId) {
         const meeting = AppState.meetings.find(m => m.id === AppState.currentMeetingId);
@@ -4071,9 +4145,9 @@
           await saveToSupabase('meetings', meeting);
         }
       }
-      
+
       await save();
-      
+
       gid('meetingNotes').value = '';
       toast('Toplantı notları kaydedildi! 💾', 'success');
     }
@@ -5603,7 +5677,7 @@
     // ═══════════════════════════════════════════════════════════════
     // SOCIAL FEED
     // ═══════════════════════════════════════════════════════════════
-function renderSocialFeed() {
+    function renderSocialFeed() {
       const feed = gid('socialFeed');
 
       if (AppState.posts.length === 0) {
@@ -5663,7 +5737,7 @@ function renderSocialFeed() {
       `).join('');
     }
 
-      feed.innerHTML = AppState.posts.map(post => `
+    feed.innerHTML = AppState.posts.map(post => `
         <div class="social-post">
           <div class="social-post-header">
             <div class="social-post-avatar">${post.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</div>
@@ -5730,11 +5804,11 @@ function renderSocialFeed() {
       };
 
       AppState.posts.unshift(post);
-      
+
       // Save to Supabase for permanent storage
       await saveToSupabase('posts', post);
       await save();
-      
+
       closeModal('newPostModal');
       gid('postContent').value = '';
       renderSocialFeed();
@@ -5755,13 +5829,13 @@ function renderSocialFeed() {
     async function editPost(id) {
       const post = AppState.posts.find(p => p.id === id);
       if (!post) return;
-      
+
       const newContent = prompt('Gönderiyi düzenle:', post.content);
       if (!newContent || newContent.trim() === post.content) return;
-      
+
       post.content = newContent.trim();
       post.updatedAt = Date.now();
-      
+
       await saveToSupabase('posts', post);
       await save();
       renderSocialFeed();
@@ -5770,7 +5844,7 @@ function renderSocialFeed() {
 
     async function deletePost(id) {
       if (!confirm('Bu gönderiyi silmek istediğinize emin misiniz?')) return;
-      
+
       try {
         await deleteFromSupabase('posts', id);
         AppState.posts = AppState.posts.filter(p => p.id !== id);
@@ -5799,10 +5873,10 @@ function renderSocialFeed() {
         createdAt: Date.now()
       });
       post.comments++;
-      
+
       await saveToSupabase('posts', post);
       await save();
-      
+
       renderSocialFeed();
       toast('Comment added! 💬', 'success');
     }
@@ -6065,6 +6139,7 @@ function renderSocialFeed() {
       const role = gid('meetingRole').value;
       const reminderMinutes = parseInt(gid('meetingReminder').value) || 15;
       const password = gid('meetingPassword').value.trim();
+      const hashedPassword = password ? await hashPassword(password) : null;
       const waitingRoom = gid('meetingWaitingRoom').value === 'true';
       const encrypted = gid('meetingEncrypted').value === 'true';
       const joinPermissions = gid('meetingJoinPermissions').value;
@@ -6095,7 +6170,7 @@ function renderSocialFeed() {
           m.attendees = attendees;
           m.role = role;
           m.reminder_minutes = reminderMinutes;
-          m.password = password || null;
+          m.password = hashedPassword || null;
           m.waiting_room = waitingRoom;
           m.encrypted = encrypted;
           m.join_permissions = joinPermissions;
@@ -6128,7 +6203,7 @@ function renderSocialFeed() {
           attendees,
           role,
           reminder_minutes: reminderMinutes,
-          password: password || null,
+          password: hashedPassword || null,
           waiting_room: waitingRoom,
           encrypted: encrypted,
           join_permissions: joinPermissions,
@@ -6218,10 +6293,10 @@ function renderSocialFeed() {
           member.email = gid('teamEmail').value.trim();
           member.initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
           member.updatedAt = Date.now();
-          
+
           saveToSupabase('team', member);
           save();
-          
+
           addActivity(`Updated team member: ${name}`, '👥');
         }
         window.editingTeamMemberId = null;
@@ -6238,10 +6313,10 @@ function renderSocialFeed() {
           createdAt: Date.now()
         };
         AppState.team.push(newMember);
-        
+
         saveToSupabase('team', newMember);
         save();
-        
+
         toast('Team member added! ✅', 'success');
         addActivity(`Added team member: ${name}`, '👥');
       }
@@ -6281,7 +6356,7 @@ function renderSocialFeed() {
           tags: (getValue('noteTags') || '').split(',').map(t => t.trim()).filter(t => t),
           createdAt: Date.now()
         };
-        
+
         // Bug Fix: Ensure array exists before push
         AppState.notes = ensureArray(AppState, 'notes');
         AppState.notes.push(newNote);
@@ -6302,7 +6377,7 @@ function renderSocialFeed() {
       if (!name) { toast('Resource name is required', 'error'); return; }
 
       AppState.resources = AppState.resources || [];
-      
+
       if (window.editingResourceId) {
         const index = AppState.resources.findIndex(r => r.id === window.editingResourceId);
         if (index !== -1) {
@@ -6315,10 +6390,10 @@ function renderSocialFeed() {
             updatedAt: Date.now()
           };
           AppState.resources[index] = updatedResource;
-          
+
           saveToSupabase('resources', updatedResource);
           save();
-          
+
           addActivity(`Updated resource: ${name}`, '⚡');
         }
         window.editingResourceId = null;
@@ -6333,10 +6408,10 @@ function renderSocialFeed() {
           createdAt: Date.now()
         };
         AppState.resources.push(newResource);
-        
+
         saveToSupabase('resources', newResource);
         save();
-        
+
         toast('Resource saved! ✅', 'success');
         addActivity(`Added resource: ${name}`, '⚡');
       }
@@ -6350,7 +6425,7 @@ function renderSocialFeed() {
       if (!item) { toast('Item name is required', 'error'); return; }
 
       AppState.budget = AppState.budget || [];
-      
+
       if (window.editingBudgetId) {
         const index = AppState.budget.findIndex(b => b.id === window.editingBudgetId);
         if (index !== -1) {
@@ -6363,10 +6438,10 @@ function renderSocialFeed() {
             updatedAt: Date.now()
           };
           AppState.budget[index] = updatedBudget;
-          
+
           saveToSupabase('budget', updatedBudget);
           save();
-          
+
           addActivity(`Updated budget: ${item}`, '💰');
         }
         window.editingBudgetId = null;
@@ -6381,10 +6456,10 @@ function renderSocialFeed() {
           createdAt: Date.now()
         };
         AppState.budget.push(newBudget);
-        
+
         saveToSupabase('budget', newBudget);
         save();
-        
+
         toast('Budget item saved! ✅', 'success');
         addActivity(`Added budget: ${item}`, '💰');
       }
@@ -6398,7 +6473,7 @@ function renderSocialFeed() {
       if (!name) { toast('Risk name is required', 'error'); return; }
 
       AppState.risks = AppState.risks || [];
-      
+
       if (window.editingRiskId) {
         const index = AppState.risks.findIndex(r => r.id === window.editingRiskId);
         if (index !== -1) {
@@ -6413,10 +6488,10 @@ function renderSocialFeed() {
             updatedAt: Date.now()
           };
           AppState.risks[index] = updatedRisk;
-          
+
           saveToSupabase('risks', updatedRisk);
           save();
-          
+
           addActivity(`Updated risk: ${name}`, '⚠️');
         }
         window.editingRiskId = null;
@@ -6433,10 +6508,10 @@ function renderSocialFeed() {
           createdAt: Date.now()
         };
         AppState.risks.push(newRisk);
-        
+
         saveToSupabase('risks', newRisk);
         save();
-        
+
         toast('Risk saved! ✅', 'success');
         addActivity(`Added risk: ${name}`, '⚠️');
       }
@@ -6444,31 +6519,31 @@ function renderSocialFeed() {
       closeModal('newRiskModal');
       renderAll();
     }
-        name,
-        category: gid('riskCategory').value,
+    name,
+      category: gid('riskCategory').value,
         severity: gid('riskSeverity').value,
-        probability: parseInt(gid('riskProbability').value) || 0,
-        mitigation: gid('riskMitigation').value.trim()
+          probability: parseInt(gid('riskProbability').value) || 0,
+            mitigation: gid('riskMitigation').value.trim()
       };
 
-      if (window.editingRiskId) {
-        const index = AppState.risks.findIndex(r => r.id === window.editingRiskId);
-        if (index !== -1) {
-          AppState.risks[index] = { ...AppState.risks[index], ...riskData };
-          window.editingRiskId = null;
-        }
-      } else {
-        AppState.risks.push({
-          id: genId(),
-          ...riskData,
-          createdAt: Date.now()
-        });
+    if (window.editingRiskId) {
+      const index = AppState.risks.findIndex(r => r.id === window.editingRiskId);
+      if (index !== -1) {
+        AppState.risks[index] = { ...AppState.risks[index], ...riskData };
+        window.editingRiskId = null;
       }
+    } else {
+      AppState.risks.push({
+        id: genId(),
+        ...riskData,
+        createdAt: Date.now()
+      });
+    }
 
-      save();
-      closeModal('newRiskModal');
-      toast('Risk saved!', 'success');
-      renderAll();
+    save();
+    closeModal('newRiskModal');
+    toast('Risk saved!', 'success');
+    renderAll();
     }
 
     async function deleteItem(type, id) {
@@ -6485,7 +6560,7 @@ function renderSocialFeed() {
         post: 'Bu gönderiyi silmek istediğinize emin misiniz?',
         image: 'Bu görseli silmek istediğinize emin misiniz?'
       };
-      
+
       const typeLabels = {
         project: 'Proje',
         task: 'Görev',
@@ -6497,15 +6572,15 @@ function renderSocialFeed() {
         post: 'Gönderi',
         image: 'Görsel'
       };
-      
+
       const message = confirmMessages[type] || `${typeLabels[type] || 'Bu öğeyi'} silmek istediğinize emin misiniz?`;
-      
+
       if (!confirm(message)) return;
-      
+
       try {
         // Delete from Supabase
         await deleteFromSupabase(type, id);
-        
+
         // Delete from local state
         if (AppState[type]) {
           AppState[type] = AppState[type].filter(item => item.id !== id);
@@ -6514,12 +6589,12 @@ function renderSocialFeed() {
         } else if (type === 'image') {
           AppState.images = AppState.images.filter(i => i.id !== id);
         }
-        
+
         await save();
         renderAll();
-        
+
         toast(`${typeLabels[type] || 'Öğe'} başarıyla silindi`, 'success');
-        
+
       } catch (error) {
         console.error('Delete error:', error);
         toast('Silme işlemi başarısız', 'error');

@@ -753,3 +753,75 @@ CREATE TABLE IF NOT EXISTS public.integrations (
   created_at       TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at       TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- ================================================================
+-- PERFORMANCE INDEXES (Added for query optimization)
+-- ================================================================
+
+-- User-related indexes
+CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON public.user_profiles(email);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_created_at ON public.user_profiles(created_at);
+
+-- Project indexes
+CREATE INDEX IF NOT EXISTS idx_projects_user_id ON public.projects(user_id);
+CREATE INDEX IF NOT EXISTS idx_projects_status ON public.projects(status);
+CREATE INDEX IF NOT EXISTS idx_projects_created_at ON public.projects(created_at);
+
+-- Task indexes
+CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON public.tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON public.tasks(project_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON public.tasks(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_priority ON public.tasks(priority);
+CREATE INDEX IF NOT EXISTS idx_tasks_date ON public.tasks(date);
+
+-- Meeting indexes
+CREATE INDEX IF NOT EXISTS idx_meetings_user_id ON public.meetings(user_id);
+CREATE INDEX IF NOT EXISTS idx_meetings_date ON public.meetings(date);
+CREATE INDEX IF NOT EXISTS idx_meetings_status ON public.meetings(status);
+CREATE INDEX IF NOT EXISTS idx_meetings_recurrence ON public.meetings(recurrence);
+
+-- Meeting participants indexes
+CREATE INDEX IF NOT EXISTS idx_meeting_participants_meeting_id ON public.meeting_participants(meeting_id);
+CREATE INDEX IF NOT EXISTS idx_meeting_participants_user_id ON public.meeting_participants(user_id);
+CREATE INDEX IF NOT EXISTS idx_meeting_participants_status ON public.meeting_participants(status);
+
+-- Note indexes
+CREATE INDEX IF NOT EXISTS idx_notes_user_id ON public.notes(user_id);
+CREATE INDEX IF NOT EXISTS idx_notes_created_at ON public.notes(created_at);
+
+-- Resource indexes
+CREATE INDEX IF NOT EXISTS idx_resources_user_id ON public.resources(user_id);
+CREATE INDEX IF NOT EXISTS idx_resources_type ON public.resources(type);
+
+-- Post indexes
+CREATE INDEX IF NOT EXISTS idx_posts_user_id ON public.posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_posts_created_at ON public.posts(created_at);
+
+-- Image indexes
+CREATE INDEX IF NOT EXISTS idx_images_user_id ON public.images(user_id);
+CREATE INDEX IF NOT EXISTS idx_images_created_at ON public.images(created_at);
+
+-- Budget indexes
+CREATE INDEX IF NOT EXISTS idx_budget_user_id ON public.budget(user_id);
+
+-- Risk indexes
+CREATE INDEX IF NOT EXISTS idx_risks_user_id ON public.risks(user_id);
+CREATE INDEX IF NOT EXISTS idx_risks_probability ON public.risks(probability);
+CREATE INDEX IF NOT EXISTS idx_risks_impact ON public.risks(impact);
+
+-- Team indexes
+CREATE INDEX IF NOT EXISTS idx_team_user_id ON public.team(user_id);
+CREATE INDEX IF NOT EXISTS idx_team_department ON public.team(department);
+
+-- Activity indexes
+CREATE INDEX IF NOT EXISTS idx_activity_user_id ON public.activity(user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_created_at ON public.activity(created_at);
+
+-- Comment indexes
+CREATE INDEX IF NOT EXISTS idx_comments_post_id ON public.comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_comments_user_id ON public.comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_comments_created_at ON public.comments(created_at);
+
+-- Voice note indexes
+CREATE INDEX IF NOT EXISTS idx_voice_notes_user_id ON public.voice_notes(user_id);
+CREATE INDEX IF NOT EXISTS idx_voice_notes_created_at ON public.voice_notes(created_at);
